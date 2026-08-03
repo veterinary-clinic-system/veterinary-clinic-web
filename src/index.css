@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * PLACEHOLDER values - replace with the real tokens from DESIGN.md (repo root) once it
+ * exists. Values are R G B triples (no commas) so Tailwind's `<alpha-value>` opacity
+ * modifiers work, e.g. `bg-primary/50`.
+ */
+:root {
+  --color-primary: 37 99 235; /* blue-600 */
+  --color-primary-foreground: 255 255 255;
+  --color-surface: 255 255 255;
+  --color-surface-muted: 244 246 248;
+  --color-border: 226 232 240;
+  --color-foreground: 15 23 42;
+  --color-muted-foreground: 100 116 139;
+  --color-destructive: 220 38 38;
+  --radius: 0.5rem;
+}
+
+body {
+  @apply bg-surface text-foreground antialiased;
+}
