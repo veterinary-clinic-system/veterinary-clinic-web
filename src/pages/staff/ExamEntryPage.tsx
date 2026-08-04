@@ -1,54 +1,61 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { appointmentsApi } from '@/api/appointments.api';
 import { examinationsApi } from '@/api/examinations.api';
+import { medicalRecordsApi } from '@/api/medical-records.api';
 import { catalogApi } from '@/api/catalog.api';
 import { branchesApi } from '@/api/branches.api';
 import { doctorsApi } from '@/api/doctors.api';
 import { filesApi } from '@/api/files.api';
-import { LabTestOrder, Medication, Prescription } from '@/types/models';
-import { LabTestStatus } from '@/types/enums';
-import { formatDateTime } from '@/utils/format';
-import { LAB_TEST_STATUS_LABEL_VI } from '@/utils/labels';
+import { Badge, Button, Input, Select, Textarea, useToast } from '@/components/basic';
+import {
+  Diagnosis,
+  LabTestOrder,
+  MedicalRecord,
+  Medication,
+  Prescription,
+  Treatment,
+} from '@/types/models';
+import { DiagnosisSeverity, LabTestStatus, MedicalRecordStatus } from '@/types/enums';
+import { formatDate, formatDateTime } from '@/utils/format';
+import {
+  DIAGNOSIS_SEVERITY_LABEL_VI,
+  LAB_TEST_STATUS_LABEL_VI,
+  MEDICAL_RECORD_STATUS_LABEL_VI,
+} from '@/utils/labels';
 
-interface ExamFormValues {
-  diseaseGroups: string;
-  diagnosisText: string;
-  notes: string;
-  temperatureCelsius: string;
-  weightKg: string;
-  heartRateBpm: string;
-  respiratoryRateBpm: string;
-}
-
-function toOptionalNumber(value: string): number | undefined {
-  if (value.trim() === '') return undefined;
-  const n = Number(value);
-  return Number.isNaN(n) ? undefined : n;
-}
-
-/** Doctor exam-recording form: vitals/diagnosis, prescriptions, lab tests, attachments, follow-up. */
+/**
+ * Màn hình khám bệnh — UC-03.
+ *
+ * Bố cục 2 cột theo đúng FR-07 (*"Bác sĩ có thể xem các lần khám trước"*): cột trái là
+ * bệnh sử các lần trước, cột phải là form nhập của lần này. Bác sĩ cần nhìn lần khám
+ * trước **trong lúc** khám, không phải mở tab khác rồi nhớ lại.
+ *
+ * Thứ tự các khối bên phải bám đúng luồng UC-03: hành chính → sinh hiệu → chẩn đoán →
+ * điều trị → xét nghiệm → đơn thuốc → hoàn tất.
+ */
 export function ExamEntryPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id: appointmentId } = useParams<{ id: string }>();
 
   const apptQuery = useQuery({
-    queryKey: ['appointment', id],
-    queryFn: () => appointmentsApi.getOne(id!),
-    enabled: !!id,
+    queryKey: ['appointment', appointmentId],
+    queryFn: () => appointmentsApi.getOne(appointmentId!),
+    enabled: !!appointmentId,
   });
 
-  const examQuery = useQuery({
-    queryKey: ['examination-by-appointment', id],
-    queryFn: () => examinationsApi.getByAppointment(id!),
-    enabled: !!id,
+  // `POST /medical-records` là idempotent ở phía server (trả về hồ sơ đã có nếu lịch hẹn
+  // này đã mở), nên gọi thẳng nó khi vào màn hình là an toàn - không cần thử GET rồi mới
+  // POST. Đây chính là hành vi acceptance đòi: vào từ nút "Phiếu khám" là tự mở hồ sơ DRAFT.
+  const recordQuery = useQuery({
+    queryKey: ['medical-record', 'by-appointment', appointmentId],
+    queryFn: () => medicalRecordsApi.open({ appointmentId: appointmentId! }),
+    enabled: !!appointmentId,
     retry: false,
   });
-  const examNotFound = examQuery.isError && (examQuery.error as AxiosError)?.response?.status === 404;
 
-  if (apptQuery.isLoading || examQuery.isLoading) {
+  if (apptQuery.isLoading || recordQuery.isLoading) {
     return <p className="text-muted">Đang tải…</p>;
   }
   if (!apptQuery.data) {
@@ -61,59 +68,327 @@ export function ExamEntryPage() {
       <div>
         <h1 className="text-2xl font-semibold">Khám bệnh — {appt.pet?.name ?? 'Thú cưng'}</h1>
         <p className="text-muted">
-          {formatDateTime(appt.startAt)} · BS. {appt.doctor?.fullName ?? '—'} · {appt.service?.item.itemName ?? '—'}
+          {formatDateTime(appt.startAt)} · BS. {appt.doctor?.fullName ?? '—'} ·{' '}
+          {appt.service?.item.itemName ?? '—'}
         </p>
-        <Link to={`/staff/appointments/${appt.id}`} className="text-sm text-primary hover:underline">
+        <Link
+          to={`/staff/appointments/${appt.id}`}
+          className="text-sm text-primary hover:underline"
+        >
           ← Quay lại chi tiết lịch hẹn
         </Link>
       </div>
 
-      {examNotFound ? (
-        <CreateExamForm appointmentId={appt.id} />
-      ) : examQuery.data ? (
-        <ExaminationWorkspace examination={examQuery.data} appointmentId={appt.id} appt={appt} />
+      {recordQuery.isError ? (
+        <OpenRecordError error={recordQuery.error} />
+      ) : recordQuery.data ? (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+          <PetHistoryPanel petId={appt.petId} currentRecordId={recordQuery.data.id} />
+          <CurrentVisitPanel record={recordQuery.data} appointmentId={appt.id} appt={appt} />
+        </div>
       ) : (
-        <p className="text-destructive">Không thể tải phiếu khám.</p>
+        <p className="text-destructive">Không thể mở hồ sơ bệnh án.</p>
       )}
     </div>
   );
 }
 
-function CreateExamForm({ appointmentId }: { appointmentId: string }) {
-  const queryClient = useQueryClient();
-  const { register, handleSubmit } = useForm<ExamFormValues>({
-    defaultValues: {
-      diseaseGroups: '',
-      diagnosisText: '',
-      notes: '',
-      temperatureCelsius: '',
-      weightKg: '',
-      heartRateBpm: '',
-      respiratoryRateBpm: '',
-    },
+/**
+ * BR-06 (chưa check-in) và lịch hẹn đã kết thúc đều trả 409 kèm thông báo tiếng Việt
+ * đã đủ rõ - hiển thị nguyên văn thay vì dịch lại một lần nữa ở client.
+ */
+function OpenRecordError({ error }: { error: unknown }) {
+  const message = extractApiMessage(error) ?? 'Không thể mở hồ sơ bệnh án cho lịch hẹn này.';
+  return (
+    <div className="rounded border border-destructive bg-destructive/5 p-4">
+      <p className="text-sm text-destructive">{message}</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------------
+// Cột trái — bệnh sử
+// ---------------------------------------------------------------------------------
+
+function PetHistoryPanel({
+  petId,
+  currentRecordId,
+}: {
+  petId: string;
+  currentRecordId: string;
+}) {
+  const historyQuery = useQuery({
+    queryKey: ['medical-records', 'by-pet', petId],
+    queryFn: () => medicalRecordsApi.getTimelineForPet(petId),
   });
-  const [attachmentUrls, setAttachmentUrls] = useState<string[]>([]);
+
+  // Lần khám ĐANG diễn ra đã nằm ở cột phải - để lại ở cột trái là nhìn thấy hai lần.
+  const previous = (historyQuery.data ?? []).filter((r) => r.id !== currentRecordId);
+
+  return (
+    <aside className="flex flex-col gap-3 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
+      <h2 className="font-medium">Bệnh sử ({previous.length})</h2>
+      {historyQuery.isLoading && <p className="text-sm text-muted">Đang tải bệnh sử…</p>}
+      {!historyQuery.isLoading && previous.length === 0 && (
+        <p className="rounded border border-border bg-surface p-4 text-sm text-muted">
+          Đây là lần khám đầu tiên được ghi nhận cho thú cưng này.
+        </p>
+      )}
+      {previous.map((record) => (
+        <HistoryCard key={record.id} record={record} />
+      ))}
+    </aside>
+  );
+}
+
+function HistoryCard({ record }: { record: MedicalRecord }) {
+  const [expanded, setExpanded] = useState(false);
+  const visitedAt = record.examination?.examinedAt ?? record.createdAt;
+  const primary = (record.diagnoses ?? []).find((d) => d.isPrimary) ?? record.diagnoses?.[0];
+
+  return (
+    <article className="rounded border border-border bg-surface p-3 text-sm">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-start justify-between gap-2 text-left"
+      >
+        <span>
+          <span className="font-medium">{formatDate(visitedAt)}</span>
+          <span className="block text-muted">BS. {record.doctor?.fullName ?? '—'}</span>
+        </span>
+        <Badge variant={record.status === MedicalRecordStatus.COMPLETED ? 'success' : 'warning'}>
+          {MEDICAL_RECORD_STATUS_LABEL_VI[record.status]}
+        </Badge>
+      </button>
+
+      <p className="mt-2 text-foreground">{primary?.diagnosisText ?? 'Chưa có chẩn đoán'}</p>
+
+      {expanded && (
+        <dl className="mt-3 flex flex-col gap-2 border-t border-border pt-3 text-xs">
+          {record.visitReason && (
+            <div>
+              <dt className="text-muted">Lý do khám</dt>
+              <dd>{record.visitReason}</dd>
+            </div>
+          )}
+          {(record.diagnoses ?? []).length > 0 && (
+            <div>
+              <dt className="text-muted">Chẩn đoán</dt>
+              <dd>
+                <ul className="list-inside list-disc">
+                  {record.diagnoses!.map((d) => (
+                    <li key={d.id}>
+                      {d.diagnosisText} — {DIAGNOSIS_SEVERITY_LABEL_VI[d.severity]}
+                      {d.isPrimary ? ' (chính)' : ''}
+                    </li>
+                  ))}
+                </ul>
+              </dd>
+            </div>
+          )}
+          {(record.treatments ?? []).length > 0 && (
+            <div>
+              <dt className="text-muted">Điều trị</dt>
+              <dd>
+                <ul className="list-inside list-disc">
+                  {record.treatments!.map((t) => (
+                    <li key={t.id}>{t.method}</li>
+                  ))}
+                </ul>
+              </dd>
+            </div>
+          )}
+          {record.examination && (
+            <div>
+              <dt className="text-muted">Sinh hiệu</dt>
+              <dd>
+                {record.examination.temperatureCelsius ?? '—'} °C ·{' '}
+                {record.examination.weightKg ?? '—'} kg
+              </dd>
+            </div>
+          )}
+          {record.notes && (
+            <div>
+              <dt className="text-muted">Ghi chú</dt>
+              <dd>{record.notes}</dd>
+            </div>
+          )}
+        </dl>
+      )}
+    </article>
+  );
+}
+
+// ---------------------------------------------------------------------------------
+// Cột phải — lần khám này
+// ---------------------------------------------------------------------------------
+
+function CurrentVisitPanel({
+  record,
+  appointmentId,
+  appt,
+}: {
+  record: MedicalRecord;
+  appointmentId: string;
+  appt: { doctorId: string; branchId: string; serviceId: string };
+}) {
+  // BR-08 - hồ sơ đã hoàn tất thì mọi ô nhập bị khoá. Một cờ duy nhất, truyền xuống mọi
+  // khối con: nếu để từng khối tự hỏi trạng thái, chỉ cần quên một chỗ là BR-08 thủng.
+  const readOnly = record.status === MedicalRecordStatus.COMPLETED;
+
+  return (
+    <div className="flex flex-col gap-6">
+      {readOnly && (
+        <div className="rounded border border-border bg-surface-muted p-4">
+          <p className="text-sm font-medium">Hồ sơ đã hoàn tất — chỉ xem</p>
+          <p className="mt-1 text-sm text-muted">
+            Hoàn tất lúc {record.completedAt ? formatDateTime(record.completedAt) : '—'}. Theo BR-08,
+            hồ sơ bệnh án đã chốt không được sửa; mọi thay đổi sau đó phải đi qua đường sửa có ghi
+            nhật ký kiểm toán.
+          </p>
+        </div>
+      )}
+
+      <RecordHeaderSection record={record} readOnly={readOnly} />
+      <VitalsSection record={record} readOnly={readOnly} />
+      <DiagnosesSection record={record} readOnly={readOnly} />
+      <TreatmentsSection record={record} readOnly={readOnly} />
+      <LabTestsSection record={record} readOnly={readOnly} />
+      <PrescriptionsSection record={record} readOnly={readOnly} />
+      <CompleteSection record={record} readOnly={readOnly} />
+      {readOnly && <FollowUpSection appointmentId={appointmentId} appt={appt} />}
+    </div>
+  );
+}
+
+function Section({
+  title,
+  action,
+  children,
+}: {
+  title: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded border border-border bg-surface p-4">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h2 className="font-medium">{title}</h2>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/** Khối hành chính (FR-07): lý do khám + tình trạng chung + ghi chú của hồ sơ. */
+function RecordHeaderSection({ record, readOnly }: { record: MedicalRecord; readOnly: boolean }) {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const [visitReason, setVisitReason] = useState(record.visitReason ?? '');
+  const [generalCondition, setGeneralCondition] = useState(record.generalCondition ?? '');
+  const [notes, setNotes] = useState(record.notes ?? '');
+
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      medicalRecordsApi.update(record.id, { visitReason, generalCondition, notes }),
+    onSuccess: () => {
+      toast.show('Đã lưu thông tin hồ sơ', 'success');
+      void queryClient.invalidateQueries({ queryKey: ['medical-record'] });
+    },
+    onError: (error) => toast.show(extractApiMessage(error) ?? 'Lưu thất bại', 'error'),
+  });
+
+  return (
+    <Section title="Thông tin lần khám">
+      <div className="flex flex-col gap-3">
+        <Textarea
+          label="Lý do khám"
+          rows={2}
+          value={visitReason}
+          disabled={readOnly}
+          onChange={(e) => setVisitReason(e.target.value)}
+          hint="Lý do bác sĩ ghi lại sau khi hỏi bệnh — khác lời khách tự kể lúc đặt lịch."
+        />
+        <Textarea
+          label="Tình trạng chung"
+          rows={2}
+          value={generalCondition}
+          disabled={readOnly}
+          onChange={(e) => setGeneralCondition(e.target.value)}
+        />
+        <Textarea
+          label="Ghi chú"
+          rows={2}
+          value={notes}
+          disabled={readOnly}
+          onChange={(e) => setNotes(e.target.value)}
+        />
+        {!readOnly && (
+          <Button
+            type="button"
+            className="w-fit"
+            loading={saveMutation.isPending}
+            onClick={() => saveMutation.mutate()}
+          >
+            Lưu thông tin
+          </Button>
+        )}
+      </div>
+    </Section>
+  );
+}
+
+interface VitalsFormState {
+  temperatureCelsius: string;
+  weightKg: string;
+  heartRateBpm: string;
+  respiratoryRateBpm: string;
+  notes: string;
+}
+
+function toOptionalNumber(value: string): number | undefined {
+  if (value.trim() === '') return undefined;
+  const n = Number(value);
+  return Number.isNaN(n) ? undefined : n;
+}
+
+/** Khối sinh hiệu — vẫn là entity `Examination`, phần "sinh hiệu" của hồ sơ. */
+function VitalsSection({ record, readOnly }: { record: MedicalRecord; readOnly: boolean }) {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const examination = record.examination ?? null;
+
+  const [form, setForm] = useState<VitalsFormState>({
+    temperatureCelsius: examination?.temperatureCelsius?.toString() ?? '',
+    weightKg: examination?.weightKg?.toString() ?? '',
+    heartRateBpm: examination?.heartRateBpm?.toString() ?? '',
+    respiratoryRateBpm: examination?.respiratoryRateBpm?.toString() ?? '',
+    notes: examination?.notes ?? '',
+  });
+  const [attachmentUrls, setAttachmentUrls] = useState<string[]>(examination?.attachmentUrls ?? []);
   const [uploading, setUploading] = useState(false);
 
-  const createMutation = useMutation({
-    mutationFn: (values: ExamFormValues) =>
-      examinationsApi.create({
-        appointmentId,
-        diseaseGroups: values.diseaseGroups
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean),
-        diagnosisText: values.diagnosisText || undefined,
-        notes: values.notes || undefined,
-        temperatureCelsius: toOptionalNumber(values.temperatureCelsius),
-        weightKg: toOptionalNumber(values.weightKg),
-        heartRateBpm: toOptionalNumber(values.heartRateBpm),
-        respiratoryRateBpm: toOptionalNumber(values.respiratoryRateBpm),
+  const saveMutation = useMutation({
+    mutationFn: () => {
+      const payload = {
+        temperatureCelsius: toOptionalNumber(form.temperatureCelsius),
+        weightKg: toOptionalNumber(form.weightKg),
+        heartRateBpm: toOptionalNumber(form.heartRateBpm),
+        respiratoryRateBpm: toOptionalNumber(form.respiratoryRateBpm),
+        notes: form.notes || undefined,
         attachmentUrls,
-      }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['examination-by-appointment', appointmentId] });
+      };
+      return examination
+        ? examinationsApi.update(examination.id, payload)
+        : examinationsApi.create({ appointmentId: record.appointmentId, ...payload });
     },
+    onSuccess: () => {
+      toast.show('Đã lưu sinh hiệu', 'success');
+      void queryClient.invalidateQueries({ queryKey: ['medical-record'] });
+    },
+    onError: (error) => toast.show(extractApiMessage(error) ?? 'Lưu thất bại', 'error'),
   });
 
   async function handleFilesSelected(files: FileList | null) {
@@ -131,136 +406,550 @@ function CreateExamForm({ appointmentId }: { appointmentId: string }) {
     }
   }
 
+  function set<K extends keyof VitalsFormState>(key: K, value: string) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
   return (
-    <form
-      onSubmit={handleSubmit((values) => createMutation.mutate(values))}
-      className="flex flex-col gap-4 rounded border border-border bg-surface p-4"
+    <Section
+      title="Sinh hiệu & triệu chứng"
+      action={
+        examination && !readOnly ? <DownloadPdfButton examinationId={examination.id} /> : undefined
+      }
     >
-      <h2 className="font-medium">Tạo phiếu khám</h2>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">Nhóm bệnh (phân cách bằng dấu phẩy)</span>
-          <input {...register('diseaseGroups')} className="rounded border border-border bg-surface px-3 py-2 text-sm" placeholder="Ví dụ: Da liễu, Tiêu hóa" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">Chẩn đoán</span>
-          <input {...register('diagnosisText')} className="rounded border border-border bg-surface px-3 py-2 text-sm" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">Nhiệt độ (°C)</span>
-          <input type="number" step="0.1" {...register('temperatureCelsius')} className="rounded border border-border bg-surface px-3 py-2 text-sm" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">Cân nặng (kg)</span>
-          <input type="number" step="0.1" {...register('weightKg')} className="rounded border border-border bg-surface px-3 py-2 text-sm" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">Nhịp tim (lần/phút)</span>
-          <input type="number" {...register('heartRateBpm')} className="rounded border border-border bg-surface px-3 py-2 text-sm" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">Nhịp thở (lần/phút)</span>
-          <input type="number" {...register('respiratoryRateBpm')} className="rounded border border-border bg-surface px-3 py-2 text-sm" />
-        </label>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Input
+          label="Nhiệt độ (°C)"
+          type="number"
+          step="0.1"
+          disabled={readOnly}
+          value={form.temperatureCelsius}
+          onChange={(e) => set('temperatureCelsius', e.target.value)}
+        />
+        <Input
+          label="Cân nặng (kg)"
+          type="number"
+          step="0.01"
+          disabled={readOnly}
+          value={form.weightKg}
+          onChange={(e) => set('weightKg', e.target.value)}
+        />
+        <Input
+          label="Nhịp tim (lần/phút)"
+          type="number"
+          disabled={readOnly}
+          value={form.heartRateBpm}
+          onChange={(e) => set('heartRateBpm', e.target.value)}
+        />
+        <Input
+          label="Nhịp thở (lần/phút)"
+          type="number"
+          disabled={readOnly}
+          value={form.respiratoryRateBpm}
+          onChange={(e) => set('respiratoryRateBpm', e.target.value)}
+        />
       </div>
 
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="text-muted">Ghi chú</span>
-        <textarea {...register('notes')} rows={3} className="rounded border border-border bg-surface px-3 py-2 text-sm" />
-      </label>
-
-      <div className="flex flex-col gap-2 text-sm">
-        <span className="text-muted">Ảnh/tệp đính kèm</span>
-        <input type="file" multiple onChange={(e) => void handleFilesSelected(e.target.files)} className="text-sm" />
-        {uploading && <span className="text-muted">Đang tải lên…</span>}
-        {attachmentUrls.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {attachmentUrls.map((url) => (
-              <img key={url} src={url} alt="Tệp đính kèm" className="h-16 w-16 rounded object-cover" />
-            ))}
-          </div>
-        )}
+      <div className="mt-3">
+        <Textarea
+          label="Triệu chứng ghi nhận"
+          rows={3}
+          disabled={readOnly}
+          value={form.notes}
+          onChange={(e) => set('notes', e.target.value)}
+        />
       </div>
 
-      <button
-        type="submit"
-        disabled={createMutation.isPending}
-        className="w-fit rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-      >
-        {createMutation.isPending ? 'Đang lưu…' : 'Lưu phiếu khám'}
-      </button>
-      {createMutation.isError && <p className="text-sm text-destructive">Có lỗi xảy ra, vui lòng thử lại.</p>}
-    </form>
-  );
-}
+      {!readOnly && (
+        <label className="mt-3 flex flex-col gap-1 text-sm">
+          <span className="text-muted">Ảnh/tệp đính kèm</span>
+          <input
+            type="file"
+            multiple
+            onChange={(e) => void handleFilesSelected(e.target.files)}
+            className="text-sm"
+          />
+          {uploading && <span className="text-muted">Đang tải lên…</span>}
+        </label>
+      )}
+      {attachmentUrls.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {attachmentUrls.map((url) => (
+            <a key={url} href={url} target="_blank" rel="noreferrer">
+              <img src={url} alt="Tệp đính kèm" className="h-16 w-16 rounded object-cover" />
+            </a>
+          ))}
+        </div>
+      )}
 
-interface ExaminationWorkspaceProps {
-  examination: { id: string; diseaseGroups: string[]; diagnosisText: string | null; notes: string | null; temperatureCelsius: number | null; weightKg: number | null; heartRateBpm: number | null; respiratoryRateBpm: number | null; attachmentUrls: string[]; examinedAt: string };
-  appointmentId: string;
-  appt: { doctorId: string; branchId: string; serviceId: string };
-}
-
-function ExaminationWorkspace({ examination, appointmentId, appt }: ExaminationWorkspaceProps) {
-  return (
-    <div className="flex flex-col gap-6">
-      <section className="rounded border border-border bg-surface p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-medium">Phiếu khám</h2>
+      {!readOnly && (
+        <Button
+          type="button"
+          className="mt-3 w-fit"
+          loading={saveMutation.isPending}
+          onClick={() => saveMutation.mutate()}
+        >
+          {examination ? 'Cập nhật sinh hiệu' : 'Lưu sinh hiệu'}
+        </Button>
+      )}
+      {readOnly && examination && (
+        <div className="mt-3">
           <DownloadPdfButton examinationId={examination.id} />
         </div>
-        <dl className="grid grid-cols-2 gap-y-2 text-sm sm:grid-cols-4">
-          <dt className="text-muted">Nhóm bệnh</dt>
-          <dd className="col-span-3">{examination.diseaseGroups.join(', ') || '—'}</dd>
-          <dt className="text-muted">Chẩn đoán</dt>
-          <dd className="col-span-3">{examination.diagnosisText ?? '—'}</dd>
-          <dt className="text-muted">Nhiệt độ</dt>
-          <dd>{examination.temperatureCelsius != null ? `${examination.temperatureCelsius} °C` : '—'}</dd>
-          <dt className="text-muted">Cân nặng</dt>
-          <dd>{examination.weightKg != null ? `${examination.weightKg} kg` : '—'}</dd>
-          <dt className="text-muted">Nhịp tim</dt>
-          <dd>{examination.heartRateBpm != null ? `${examination.heartRateBpm} bpm` : '—'}</dd>
-          <dt className="text-muted">Nhịp thở</dt>
-          <dd>{examination.respiratoryRateBpm != null ? `${examination.respiratoryRateBpm} bpm` : '—'}</dd>
-          <dt className="text-muted">Ghi chú</dt>
-          <dd className="col-span-3">{examination.notes ?? '—'}</dd>
-        </dl>
-        {examination.attachmentUrls.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {examination.attachmentUrls.map((url) => (
-              <a key={url} href={url} target="_blank" rel="noreferrer">
-                <img src={url} alt="Tệp đính kèm" className="h-16 w-16 rounded object-cover" />
-              </a>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <PrescriptionSection examinationId={examination.id} />
-      <LabTestsSection examinationId={examination.id} />
-      <FollowUpSection appointmentId={appointmentId} appt={appt} />
-    </div>
+      )}
+    </Section>
   );
 }
 
-function DownloadPdfButton({ examinationId }: { examinationId: string }) {
-  const [loading, setLoading] = useState(false);
+const SEVERITY_OPTIONS = Object.values(DiagnosisSeverity).map((value) => ({
+  value,
+  label: DIAGNOSIS_SEVERITY_LABEL_VI[value],
+}));
+
+/** Khối chẩn đoán (FR-09) — nhiều chẩn đoán trên cùng một hồ sơ, đúng một cái là chính. */
+function DiagnosesSection({ record, readOnly }: { record: MedicalRecord; readOnly: boolean }) {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const diagnoses = record.diagnoses ?? [];
+
+  const [diagnosisText, setDiagnosisText] = useState('');
+  const [severity, setSeverity] = useState<string>(DiagnosisSeverity.MILD);
+  const [diseaseId, setDiseaseId] = useState('');
+  const [notes, setNotes] = useState('');
+
+  const diseasesQuery = useQuery({
+    queryKey: ['diseases', 'for-diagnosis'],
+    queryFn: () => catalogApi.diseases({ limit: 200 }),
+  });
+  const diseaseOptions = [
+    { value: '', label: '— Không chọn từ danh mục —' },
+    ...((diseasesQuery.data?.data ?? []) as { id: string; diseaseName: string }[]).map((d) => ({
+      value: d.id,
+      label: d.diseaseName,
+    })),
+  ];
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['medical-record'] });
+
+  const addMutation = useMutation({
+    mutationFn: () =>
+      medicalRecordsApi.addDiagnosis(record.id, {
+        diagnosisText,
+        severity,
+        diseaseId: diseaseId || undefined,
+        notes: notes || undefined,
+      }),
+    onSuccess: () => {
+      setDiagnosisText('');
+      setNotes('');
+      setDiseaseId('');
+      setSeverity(DiagnosisSeverity.MILD);
+      toast.show('Đã thêm chẩn đoán', 'success');
+      void invalidate();
+    },
+    onError: (error) => toast.show(extractApiMessage(error) ?? 'Thêm thất bại', 'error'),
+  });
+
+  const setPrimaryMutation = useMutation({
+    mutationFn: (id: string) => medicalRecordsApi.updateDiagnosis(id, { isPrimary: true }),
+    onSuccess: () => void invalidate(),
+    onError: (error) => toast.show(extractApiMessage(error) ?? 'Cập nhật thất bại', 'error'),
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: (id: string) => medicalRecordsApi.removeDiagnosis(id),
+    onSuccess: () => {
+      toast.show('Đã xoá chẩn đoán', 'success');
+      void invalidate();
+    },
+    onError: (error) => toast.show(extractApiMessage(error) ?? 'Xoá thất bại', 'error'),
+  });
+
   return (
-    <button
-      type="button"
-      disabled={loading}
-      onClick={async () => {
-        setLoading(true);
-        try {
-          await examinationsApi.downloadPdf(examinationId);
-        } finally {
-          setLoading(false);
-        }
-      }}
-      className="rounded border border-border px-3 py-1.5 text-sm hover:bg-surface-muted disabled:opacity-50"
-    >
-      {loading ? 'Đang xuất…' : 'Xuất PDF'}
-    </button>
+    <Section title="Chẩn đoán">
+      {diagnoses.length === 0 ? (
+        <p className="text-sm text-muted">Chưa có chẩn đoán nào.</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {diagnoses.map((diagnosis) => (
+            <DiagnosisRow
+              key={diagnosis.id}
+              diagnosis={diagnosis}
+              readOnly={readOnly}
+              onSetPrimary={() => setPrimaryMutation.mutate(diagnosis.id)}
+              onRemove={() => removeMutation.mutate(diagnosis.id)}
+            />
+          ))}
+        </ul>
+      )}
+
+      {!readOnly && (
+        <form
+          className="mt-4 flex flex-col gap-3 border-t border-border pt-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (diagnosisText.trim()) addMutation.mutate();
+          }}
+        >
+          <Textarea
+            label="Chẩn đoán"
+            rows={2}
+            value={diagnosisText}
+            onChange={(e) => setDiagnosisText(e.target.value)}
+            placeholder="Ví dụ: Viêm da dị ứng nhẹ, nghi do phấn hoa"
+          />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Select
+              label="Mức độ"
+              value={severity}
+              onChange={setSeverity}
+              options={SEVERITY_OPTIONS}
+            />
+            <Select
+              label="Bệnh trong danh mục (tuỳ chọn)"
+              value={diseaseId}
+              onChange={setDiseaseId}
+              options={diseaseOptions}
+              hint="Bỏ trống nếu bệnh chưa có trong danh mục."
+            />
+          </div>
+          <Input
+            label="Ghi chú"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
+          <Button
+            type="submit"
+            className="w-fit"
+            loading={addMutation.isPending}
+            disabled={!diagnosisText.trim()}
+          >
+            + Thêm chẩn đoán
+          </Button>
+        </form>
+      )}
+    </Section>
+  );
+}
+
+function DiagnosisRow({
+  diagnosis,
+  readOnly,
+  onSetPrimary,
+  onRemove,
+}: {
+  diagnosis: Diagnosis;
+  readOnly: boolean;
+  onSetPrimary: () => void;
+  onRemove: () => void;
+}) {
+  return (
+    <li className="flex flex-wrap items-start justify-between gap-2 rounded border border-border p-3 text-sm">
+      <div className="min-w-0">
+        <p className="flex flex-wrap items-center gap-2">
+          <span className="font-medium">{diagnosis.diagnosisText}</span>
+          <Badge variant="outline">{DIAGNOSIS_SEVERITY_LABEL_VI[diagnosis.severity]}</Badge>
+          {diagnosis.isPrimary && <Badge>Chẩn đoán chính</Badge>}
+        </p>
+        {diagnosis.disease && (
+          <p className="text-muted">Danh mục: {diagnosis.disease.diseaseName}</p>
+        )}
+        {diagnosis.notes && <p className="text-muted">{diagnosis.notes}</p>}
+      </div>
+      {!readOnly && (
+        <div className="flex shrink-0 gap-2">
+          {!diagnosis.isPrimary && (
+            <Button type="button" variant="secondary" size="sm" onClick={onSetPrimary}>
+              Đặt làm chính
+            </Button>
+          )}
+          <Button type="button" variant="ghost" size="sm" onClick={onRemove}>
+            Xoá
+          </Button>
+        </div>
+      )}
+    </li>
+  );
+}
+
+/** Khối điều trị (FR-10) — `endDate` bỏ trống nghĩa là điều trị đang tiếp diễn. */
+function TreatmentsSection({ record, readOnly }: { record: MedicalRecord; readOnly: boolean }) {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const treatments = record.treatments ?? [];
+
+  const [method, setMethod] = useState('');
+  const [description, setDescription] = useState('');
+  const [startDate, setStartDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [endDate, setEndDate] = useState('');
+  const [instruction, setInstruction] = useState('');
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['medical-record'] });
+
+  const addMutation = useMutation({
+    mutationFn: () =>
+      medicalRecordsApi.addTreatment(record.id, {
+        method,
+        description: description || undefined,
+        startDate,
+        endDate: endDate || undefined,
+        instruction: instruction || undefined,
+      }),
+    onSuccess: () => {
+      setMethod('');
+      setDescription('');
+      setEndDate('');
+      setInstruction('');
+      toast.show('Đã thêm phương pháp điều trị', 'success');
+      void invalidate();
+    },
+    onError: (error) => toast.show(extractApiMessage(error) ?? 'Thêm thất bại', 'error'),
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: (id: string) => medicalRecordsApi.removeTreatment(id),
+    onSuccess: () => void invalidate(),
+    onError: (error) => toast.show(extractApiMessage(error) ?? 'Xoá thất bại', 'error'),
+  });
+
+  return (
+    <Section title="Điều trị">
+      {treatments.length === 0 ? (
+        <p className="text-sm text-muted">Chưa ghi phương pháp điều trị nào.</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {treatments.map((treatment) => (
+            <TreatmentRow
+              key={treatment.id}
+              treatment={treatment}
+              readOnly={readOnly}
+              onRemove={() => removeMutation.mutate(treatment.id)}
+            />
+          ))}
+        </ul>
+      )}
+
+      {!readOnly && (
+        <form
+          className="mt-4 flex flex-col gap-3 border-t border-border pt-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (method.trim() && startDate) addMutation.mutate();
+          }}
+        >
+          <Input
+            label="Phương pháp"
+            value={method}
+            onChange={(e) => setMethod(e.target.value)}
+            placeholder="Ví dụ: Truyền dịch, Tiêm kháng sinh, Bôi thuốc ngoài da"
+          />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Input
+              label="Ngày bắt đầu"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+            <Input
+              label="Ngày kết thúc"
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              hint="Bỏ trống nếu điều trị còn tiếp diễn."
+            />
+          </div>
+          <Textarea
+            label="Mô tả (phòng khám đã làm gì)"
+            rows={2}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+          <Textarea
+            label="Hướng dẫn cho chủ nuôi"
+            rows={2}
+            value={instruction}
+            onChange={(e) => setInstruction(e.target.value)}
+          />
+          <Button
+            type="submit"
+            className="w-fit"
+            loading={addMutation.isPending}
+            disabled={!method.trim() || !startDate}
+          >
+            + Thêm điều trị
+          </Button>
+        </form>
+      )}
+    </Section>
+  );
+}
+
+function TreatmentRow({
+  treatment,
+  readOnly,
+  onRemove,
+}: {
+  treatment: Treatment;
+  readOnly: boolean;
+  onRemove: () => void;
+}) {
+  return (
+    <li className="flex flex-wrap items-start justify-between gap-2 rounded border border-border p-3 text-sm">
+      <div className="min-w-0">
+        <p className="flex flex-wrap items-center gap-2">
+          <span className="font-medium">{treatment.method}</span>
+          <Badge variant="outline">
+            {formatDate(treatment.startDate)} →{' '}
+            {treatment.endDate ? formatDate(treatment.endDate) : 'đang tiếp diễn'}
+          </Badge>
+        </p>
+        {treatment.description && <p className="text-muted">{treatment.description}</p>}
+        {treatment.instruction && (
+          <p className="text-muted">Hướng dẫn: {treatment.instruction}</p>
+        )}
+      </div>
+      {!readOnly && (
+        <Button type="button" variant="ghost" size="sm" onClick={onRemove}>
+          Xoá
+        </Button>
+      )}
+    </li>
+  );
+}
+
+/**
+ * Khối xét nghiệm. Chỉ định phải đi qua `POST /examinations/:id/lab-tests`, nên phải có
+ * phiếu sinh hiệu trước - đó là lý do khối này nhắc bác sĩ lưu sinh hiệu khi chưa có.
+ */
+function LabTestsSection({ record, readOnly }: { record: MedicalRecord; readOnly: boolean }) {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const examination = record.examination ?? null;
+  const labTests = record.labTestOrders ?? [];
+  const [testName, setTestName] = useState('');
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['medical-record'] });
+
+  const addMutation = useMutation({
+    mutationFn: () => examinationsApi.addLabTest(examination!.id, testName),
+    onSuccess: () => {
+      setTestName('');
+      void invalidate();
+    },
+    onError: (error) => toast.show(extractApiMessage(error) ?? 'Thêm thất bại', 'error'),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (payload: { id: string; status: LabTestStatus; resultText: string }) =>
+      examinationsApi.updateLabTest(payload.id, {
+        status: payload.status,
+        resultText: payload.resultText || undefined,
+      }),
+    onSuccess: () => {
+      toast.show('Đã cập nhật kết quả xét nghiệm', 'success');
+      void invalidate();
+    },
+    onError: (error) => toast.show(extractApiMessage(error) ?? 'Cập nhật thất bại', 'error'),
+  });
+
+  return (
+    <Section title="Xét nghiệm">
+      {labTests.length === 0 ? (
+        <p className="text-sm text-muted">Chưa chỉ định xét nghiệm nào.</p>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {labTests.map((test) => (
+            <LabTestRow
+              key={test.id}
+              test={test}
+              readOnly={readOnly}
+              saving={updateMutation.isPending}
+              onSave={(status, resultText) =>
+                updateMutation.mutate({ id: test.id, status, resultText })
+              }
+            />
+          ))}
+        </div>
+      )}
+
+      {!readOnly &&
+        (examination ? (
+          <form
+            className="mt-4 flex flex-wrap items-end gap-2 border-t border-border pt-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (testName.trim()) addMutation.mutate();
+            }}
+          >
+            <Input
+              label="Tên xét nghiệm"
+              value={testName}
+              onChange={(e) => setTestName(e.target.value)}
+            />
+            <Button type="submit" loading={addMutation.isPending} disabled={!testName.trim()}>
+              Chỉ định xét nghiệm
+            </Button>
+          </form>
+        ) : (
+          <p className="mt-4 border-t border-border pt-4 text-sm text-muted">
+            Cần lưu sinh hiệu trước khi chỉ định xét nghiệm.
+          </p>
+        ))}
+    </Section>
+  );
+}
+
+function LabTestRow({
+  test,
+  readOnly,
+  onSave,
+  saving,
+}: {
+  test: LabTestOrder;
+  readOnly: boolean;
+  onSave: (status: LabTestStatus, resultText: string) => void;
+  saving: boolean;
+}) {
+  const [status, setStatus] = useState<LabTestStatus>(test.status);
+  const [resultText, setResultText] = useState(test.resultText ?? '');
+
+  if (readOnly) {
+    return (
+      <div className="rounded border border-border p-3 text-sm">
+        <p className="font-medium">{test.testName}</p>
+        <p className="text-muted">
+          {LAB_TEST_STATUS_LABEL_VI[test.status]}
+          {test.resultText ? ` — ${test.resultText}` : ''}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 items-end gap-2 rounded border border-border p-3 sm:grid-cols-[2fr_1fr_2fr_auto]">
+      <span className="self-center text-sm font-medium">{test.testName}</span>
+      <Select
+        value={status}
+        onChange={(value) => setStatus(value as LabTestStatus)}
+        options={Object.values(LabTestStatus).map((s) => ({
+          value: s,
+          label: LAB_TEST_STATUS_LABEL_VI[s],
+        }))}
+      />
+      <Input
+        value={resultText}
+        onChange={(e) => setResultText(e.target.value)}
+        placeholder="Kết quả"
+      />
+      <Button
+        type="button"
+        variant="secondary"
+        loading={saving}
+        onClick={() => onSave(status, resultText)}
+      >
+        Lưu
+      </Button>
+    </div>
   );
 }
 
@@ -271,22 +960,35 @@ interface PrescriptionLine {
   instructions: string;
 }
 
-const EMPTY_LINE: PrescriptionLine = { medicationId: '', dosage: '', durationDays: '', instructions: '' };
+const EMPTY_LINE: PrescriptionLine = {
+  medicationId: '',
+  dosage: '',
+  durationDays: '',
+  instructions: '',
+};
 
-function PrescriptionSection({ examinationId }: { examinationId: string }) {
+function PrescriptionsSection({ record, readOnly }: { record: MedicalRecord; readOnly: boolean }) {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const examination = record.examination ?? null;
+  const prescriptions = record.prescriptions ?? [];
+
   const medicationsQuery = useQuery({
     queryKey: ['medications', 'for-prescription'],
     queryFn: () => catalogApi.medications({ limit: 100 }),
   });
   const medications: Medication[] = medicationsQuery.data?.data ?? [];
+  const medicationOptions = [
+    { value: '', label: '— Chọn thuốc —' },
+    ...medications.map((m) => ({ value: m.id, label: `${m.item.itemName} (${m.unit})` })),
+  ];
 
   const [notes, setNotes] = useState('');
   const [lines, setLines] = useState<PrescriptionLine[]>([{ ...EMPTY_LINE }]);
-  const [saved, setSaved] = useState<Prescription[]>([]);
 
   const addMutation = useMutation({
     mutationFn: () =>
-      examinationsApi.addPrescription(examinationId, {
+      examinationsApi.addPrescription(examination!.id, {
         notes: notes || undefined,
         items: lines
           .filter((l) => l.medicationId)
@@ -297,207 +999,188 @@ function PrescriptionSection({ examinationId }: { examinationId: string }) {
             instructions: l.instructions || undefined,
           })),
       }),
-    onSuccess: (prescription) => {
-      setSaved((prev) => [...prev, prescription]);
+    onSuccess: () => {
       setLines([{ ...EMPTY_LINE }]);
       setNotes('');
+      toast.show('Đã lưu đơn thuốc', 'success');
+      void queryClient.invalidateQueries({ queryKey: ['medical-record'] });
     },
+    onError: (error) => toast.show(extractApiMessage(error) ?? 'Lưu đơn thuốc thất bại', 'error'),
   });
+
+  function updateLine(index: number, patch: Partial<PrescriptionLine>) {
+    setLines((prev) => prev.map((l, i) => (i === index ? { ...l, ...patch } : l)));
+  }
 
   return (
-    <section className="rounded border border-border bg-surface p-4">
-      <h2 className="mb-3 font-medium">Kê đơn thuốc</h2>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          addMutation.mutate();
-        }}
-        className="flex flex-col gap-3"
-      >
-        {lines.map((line, idx) => (
-          <div key={idx} className="grid grid-cols-1 gap-2 sm:grid-cols-[2fr_1fr_1fr_2fr]">
-            <select
-              value={line.medicationId}
-              onChange={(e) => {
-                const v = e.target.value;
-                setLines((prev) => prev.map((l, i) => (i === idx ? { ...l, medicationId: v } : l)));
-              }}
-              className="rounded border border-border bg-surface px-3 py-2 text-sm"
-            >
-              <option value="">— Chọn thuốc —</option>
-              {medications.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.item.itemName} ({m.unit})
-                </option>
-              ))}
-            </select>
-            <input
-              placeholder="Liều dùng"
-              value={line.dosage}
-              onChange={(e) => {
-                const v = e.target.value;
-                setLines((prev) => prev.map((l, i) => (i === idx ? { ...l, dosage: v } : l)));
-              }}
-              className="rounded border border-border bg-surface px-3 py-2 text-sm"
-            />
-            <input
-              type="number"
-              placeholder="Số ngày"
-              value={line.durationDays}
-              onChange={(e) => {
-                const v = e.target.value;
-                setLines((prev) => prev.map((l, i) => (i === idx ? { ...l, durationDays: v } : l)));
-              }}
-              className="rounded border border-border bg-surface px-3 py-2 text-sm"
-            />
-            <input
-              placeholder="Hướng dẫn sử dụng (tùy chọn)"
-              value={line.instructions}
-              onChange={(e) => {
-                const v = e.target.value;
-                setLines((prev) => prev.map((l, i) => (i === idx ? { ...l, instructions: v } : l)));
-              }}
-              className="rounded border border-border bg-surface px-3 py-2 text-sm"
-            />
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={() => setLines((prev) => [...prev, { ...EMPTY_LINE }])}
-          className="w-fit rounded border border-border px-3 py-1.5 text-sm hover:bg-surface-muted"
-        >
-          + Thêm thuốc
-        </button>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">Ghi chú đơn thuốc</span>
-          <input value={notes} onChange={(e) => setNotes(e.target.value)} className="rounded border border-border bg-surface px-3 py-2 text-sm" />
-        </label>
-        <button
-          type="submit"
-          disabled={addMutation.isPending || !lines.some((l) => l.medicationId)}
-          className="w-fit rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-        >
-          {addMutation.isPending ? 'Đang lưu…' : 'Lưu đơn thuốc'}
-        </button>
-      </form>
-
-      {saved.length > 0 && (
-        <div className="mt-4 flex flex-col gap-2">
-          <p className="text-sm font-medium">Đơn thuốc đã lưu (trong phiên này)</p>
-          {saved.map((p) => (
-            <ul key={p.id} className="list-inside list-disc text-sm text-muted">
-              {p.items.map((it) => (
-                <li key={it.id}>
-                  {it.medication?.item.itemName ?? it.medicationId} — {it.dosage} — {it.durationDays} ngày
-                </li>
-              ))}
-            </ul>
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
-function LabTestsSection({ examinationId }: { examinationId: string }) {
-  const [testName, setTestName] = useState('');
-  const [labTests, setLabTests] = useState<LabTestOrder[]>([]);
-
-  const addMutation = useMutation({
-    mutationFn: () => examinationsApi.addLabTest(examinationId, testName),
-    onSuccess: (order) => {
-      setLabTests((prev) => [...prev, order]);
-      setTestName('');
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: (payload: { id: string; status: LabTestStatus; resultText: string }) =>
-      examinationsApi.updateLabTest(payload.id, { status: payload.status, resultText: payload.resultText || undefined }),
-    onSuccess: (updated) => {
-      setLabTests((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
-    },
-  });
-
-  return (
-    <section className="rounded border border-border bg-surface p-4">
-      <h2 className="mb-3 font-medium">Xét nghiệm</h2>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (testName.trim()) addMutation.mutate();
-        }}
-        className="mb-4 flex flex-wrap items-end gap-2"
-      >
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">Tên xét nghiệm</span>
-          <input value={testName} onChange={(e) => setTestName(e.target.value)} className="rounded border border-border bg-surface px-3 py-2 text-sm" />
-        </label>
-        <button
-          type="submit"
-          disabled={addMutation.isPending || !testName.trim()}
-          className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-        >
-          Thêm xét nghiệm
-        </button>
-      </form>
-
-      {labTests.length === 0 ? (
-        <p className="text-sm text-muted">
-          Chưa có xét nghiệm nào được thêm trong phiên này. (API hiện không hỗ trợ tải danh sách xét nghiệm đã lưu
-          trước đó cho một phiếu khám — chỉ các mục thêm/cập nhật trong phiên hiện tại được hiển thị.)
-        </p>
+    <Section title="Đơn thuốc">
+      {prescriptions.length === 0 ? (
+        <p className="text-sm text-muted">Chưa kê đơn thuốc nào.</p>
       ) : (
         <div className="flex flex-col gap-3">
-          {labTests.map((test) => (
-            <LabTestRow key={test.id} test={test} onSave={(status, resultText) => updateMutation.mutate({ id: test.id, status, resultText })} saving={updateMutation.isPending} />
+          {prescriptions.map((prescription: Prescription) => (
+            <div key={prescription.id} className="rounded border border-border p-3 text-sm">
+              <ul className="list-inside list-disc">
+                {prescription.items.map((item) => (
+                  <li key={item.id}>
+                    {item.medication?.item.itemName ?? item.medicationId} — {item.dosage} —{' '}
+                    {item.durationDays} ngày
+                    {item.instructions ? ` — ${item.instructions}` : ''}
+                  </li>
+                ))}
+              </ul>
+              {prescription.notes && (
+                <p className="mt-1 text-muted">Ghi chú: {prescription.notes}</p>
+              )}
+            </div>
           ))}
         </div>
       )}
-    </section>
+
+      {!readOnly &&
+        (examination ? (
+          <form
+            className="mt-4 flex flex-col gap-3 border-t border-border pt-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              addMutation.mutate();
+            }}
+          >
+            {lines.map((line, index) => (
+              <div
+                key={index}
+                className="grid grid-cols-1 gap-2 sm:grid-cols-[2fr_1fr_1fr_2fr]"
+              >
+                <Select
+                  value={line.medicationId}
+                  onChange={(value) => updateLine(index, { medicationId: value })}
+                  options={medicationOptions}
+                />
+                <Input
+                  placeholder="Liều dùng"
+                  value={line.dosage}
+                  onChange={(e) => updateLine(index, { dosage: e.target.value })}
+                />
+                <Input
+                  type="number"
+                  placeholder="Số ngày"
+                  value={line.durationDays}
+                  onChange={(e) => updateLine(index, { durationDays: e.target.value })}
+                />
+                <Input
+                  placeholder="Hướng dẫn (tuỳ chọn)"
+                  value={line.instructions}
+                  onChange={(e) => updateLine(index, { instructions: e.target.value })}
+                />
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="w-fit"
+              onClick={() => setLines((prev) => [...prev, { ...EMPTY_LINE }])}
+            >
+              + Thêm thuốc
+            </Button>
+            <Input
+              label="Ghi chú đơn thuốc"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+            <Button
+              type="submit"
+              className="w-fit"
+              loading={addMutation.isPending}
+              disabled={!lines.some((l) => l.medicationId)}
+            >
+              Lưu đơn thuốc
+            </Button>
+          </form>
+        ) : (
+          <p className="mt-4 border-t border-border pt-4 text-sm text-muted">
+            Cần lưu sinh hiệu trước khi kê đơn thuốc.
+          </p>
+        ))}
+    </Section>
   );
 }
 
-function LabTestRow({
-  test,
-  onSave,
-  saving,
-}: {
-  test: LabTestOrder;
-  onSave: (status: LabTestStatus, resultText: string) => void;
-  saving: boolean;
-}) {
-  const [status, setStatus] = useState<LabTestStatus>(test.status);
-  const [resultText, setResultText] = useState(test.resultText ?? '');
+/**
+ * Chốt hồ sơ. Một hành động không lùi được, nên có bước xác nhận: sau khi bấm, BR-08
+ * khoá toàn bộ hồ sơ và lịch hẹn chuyển sang COMPLETED.
+ */
+function CompleteSection({ record, readOnly }: { record: MedicalRecord; readOnly: boolean }) {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const [confirming, setConfirming] = useState(false);
+
+  const completeMutation = useMutation({
+    mutationFn: () => medicalRecordsApi.complete(record.id),
+    onSuccess: () => {
+      toast.show('Đã hoàn tất hồ sơ bệnh án', 'success');
+      void queryClient.invalidateQueries({ queryKey: ['medical-record'] });
+      void queryClient.invalidateQueries({ queryKey: ['appointment'] });
+      void queryClient.invalidateQueries({ queryKey: ['queue'] });
+    },
+    onError: (error) => toast.show(extractApiMessage(error) ?? 'Hoàn tất thất bại', 'error'),
+  });
+
+  if (readOnly) return null;
 
   return (
-    <div className="grid grid-cols-1 gap-2 rounded border border-border p-3 sm:grid-cols-[2fr_1fr_2fr_auto]">
-      <span className="self-center text-sm font-medium">{test.testName}</span>
-      <select value={status} onChange={(e) => setStatus(e.target.value as LabTestStatus)} className="rounded border border-border bg-surface px-2 py-1.5 text-sm">
-        {Object.values(LabTestStatus).map((s) => (
-          <option key={s} value={s}>
-            {LAB_TEST_STATUS_LABEL_VI[s]}
-          </option>
-        ))}
-      </select>
-      <input
-        value={resultText}
-        onChange={(e) => setResultText(e.target.value)}
-        placeholder="Kết quả"
-        className="rounded border border-border bg-surface px-2 py-1.5 text-sm"
-      />
-      <button
-        type="button"
-        disabled={saving}
-        onClick={() => onSave(status, resultText)}
-        className="rounded border border-border px-3 py-1.5 text-sm hover:bg-surface-muted disabled:opacity-50"
-      >
-        Lưu
-      </button>
-    </div>
+    <Section title="Hoàn tất">
+      {confirming ? (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm">
+            Sau khi hoàn tất, hồ sơ <strong>không sửa được nữa</strong> (BR-08) và lịch hẹn sẽ
+            chuyển sang trạng thái hoàn tất. Bạn chắc chắn chứ?
+          </p>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              loading={completeMutation.isPending}
+              onClick={() => completeMutation.mutate()}
+            >
+              Xác nhận hoàn tất
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => setConfirming(false)}>
+              Huỷ
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <Button type="button" className="w-fit" onClick={() => setConfirming(true)}>
+          Hoàn tất hồ sơ bệnh án
+        </Button>
+      )}
+    </Section>
   );
 }
 
+function DownloadPdfButton({ examinationId }: { examinationId: string }) {
+  const [loading, setLoading] = useState(false);
+  return (
+    <Button
+      type="button"
+      variant="secondary"
+      size="sm"
+      loading={loading}
+      onClick={async () => {
+        setLoading(true);
+        try {
+          await examinationsApi.downloadPdf(examinationId);
+        } finally {
+          setLoading(false);
+        }
+      }}
+    >
+      Xuất PDF
+    </Button>
+  );
+}
+
+/** Đặt lịch tái khám - chỉ hiện sau khi hồ sơ đã chốt, đúng thứ tự của UC-03. */
 function FollowUpSection({
   appointmentId,
   appt,
@@ -511,8 +1194,14 @@ function FollowUpSection({
   const [startAt, setStartAt] = useState('');
 
   const branchesQuery = useQuery({ queryKey: ['branches'], queryFn: () => branchesApi.list() });
-  const doctorsQuery = useQuery({ queryKey: ['doctors-public', branchId], queryFn: () => doctorsApi.listPublic(branchId) });
-  const servicesQuery = useQuery({ queryKey: ['services', 'for-followup'], queryFn: () => catalogApi.services({ limit: 100 }) });
+  const doctorsQuery = useQuery({
+    queryKey: ['doctors-public', branchId],
+    queryFn: () => doctorsApi.listPublic(branchId),
+  });
+  const servicesQuery = useQuery({
+    queryKey: ['services', 'for-followup'],
+    queryFn: () => catalogApi.services({ limit: 100 }),
+  });
 
   const followUpMutation = useMutation({
     mutationFn: () =>
@@ -525,8 +1214,7 @@ function FollowUpSection({
   });
 
   return (
-    <section className="rounded border border-border bg-surface p-4">
-      <h2 className="mb-3 font-medium">Đặt lịch tái khám</h2>
+    <Section title="Đặt lịch tái khám">
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -534,52 +1222,39 @@ function FollowUpSection({
         }}
         className="flex flex-wrap items-end gap-3"
       >
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">Chi nhánh</span>
-          <select value={branchId} onChange={(e) => setBranchId(e.target.value)} className="rounded border border-border bg-surface px-3 py-2 text-sm">
-            {(branchesQuery.data ?? []).map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.branchName}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">Bác sĩ</span>
-          <select value={doctorId} onChange={(e) => setDoctorId(e.target.value)} className="rounded border border-border bg-surface px-3 py-2 text-sm">
-            {(doctorsQuery.data ?? []).map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.fullName}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">Dịch vụ</span>
-          <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} className="rounded border border-border bg-surface px-3 py-2 text-sm">
-            {(servicesQuery.data?.data ?? []).map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.item.itemName}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Select
+          label="Chi nhánh"
+          value={branchId}
+          onChange={setBranchId}
+          options={(branchesQuery.data ?? []).map((b) => ({ value: b.id, label: b.branchName }))}
+        />
+        <Select
+          label="Bác sĩ"
+          value={doctorId}
+          onChange={setDoctorId}
+          options={(doctorsQuery.data ?? []).map((d) => ({ value: d.id, label: d.fullName }))}
+        />
+        <Select
+          label="Dịch vụ"
+          value={serviceId}
+          onChange={setServiceId}
+          options={(servicesQuery.data?.data ?? []).map((s) => ({
+            value: s.id,
+            label: s.item.itemName,
+          }))}
+        />
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-muted">Thời gian</span>
           <input
             type="datetime-local"
             value={startAt}
             onChange={(e) => setStartAt(e.target.value)}
-            className="rounded border border-border bg-surface px-3 py-2 text-sm"
+            className="h-10 rounded border border-border bg-surface px-3 text-sm"
           />
         </label>
-        <button
-          type="submit"
-          disabled={followUpMutation.isPending || !startAt}
-          className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-        >
-          {followUpMutation.isPending ? 'Đang đặt…' : 'Đặt lịch tái khám'}
-        </button>
+        <Button type="submit" loading={followUpMutation.isPending} disabled={!startAt}>
+          Đặt lịch tái khám
+        </Button>
       </form>
       {followUpMutation.isSuccess && followUpMutation.data && (
         <p className="mt-2 text-sm text-triage-green">
@@ -589,7 +1264,16 @@ function FollowUpSection({
           </Link>
         </p>
       )}
-      {followUpMutation.isError && <p className="mt-2 text-sm text-destructive">Đặt lịch tái khám thất bại.</p>}
-    </section>
+      {followUpMutation.isError && (
+        <p className="mt-2 text-sm text-destructive">Đặt lịch tái khám thất bại.</p>
+      )}
+    </Section>
   );
+}
+
+/** Backend trả `{ message: string | string[] }` - lấy ra để hiện nguyên văn cho người dùng. */
+function extractApiMessage(error: unknown): string | null {
+  const data = (error as AxiosError<{ message?: string | string[] }>)?.response?.data;
+  if (!data?.message) return null;
+  return Array.isArray(data.message) ? data.message.join(', ') : data.message;
 }

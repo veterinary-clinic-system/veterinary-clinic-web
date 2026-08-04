@@ -1,7 +1,9 @@
 import {
   AppointmentStatus,
+  DiagnosisSeverity,
   Gender,
   LabTestStatus,
+  MedicalRecordStatus,
   PaymentMethod,
   Role,
   SlotStatus,
@@ -32,6 +34,18 @@ export const LAB_TEST_STATUS_LABEL_VI: Record<LabTestStatus, string> = {
   [LabTestStatus.ORDERED]: 'Đã chỉ định',
   [LabTestStatus.IN_PROGRESS]: 'Đang thực hiện',
   [LabTestStatus.COMPLETED]: 'Hoàn tất',
+};
+
+export const MEDICAL_RECORD_STATUS_LABEL_VI: Record<MedicalRecordStatus, string> = {
+  [MedicalRecordStatus.DRAFT]: 'Đang khám',
+  [MedicalRecordStatus.COMPLETED]: 'Đã hoàn tất',
+};
+
+export const DIAGNOSIS_SEVERITY_LABEL_VI: Record<DiagnosisSeverity, string> = {
+  [DiagnosisSeverity.MILD]: 'Nhẹ',
+  [DiagnosisSeverity.MODERATE]: 'Trung bình',
+  [DiagnosisSeverity.SEVERE]: 'Nặng',
+  [DiagnosisSeverity.CRITICAL]: 'Nguy kịch',
 };
 
 export const SLOT_STATUS_LABEL_VI: Record<SlotStatus, string> = {

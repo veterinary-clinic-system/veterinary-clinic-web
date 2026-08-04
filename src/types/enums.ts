@@ -132,6 +132,23 @@ export enum LabTestStatus {
   COMPLETED = 'COMPLETED',
 }
 
+/**
+ * Vòng đời hồ sơ bệnh án — SRS FR-08 / BR-08. `COMPLETED` là ranh giới BR-08 bảo vệ:
+ * hồ sơ đã chốt thì mọi ô nhập bị khoá.
+ */
+export enum MedicalRecordStatus {
+  DRAFT = 'DRAFT',
+  COMPLETED = 'COMPLETED',
+}
+
+/** Mức độ nặng của một chẩn đoán — SRS FR-09. */
+export enum DiagnosisSeverity {
+  MILD = 'MILD',
+  MODERATE = 'MODERATE',
+  SEVERE = 'SEVERE',
+  CRITICAL = 'CRITICAL',
+}
+
 export enum QueueStatus {
   WAITING = 'WAITING',
   ASSIGNED = 'ASSIGNED',

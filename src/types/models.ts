@@ -1,9 +1,11 @@
 import {
   AppointmentStatus,
   CommonSymptom,
+  DiagnosisSeverity,
   Gender,
   ItemType,
   LabTestStatus,
+  MedicalRecordStatus,
   PaymentMethod,
   PriorityColor,
   QueueSource,
@@ -209,9 +211,60 @@ export interface Examination {
   examinedAt: string;
 }
 
+/**
+ * Hồ sơ bệnh án (SRS FR-07…FR-10) — lớp bọc ngoài của một lần khám.
+ * `GET /medical-records/:id` trả đủ mọi khối trong một request.
+ */
+export interface MedicalRecord {
+  id: string;
+  appointmentId: string;
+  petId: string;
+  doctorId: string;
+  visitReason: string | null;
+  generalCondition: string | null;
+  notes: string | null;
+  status: MedicalRecordStatus;
+  completedAt: string | null;
+  createdAt: string;
+  appointment?: Appointment;
+  pet?: Pet;
+  doctor?: DoctorSummary;
+  examination?: Examination | null;
+  diagnoses?: Diagnosis[];
+  treatments?: Treatment[];
+  prescriptions?: Prescription[];
+  labTestOrders?: LabTestOrder[];
+}
+
+/** Một chẩn đoán trong hồ sơ — SRS FR-09. */
+export interface Diagnosis {
+  id: string;
+  medicalRecordId: string;
+  diseaseId: string | null;
+  disease?: { id: string; diseaseName: string } | null;
+  diagnosisText: string;
+  severity: DiagnosisSeverity;
+  notes: string | null;
+  isPrimary: boolean;
+  createdAt: string;
+}
+
+/** Một phương pháp điều trị — SRS FR-10. `endDate === null` là điều trị đang tiếp diễn. */
+export interface Treatment {
+  id: string;
+  medicalRecordId: string;
+  method: string;
+  description: string | null;
+  startDate: string;
+  endDate: string | null;
+  instruction: string | null;
+  notes: string | null;
+  createdAt: string;
+}
+
 export interface Prescription {
   id: string;
-  examinationId: string;
+  medicalRecordId: string;
   notes: string | null;
   items: PrescriptionItem[];
 }
@@ -227,7 +280,7 @@ export interface PrescriptionItem {
 
 export interface LabTestOrder {
   id: string;
-  examinationId: string;
+  medicalRecordId: string;
   testName: string;
   status: LabTestStatus;
   resultText: string | null;
@@ -294,17 +347,27 @@ export interface CustomerAppointment {
   serviceName: string | null;
 }
 
+/** Chẩn đoán rút gọn nhúng trong một dòng bệnh sử. */
+export interface MedicalHistoryDiagnosis {
+  id: string;
+  diagnosisText: string;
+  severity: DiagnosisSeverity;
+  isPrimary: boolean;
+  diseaseName: string | null;
+}
+
 /** Một dòng tab "Lịch sử khám" của hồ sơ khách - `GET /customers/:id/medical-history`. */
 export interface CustomerMedicalHistory {
-  examinationId: string;
+  medicalRecordId: string;
   appointmentId: string;
+  status: MedicalRecordStatus;
   examinedAt: string;
   petId: string;
   petName: string;
   doctorName: string | null;
   branchName: string | null;
-  diagnosisText: string | null;
-  diseaseGroups: string[];
+  visitReason: string | null;
+  diagnoses: MedicalHistoryDiagnosis[];
 }
 
 /** Một dòng lịch sử giao dịch - `GET /customers/:id/transactions`. */
@@ -342,13 +405,14 @@ export interface PetAppointment {
 
 /** `GET /pets/:id/medical-history` */
 export interface PetMedicalHistory {
-  examinationId: string;
+  medicalRecordId: string;
   appointmentId: string;
+  status: MedicalRecordStatus;
   examinedAt: string;
   doctorName: string | null;
   branchName: string | null;
-  diagnosisText: string | null;
-  diseaseGroups: string[];
+  visitReason: string | null;
+  diagnoses: MedicalHistoryDiagnosis[];
   notes: string | null;
   temperatureCelsius: number | null;
   weightKg: number | null;
@@ -357,7 +421,7 @@ export interface PetMedicalHistory {
 /** `GET /pets/:id/prescriptions` */
 export interface PetPrescription {
   prescriptionId: string;
-  examinationId: string;
+  medicalRecordId: string;
   examinedAt: string;
   doctorName: string | null;
   notes: string | null;
@@ -374,7 +438,7 @@ export interface PetPrescription {
 /** `GET /pets/:id/lab-tests` */
 export interface PetLabTest {
   labTestId: string;
-  examinationId: string;
+  medicalRecordId: string;
   orderedAt: string;
   testName: string;
   status: LabTestStatus;
