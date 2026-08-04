@@ -94,6 +94,55 @@ export interface Item {
   itemType: ItemType;
   unitPrice: number;
   active: boolean;
+  /** Mã nghiệp vụ (DV0001 / TH0001 / SP0001…) — backend sinh, không nhận từ client. */
+  code: string;
+  categoryId: string | null;
+  category?: Category | null;
+}
+
+/**
+ * Danh mục hàng hoá (SRS FR-14/FR-15/FR-16) — một cây dùng chung cho Dịch vụ, Thuốc
+ * và Sản phẩm, phân biệt bằng `itemType`.
+ *
+ * `GET /catalog/categories` trả về **dạng cây**: `children` đã được lồng sẵn, client
+ * không phải tự dựng lại từ danh sách phẳng.
+ */
+export interface Category {
+  id: string;
+  categoryName: string;
+  code: string;
+  parentId: string | null;
+  itemType: ItemType;
+  active: boolean;
+  children: Category[];
+}
+
+/** Hàng hoá bán lẻ (SRS FR-16). Giá bán ở `item.unitPrice`; `costPrice` là giá vốn. */
+export interface Product {
+  id: string;
+  itemId: string;
+  item: Item;
+  sku: string;
+  brand: string | null;
+  unit: string;
+  costPrice: number;
+  minimumStock: number;
+  active: boolean;
+}
+
+/** Nhà cung cấp (SRS FR-17). */
+export interface Supplier {
+  id: string;
+  supplierCode: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  contactPerson: string | null;
+  taxCode: string | null;
+  active: boolean;
+  note: string | null;
+  createdAt: string;
 }
 
 export interface Service {
@@ -111,6 +160,13 @@ export interface Medication {
   item: Item;
   unit: string;
   activeIngredient: string | null;
+  /** Tên gốc (INN) — khác `activeIngredient`: "Paracetamol" so với "Panadol". */
+  genericName: string | null;
+  manufacturer: string | null;
+  supplierId: string | null;
+  supplier?: Supplier | null;
+  costPrice: number;
+  minimumStock: number;
   active: boolean;
 }
 

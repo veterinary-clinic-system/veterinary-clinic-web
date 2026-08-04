@@ -26,6 +26,9 @@ import { ExamEntryPage } from '@/pages/staff/ExamEntryPage';
 import { BillingListPage } from '@/pages/staff/BillingListPage';
 import { InvoiceDetailPage } from '@/pages/staff/InvoiceDetailPage';
 import { CatalogAdminPage } from '@/pages/staff/CatalogAdminPage';
+import { ProductsPage } from '@/pages/staff/ProductsPage';
+import { CategoriesPage } from '@/pages/staff/CategoriesPage';
+import { SuppliersPage } from '@/pages/staff/SuppliersPage';
 import { BranchesAdminPage } from '@/pages/staff/BranchesAdminPage';
 import { UsersAdminPage } from '@/pages/staff/UsersAdminPage';
 import { EmployeesPage } from '@/pages/staff/EmployeesPage';
@@ -71,6 +74,17 @@ export function AppRoutes() {
             <Route path="/staff/catalog" element={<CatalogAdminPage />} />
             {/* BR-15: chỉ Manager/Admin được xem báo cáo doanh thu. */}
             <Route path="/staff/reports" element={<ReportsPage />} />
+          </Route>
+
+          {/*
+            Danh mục hàng hoá (P5) mở thêm cho PHARMACIST: ma trận `role_permissions`
+            phía backend cho họ CATALOG_MANAGE, nên chặn ở router sẽ tạo ra một danh
+            sách vai trò thứ hai lệch với nguồn sự thật kia.
+          */}
+          <Route element={<RequireAuth allow={[Role.ADMIN, Role.MANAGER, Role.PHARMACIST]} />}>
+            <Route path="/staff/products" element={<ProductsPage />} />
+            <Route path="/staff/categories" element={<CategoriesPage />} />
+            <Route path="/staff/suppliers" element={<SuppliersPage />} />
           </Route>
           <Route element={<RequireAuth allow={[Role.ADMIN, Role.MANAGER]} />}>
             <Route path="/staff/employees" element={<EmployeesPage />} />

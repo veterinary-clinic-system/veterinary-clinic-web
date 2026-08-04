@@ -123,6 +123,8 @@ export enum ItemType {
   SERVICE = 'SERVICE',
   MEDICATION = 'MEDICATION',
   LAB_TEST = 'LAB_TEST',
+  /** Hàng hoá bán lẻ — SRS FR-16 (P5). Gắn vào `items` giống Service và Medication. */
+  PRODUCT = 'PRODUCT',
   OTHER = 'OTHER',
 }
 

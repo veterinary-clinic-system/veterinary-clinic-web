@@ -8,8 +8,8 @@ const COUNTER_ROLES = [Role.ADMIN, Role.MANAGER, Role.RECEPTIONIST, Role.STAFF];
 /**
  * `roles` bỏ trống = mọi vai trò nhân viên đều thấy.
  *
- * PHARMACIST hiện chỉ thấy Tổng quan — quầy thuốc và kho là việc của Phase 6/7,
- * chưa có màn hình nào để gắn vào đây.
+ * PHARMACIST thấy Tổng quan cộng ba màn hình danh mục hàng hoá (P5). Quầy thuốc và
+ * kho là việc của Phase 6/7, chưa có màn hình nào để gắn vào đây.
  */
 const NAV_ITEMS: { to: string; label: string; roles?: Role[] }[] = [
   { to: '/staff', label: 'Tổng quan' },
@@ -21,7 +21,24 @@ const NAV_ITEMS: { to: string; label: string; roles?: Role[] }[] = [
   { to: '/staff/billing', label: 'Hóa đơn', roles: COUNTER_ROLES },
   // BR-15: chỉ Manager/Admin được xem báo cáo doanh thu.
   { to: '/staff/reports', label: 'Báo cáo', roles: [Role.ADMIN, Role.MANAGER] },
-  { to: '/staff/catalog', label: 'Danh mục', roles: [Role.ADMIN, Role.MANAGER] },
+  { to: '/staff/catalog', label: 'Dịch vụ & Thuốc', roles: [Role.ADMIN, Role.MANAGER] },
+  // PHARMACIST có CATALOG_MANAGE trong ma trận quyền nên thấy được ba màn hình danh
+  // mục hàng hoá, dù chưa thấy các màn hình phòng khám.
+  {
+    to: '/staff/products',
+    label: 'Sản phẩm',
+    roles: [Role.ADMIN, Role.MANAGER, Role.PHARMACIST],
+  },
+  {
+    to: '/staff/categories',
+    label: 'Danh mục hàng hoá',
+    roles: [Role.ADMIN, Role.MANAGER, Role.PHARMACIST],
+  },
+  {
+    to: '/staff/suppliers',
+    label: 'Nhà cung cấp',
+    roles: [Role.ADMIN, Role.MANAGER, Role.PHARMACIST],
+  },
   { to: '/staff/branches', label: 'Chi nhánh', roles: [Role.ADMIN] },
   { to: '/staff/employees', label: 'Hồ sơ nhân sự', roles: [Role.ADMIN, Role.MANAGER] },
   { to: '/staff/users', label: 'Tài khoản', roles: [Role.ADMIN] },
