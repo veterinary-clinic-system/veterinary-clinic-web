@@ -1,6 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
 import { RequireAuth } from './RequireAuth';
-import { Role } from '@/types/enums';
+import { Role, STAFF_ROLES } from '@/types/enums';
 import { PublicLayout } from '@/layouts/PublicLayout';
 import { StaffLayout } from '@/layouts/StaffLayout';
 import { HomePage } from '@/pages/public/HomePage';
@@ -28,6 +28,8 @@ import { InvoiceDetailPage } from '@/pages/staff/InvoiceDetailPage';
 import { CatalogAdminPage } from '@/pages/staff/CatalogAdminPage';
 import { BranchesAdminPage } from '@/pages/staff/BranchesAdminPage';
 import { UsersAdminPage } from '@/pages/staff/UsersAdminPage';
+import { EmployeesPage } from '@/pages/staff/EmployeesPage';
+import { RolePermissionsPage } from '@/pages/staff/RolePermissionsPage';
 import { ReportsPage } from '@/pages/staff/ReportsPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 
@@ -50,7 +52,7 @@ export function AppRoutes() {
         </Route>
       </Route>
 
-      <Route element={<RequireAuth allow={[Role.DOCTOR, Role.RECEPTIONIST, Role.ADMIN]} />}>
+      <Route element={<RequireAuth allow={STAFF_ROLES} />}>
         <Route element={<StaffLayout />}>
           <Route path="/staff" element={<StaffDashboardPage />} />
           <Route path="/staff/calendar" element={<StaffCalendarPage />} />
@@ -65,13 +67,19 @@ export function AppRoutes() {
           <Route path="/staff/billing" element={<BillingListPage />} />
           <Route path="/staff/billing/:id" element={<InvoiceDetailPage />} />
 
-          <Route element={<RequireAuth allow={[Role.ADMIN]} />}>
+          <Route element={<RequireAuth allow={[Role.ADMIN, Role.MANAGER]} />}>
             <Route path="/staff/catalog" element={<CatalogAdminPage />} />
+            {/* BR-15: chỉ Manager/Admin được xem báo cáo doanh thu. */}
+            <Route path="/staff/reports" element={<ReportsPage />} />
+          </Route>
+          <Route element={<RequireAuth allow={[Role.ADMIN, Role.MANAGER]} />}>
+            <Route path="/staff/employees" element={<EmployeesPage />} />
+          </Route>
+          <Route element={<RequireAuth allow={[Role.ADMIN]} />}>
             <Route path="/staff/branches" element={<BranchesAdminPage />} />
             <Route path="/staff/users" element={<UsersAdminPage />} />
-          </Route>
-          <Route element={<RequireAuth allow={[Role.ADMIN, Role.RECEPTIONIST]} />}>
-            <Route path="/staff/reports" element={<ReportsPage />} />
+            {/* BR-16: chỉ Admin được quản lý role và permission. */}
+            <Route path="/staff/permissions" element={<RolePermissionsPage />} />
           </Route>
         </Route>
       </Route>

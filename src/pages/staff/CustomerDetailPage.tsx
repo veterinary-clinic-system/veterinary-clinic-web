@@ -4,17 +4,34 @@ import { useQuery } from '@tanstack/react-query';
 import { customersApi } from '@/api/customers.api';
 import { Badge, Table } from '@/components/basic';
 import type { Column } from '@/components/basic';
-import { CustomerTransaction, Pet } from '@/types/models';
-import { APPOINTMENT_STATUS_LABEL_VI, PAYMENT_METHOD_LABEL_VI } from '@/utils/labels';
+import {
+  CustomerAppointment,
+  CustomerMedicalHistory,
+  CustomerTransaction,
+  Pet,
+} from '@/types/models';
+import { PRIORITY_COLOR_LABEL_VI } from '@/types/enums';
+import {
+  APPOINTMENT_STATUS_LABEL_VI,
+  PAYMENT_METHOD_LABEL_VI,
+  triageColorClasses,
+} from '@/utils/labels';
 import { GENDER_LABEL_VI } from '@/utils/display';
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/format';
 
-type Tab = 'pets' | 'transactions';
+/**
+ * Hồ sơ một khách hàng - sáu khối theo sơ đồ FR-03-04 của SRS:
+ * Thông tin → Thú cưng → Lịch hẹn → Lịch sử khám → Hóa đơn → Lịch sử mua hàng.
+ *
+ * "Hóa đơn" ở đây chính là lịch sử giao dịch khám (mỗi hóa đơn = một lần khám đã lập
+ * hóa đơn); "Lịch sử mua hàng" là bán lẻ tại quầy - POS chưa tồn tại nên tab đó nói
+ * thẳng là chưa có, không dựng dữ liệu giả.
+ */
+type Tab = 'info' | 'pets' | 'appointments' | 'medical' | 'invoices' | 'purchases';
 
-/** Hồ sơ một khách hàng: thông tin, danh sách thú cưng, lịch sử giao dịch. */
 export function CustomerDetailPage() {
   const { id = '' } = useParams();
-  const [tab, setTab] = useState<Tab>('pets');
+  const [tab, setTab] = useState<Tab>('info');
 
   const customerQuery = useQuery({
     queryKey: ['customer', id],
@@ -37,25 +54,18 @@ export function CustomerDetailPage() {
         <Link to="/staff/customers" className="text-sm text-primary hover:underline">
           ← Danh sách khách hàng
         </Link>
-        <div className="mt-2 flex items-center gap-3">
+        <div className="mt-2 flex flex-wrap items-center gap-3">
           <h1 className="text-2xl font-semibold">{customer.fullName}</h1>
+          {customer.customerCode && (
+            <span className="rounded bg-surface-muted px-2 py-0.5 font-mono text-sm text-muted">
+              {customer.customerCode}
+            </span>
+          )}
           <Badge variant={customer.active ? 'success' : 'destructive'}>
             {customer.active ? 'Hoạt động' : 'Đã ngưng'}
           </Badge>
         </div>
       </div>
-
-      <section className="grid grid-cols-1 gap-4 rounded border border-border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Field label="Số điện thoại" value={customer.phone} />
-        <Field label="Email" value={customer.email ?? '—'} />
-        <Field label="Địa chỉ" value={customer.address ?? '—'} />
-        <Field label="Ngày tạo hồ sơ" value={formatDate(customer.createdAt)} />
-        <Field
-          label="Lần khám gần nhất"
-          value={customer.lastVisitAt ? formatDate(customer.lastVisitAt) : 'Chưa có'}
-        />
-        <Field label="Ghi chú nội bộ" value={customer.note ?? '—'} />
-      </section>
 
       <section className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         <Stat label="Thú cưng" value={String(customer.petCount)} />
@@ -69,16 +79,51 @@ export function CustomerDetailPage() {
         />
       </section>
 
-      <div className="flex gap-2 border-b border-border">
+      <div className="flex flex-wrap gap-2 border-b border-border">
+        <TabButton active={tab === 'info'} onClick={() => setTab('info')}>
+          Thông tin
+        </TabButton>
         <TabButton active={tab === 'pets'} onClick={() => setTab('pets')}>
           Thú cưng ({customer.petCount})
         </TabButton>
-        <TabButton active={tab === 'transactions'} onClick={() => setTab('transactions')}>
-          Lịch sử giao dịch ({customer.invoiceCount})
+        <TabButton active={tab === 'appointments'} onClick={() => setTab('appointments')}>
+          Lịch hẹn ({customer.appointmentCount})
+        </TabButton>
+        <TabButton active={tab === 'medical'} onClick={() => setTab('medical')}>
+          Lịch sử khám
+        </TabButton>
+        <TabButton active={tab === 'invoices'} onClick={() => setTab('invoices')}>
+          Hóa đơn ({customer.invoiceCount})
+        </TabButton>
+        <TabButton active={tab === 'purchases'} onClick={() => setTab('purchases')}>
+          Lịch sử mua hàng
         </TabButton>
       </div>
 
-      {tab === 'pets' ? <PetsTab customerId={id} /> : <TransactionsTab customerId={id} />}
+      {/* Khối 1 - Thông tin khách hàng (FR-03-01) */}
+      {tab === 'info' && (
+        <section className="grid grid-cols-1 gap-4 rounded border border-border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Field label="Mã khách hàng" value={customer.customerCode ?? '—'} />
+          <Field label="Số điện thoại" value={customer.phone} />
+          <Field label="Email" value={customer.email ?? '—'} />
+          <Field
+            label="Ngày sinh"
+            value={customer.dateOfBirth ? formatDate(customer.dateOfBirth) : '—'}
+          />
+          <Field label="Địa chỉ" value={customer.address ?? '—'} />
+          <Field label="Ngày tạo hồ sơ" value={formatDate(customer.createdAt)} />
+          <Field
+            label="Lần khám gần nhất"
+            value={customer.lastVisitAt ? formatDate(customer.lastVisitAt) : 'Chưa có'}
+          />
+          <Field label="Ghi chú nội bộ" value={customer.note ?? '—'} />
+        </section>
+      )}
+      {tab === 'pets' && <PetsTab customerId={id} />}
+      {tab === 'appointments' && <AppointmentsTab customerId={id} />}
+      {tab === 'medical' && <MedicalHistoryTab customerId={id} />}
+      {tab === 'invoices' && <TransactionsTab customerId={id} />}
+      {tab === 'purchases' && <PurchasesTab />}
     </div>
   );
 }
@@ -90,6 +135,11 @@ function PetsTab({ customerId }: { customerId: string }) {
   });
 
   const columns: Column<Pet>[] = [
+    {
+      key: 'petCode',
+      header: 'Mã',
+      render: (row) => <span className="font-mono text-xs text-muted">{row.petCode}</span>,
+    },
     {
       key: 'name',
       header: 'Tên',
@@ -141,6 +191,134 @@ function PetsTab({ customerId }: { customerId: string }) {
       getRowId={(row) => row.id}
       loading={query.isLoading}
       emptyMessage="Khách hàng chưa có thú cưng nào."
+    />
+  );
+}
+
+/** Khối 3 - Lịch hẹn (FR-03-04). Mới nhất trước, kèm trạng thái + bác sĩ + chi nhánh. */
+function AppointmentsTab({ customerId }: { customerId: string }) {
+  const query = useQuery({
+    queryKey: ['customer-appointments', customerId],
+    queryFn: () => customersApi.appointments(customerId),
+  });
+
+  const columns: Column<CustomerAppointment>[] = [
+    { key: 'startAt', header: 'Thời gian', render: (row) => formatDateTime(row.startAt) },
+    {
+      key: 'petName',
+      header: 'Thú cưng',
+      render: (row) => (
+        <Link to={`/staff/patients/${row.petId}`} className="text-primary hover:underline">
+          {row.petName}
+        </Link>
+      ),
+    },
+    { key: 'serviceName', header: 'Dịch vụ', render: (row) => row.serviceName ?? '—' },
+    { key: 'doctorName', header: 'Bác sĩ', render: (row) => row.doctorName ?? '—' },
+    { key: 'branchName', header: 'Chi nhánh', render: (row) => row.branchName ?? '—' },
+    {
+      key: 'priorityColor',
+      header: 'Mức ưu tiên',
+      render: (row) =>
+        row.priorityColor ? (
+          <span
+            className={`rounded-full px-2 py-0.5 text-xs font-medium ${triageColorClasses(row.priorityColor)}`}
+          >
+            {PRIORITY_COLOR_LABEL_VI[row.priorityColor]}
+          </span>
+        ) : (
+          '—'
+        ),
+    },
+    {
+      key: 'status',
+      header: 'Trạng thái',
+      render: (row) => APPOINTMENT_STATUS_LABEL_VI[row.status],
+    },
+    {
+      key: 'link',
+      header: '',
+      render: (row) => (
+        <Link
+          to={`/staff/appointments/${row.appointmentId}`}
+          className="text-sm text-primary hover:underline"
+        >
+          Xem lịch hẹn
+        </Link>
+      ),
+    },
+  ];
+
+  return (
+    <Table
+      columns={columns}
+      data={query.data ?? []}
+      getRowId={(row) => row.appointmentId}
+      loading={query.isLoading}
+      emptyMessage="Khách hàng chưa có lịch hẹn nào."
+    />
+  );
+}
+
+/**
+ * Khối 4 - Lịch sử khám. Liên kết sang phiếu khám qua trang lịch hẹn; sau Phase 4 chỗ
+ * này trỏ thẳng vào `MedicalRecord`.
+ */
+function MedicalHistoryTab({ customerId }: { customerId: string }) {
+  const query = useQuery({
+    queryKey: ['customer-medical-history', customerId],
+    queryFn: () => customersApi.medicalHistory(customerId),
+  });
+
+  const columns: Column<CustomerMedicalHistory>[] = [
+    { key: 'examinedAt', header: 'Ngày khám', render: (row) => formatDateTime(row.examinedAt) },
+    {
+      key: 'petName',
+      header: 'Thú cưng',
+      render: (row) => (
+        <Link to={`/staff/patients/${row.petId}`} className="text-primary hover:underline">
+          {row.petName}
+        </Link>
+      ),
+    },
+    { key: 'doctorName', header: 'Bác sĩ', render: (row) => row.doctorName ?? '—' },
+    { key: 'branchName', header: 'Chi nhánh', render: (row) => row.branchName ?? '—' },
+    { key: 'diagnosisText', header: 'Chẩn đoán', render: (row) => row.diagnosisText ?? '—' },
+    {
+      key: 'diseaseGroups',
+      header: 'Nhóm bệnh',
+      render: (row) =>
+        row.diseaseGroups.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {row.diseaseGroups.map((group) => (
+              <Badge key={group}>{group}</Badge>
+            ))}
+          </div>
+        ) : (
+          '—'
+        ),
+    },
+    {
+      key: 'link',
+      header: '',
+      render: (row) => (
+        <Link
+          to={`/staff/appointments/${row.appointmentId}`}
+          className="text-sm text-primary hover:underline"
+        >
+          Xem hồ sơ khám
+        </Link>
+      ),
+    },
+  ];
+
+  return (
+    <Table
+      columns={columns}
+      data={query.data ?? []}
+      getRowId={(row) => row.examinationId}
+      loading={query.isLoading}
+      emptyMessage="Khách hàng chưa có lần khám nào được ghi hồ sơ."
     />
   );
 }
@@ -218,6 +396,21 @@ function TransactionsTab({ customerId }: { customerId: string }) {
           <strong className="text-foreground">{formatCurrency(total)}</strong>
         </p>
       )}
+    </div>
+  );
+}
+
+/**
+ * Khối 6 - Lịch sử mua hàng (bán lẻ tại quầy). Chưa có module POS nên tab này nói
+ * thẳng là chưa có dữ liệu thay vì hiển thị số liệu bịa.
+ */
+function PurchasesTab() {
+  return (
+    <div className="rounded border border-dashed border-border bg-surface p-8 text-center">
+      <p className="font-medium">Chưa có dữ liệu mua hàng</p>
+      <p className="mt-1 text-sm text-muted">
+        Bán lẻ tại quầy (POS) sẽ có ở Phase 8. Hóa đơn khám bệnh nằm ở tab “Hóa đơn”.
+      </p>
     </div>
   );
 }

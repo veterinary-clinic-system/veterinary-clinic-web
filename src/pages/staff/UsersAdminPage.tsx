@@ -8,7 +8,15 @@ import { ROLE_LABEL_VI, SPECIALIZATION_LABEL_VI } from '@/utils/labels';
 
 type Tab = 'staff' | 'shifts';
 
-const STAFF_ROLES = [Role.DOCTOR, Role.RECEPTIONIST, Role.ADMIN];
+/** Vai trò tài khoản nhân sự Admin có thể tạo — thứ tự theo cấp bậc, không theo enum. */
+const CREATABLE_ROLES = [
+  Role.ADMIN,
+  Role.MANAGER,
+  Role.DOCTOR,
+  Role.RECEPTIONIST,
+  Role.PHARMACIST,
+  Role.STAFF,
+];
 const WEEKDAYS = [
   { dayOfWeek: 1, label: 'Thứ 2' },
   { dayOfWeek: 2, label: 'Thứ 3' },
@@ -152,7 +160,7 @@ function StaffAccountsTab() {
             onChange={(e) => setForm({ ...form, role: e.target.value as Role })}
             className="rounded border border-border bg-surface px-3 py-2 text-sm"
           >
-            {STAFF_ROLES.map((r) => (
+            {CREATABLE_ROLES.map((r) => (
               <option key={r} value={r}>
                 {ROLE_LABEL_VI[r]}
               </option>
@@ -194,7 +202,7 @@ function StaffAccountsTab() {
           <span className="text-muted">Vai trò</span>
           <select value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value as Role | ''); setPage(1); }} className="rounded border border-border bg-surface px-3 py-2 text-sm">
             <option value="">Tất cả</option>
-            {STAFF_ROLES.map((r) => (
+            {CREATABLE_ROLES.map((r) => (
               <option key={r} value={r}>
                 {ROLE_LABEL_VI[r]}
               </option>

@@ -13,7 +13,7 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
   const queryClient = useQueryClient();
 
   const cancelMutation = useMutation({
-    mutationFn: () => appointmentsApi.cancel(appointment.id),
+    mutationFn: (reason: string) => appointmentsApi.cancel(appointment.id, reason),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['appointments', 'mine'] });
     },
@@ -21,10 +21,18 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
 
   const canCancel = CANCELLABLE_STATUSES.includes(appointment.status);
 
+  /**
+   * FR-05-04: lý do hủy là bắt buộc, kể cả khi chính chủ thú cưng tự hủy - phòng khám
+   * cần biết vì sao để xếp lại lịch bác sĩ. `cancelledByUserId` khi đó chính là họ.
+   */
   const onCancel = () => {
-    if (window.confirm('Bạn có chắc muốn hủy lịch hẹn này?')) {
-      cancelMutation.mutate();
+    const reason = window.prompt('Vui lòng cho biết lý do hủy lịch hẹn:', '');
+    if (reason === null) return;
+    if (reason.trim().length < 3) {
+      window.alert('Lý do hủy phải có ít nhất 3 ký tự.');
+      return;
     }
+    cancelMutation.mutate(reason.trim());
   };
 
   return (

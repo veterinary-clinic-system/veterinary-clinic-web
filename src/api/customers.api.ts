@@ -1,7 +1,9 @@
 import { apiClient } from './client';
 import {
   Customer,
+  CustomerAppointment,
   CustomerDetail,
+  CustomerMedicalHistory,
   CustomerTransaction,
   PaginatedResult,
   Pet,
@@ -25,12 +27,14 @@ export interface CreateCustomerPayload {
   fullName: string;
   email?: string;
   password?: string;
+  /** `YYYY-MM-DD`. */
+  dateOfBirth?: string;
   address?: string;
   note?: string;
 }
 
 export type UpdateCustomerPayload = Partial<
-  Pick<CreateCustomerPayload, 'fullName' | 'email' | 'address' | 'note'>
+  Pick<CreateCustomerPayload, 'fullName' | 'email' | 'dateOfBirth' | 'address' | 'note'>
 > & { active?: boolean };
 
 export const customersApi = {
@@ -47,6 +51,10 @@ export const customersApi = {
   activate: (id: string) =>
     apiClient.post<CustomerDetail>(`/customers/${id}/activate`).then((r) => r.data),
   pets: (id: string) => apiClient.get<Pet[]>(`/customers/${id}/pets`).then((r) => r.data),
+  appointments: (id: string) =>
+    apiClient.get<CustomerAppointment[]>(`/customers/${id}/appointments`).then((r) => r.data),
+  medicalHistory: (id: string) =>
+    apiClient.get<CustomerMedicalHistory[]>(`/customers/${id}/medical-history`).then((r) => r.data),
   transactions: (id: string) =>
     apiClient.get<CustomerTransaction[]>(`/customers/${id}/transactions`).then((r) => r.data),
 };

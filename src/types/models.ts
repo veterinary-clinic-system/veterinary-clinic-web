@@ -67,12 +67,16 @@ export interface Breed {
 
 export interface Pet {
   id: string;
+  /** Mã nghiệp vụ `TC000456` (FR-04-01) - do backend sinh, không gửi lên khi tạo. */
+  petCode: string;
   name: string;
   breedId: string;
   breed?: Breed & { species?: Species };
   gender: Gender;
   weight: number | null;
   birthDate: string | null;
+  microchipId: string | null;
+  color: string | null;
   avatarUrl: string | null;
   notes: string | null;
   allergies: string[];
@@ -128,6 +132,11 @@ export interface Appointment {
   address: string | null;
   notes: string | null;
   parentAppointmentId: string | null;
+  // Lưu vết kết thúc bất thường (FR-05-04) - dùng cho cả CANCELLED lẫn NO_SHOW.
+  cancelledByUserId: string | null;
+  cancelledBy?: { id: string; fullName: string } | null;
+  cancelledAt: string | null;
+  cancelReason: string | null;
 }
 
 export interface SlotInfo {
@@ -154,6 +163,23 @@ export interface DayAvailability {
   dayOfWeek: number;
   isBranchOpen: boolean;
   slots: SlotInfo[];
+}
+
+/** Một ô ngày trong chế độ tháng (FR-05-03) - chỉ số liệu tổng hợp, không có lưới slot. */
+export interface MonthDaySummary {
+  date: string;
+  dayOfWeek: number;
+  isBranchOpen: boolean;
+  /** Số lịch hẹn còn hiệu lực (chưa bị hủy / khách không đến). */
+  appointmentCount: number;
+  closedCount: number;
+  topPriorityColor: PriorityColor | null;
+}
+
+export interface MonthOverview {
+  /** 'yyyy-MM'. */
+  month: string;
+  days: MonthDaySummary[];
 }
 
 export interface PreScreeningResult {
@@ -231,9 +257,12 @@ export interface InvoiceItem {
  */
 export interface Customer {
   id: string;
+  /** Mã nghiệp vụ `KH000123` (FR-03-01) - do backend sinh. */
+  customerCode: string | null;
   phone: string;
   fullName: string;
   email: string | null;
+  dateOfBirth: string | null;
   address: string | null;
   note: string | null;
   active: boolean;
@@ -251,6 +280,33 @@ export interface CustomerDetail extends Customer {
   totalUnpaid: number;
 }
 
+/** Một dòng tab "Lịch hẹn" của hồ sơ khách - `GET /customers/:id/appointments`. */
+export interface CustomerAppointment {
+  appointmentId: string;
+  startAt: string;
+  endAt: string;
+  status: AppointmentStatus;
+  priorityColor: PriorityColor | null;
+  petId: string;
+  petName: string;
+  doctorName: string | null;
+  branchName: string | null;
+  serviceName: string | null;
+}
+
+/** Một dòng tab "Lịch sử khám" của hồ sơ khách - `GET /customers/:id/medical-history`. */
+export interface CustomerMedicalHistory {
+  examinationId: string;
+  appointmentId: string;
+  examinedAt: string;
+  petId: string;
+  petName: string;
+  doctorName: string | null;
+  branchName: string | null;
+  diagnosisText: string | null;
+  diseaseGroups: string[];
+}
+
 /** Một dòng lịch sử giao dịch - `GET /customers/:id/transactions`. */
 export interface CustomerTransaction {
   invoiceId: string;
@@ -262,6 +318,75 @@ export interface CustomerTransaction {
   branchName: string | null;
   serviceName: string | null;
   appointmentStatus: AppointmentStatus;
+  paid: boolean;
+  paidAt: string | null;
+  paymentMethod: PaymentMethod | null;
+  totalAmount: number;
+}
+
+// ---------------------------------------------------------------------------------
+// Các khối của trang hồ sơ thú cưng (FR-04-03 / mục 12.4 SRS)
+// ---------------------------------------------------------------------------------
+
+/** `GET /pets/:id/appointments` */
+export interface PetAppointment {
+  appointmentId: string;
+  startAt: string;
+  endAt: string;
+  status: AppointmentStatus;
+  priorityColor: PriorityColor | null;
+  doctorName: string | null;
+  branchName: string | null;
+  serviceName: string | null;
+}
+
+/** `GET /pets/:id/medical-history` */
+export interface PetMedicalHistory {
+  examinationId: string;
+  appointmentId: string;
+  examinedAt: string;
+  doctorName: string | null;
+  branchName: string | null;
+  diagnosisText: string | null;
+  diseaseGroups: string[];
+  notes: string | null;
+  temperatureCelsius: number | null;
+  weightKg: number | null;
+}
+
+/** `GET /pets/:id/prescriptions` */
+export interface PetPrescription {
+  prescriptionId: string;
+  examinationId: string;
+  examinedAt: string;
+  doctorName: string | null;
+  notes: string | null;
+  items: {
+    id: string;
+    medicationName: string;
+    unit: string;
+    dosage: string;
+    durationDays: number;
+    instructions: string | null;
+  }[];
+}
+
+/** `GET /pets/:id/lab-tests` */
+export interface PetLabTest {
+  labTestId: string;
+  examinationId: string;
+  orderedAt: string;
+  testName: string;
+  status: LabTestStatus;
+  resultText: string | null;
+  resultFileUrls: string[];
+}
+
+/** `GET /pets/:id/invoices` */
+export interface PetInvoice {
+  invoiceId: string;
+  appointmentId: string;
+  visitedAt: string;
   paid: boolean;
   paidAt: string | null;
   paymentMethod: PaymentMethod | null;

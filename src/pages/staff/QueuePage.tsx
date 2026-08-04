@@ -79,14 +79,28 @@ export function QueuePage() {
   }
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: QueueStatus }) =>
-      queueApi.update(id, { status }),
+    mutationFn: ({ id, status, reason }: { id: string; status: QueueStatus; reason?: string }) =>
+      queueApi.update(id, { status, reason }),
     onSuccess: (entry) => {
       toast.show(`Số ${entry.ticketNumber}: ${QUEUE_STATUS_LABEL_VI[entry.status]}.`, 'success');
       invalidateQueue();
     },
     onError: (error) => toast.show(getErrorMessage(error), 'error'),
   });
+
+  /**
+   * Hủy lượt chờ kéo theo lịch hẹn sang "đã hủy" và ghi lý do (FR-05-04). Hỏi lý do
+   * bằng prompt để không phải dựng thêm một modal nữa cho một ô nhập duy nhất; bỏ
+   * trống vẫn hủy được, backend điền "Khách bỏ về trước khi được khám".
+   */
+  function cancelQueueEntry(entry: QueueEntry) {
+    const reason = window.prompt(
+      `Hủy lượt chờ số ${entry.ticketNumber} (${entry.pet?.name ?? 'thú cưng'}). Lý do:`,
+      'Khách bỏ về trước khi được khám',
+    );
+    if (reason === null) return; // bấm Cancel
+    updateMutation.mutate({ id: entry.id, status: QueueStatus.CANCELLED, reason: reason.trim() });
+  }
 
   const columns: Column<QueueEntry>[] = [
     {
@@ -190,11 +204,7 @@ export function QueuePage() {
             </>
           )}
           {!isFinished(row.status) && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => updateMutation.mutate({ id: row.id, status: QueueStatus.CANCELLED })}
-            >
+            <Button size="sm" variant="ghost" onClick={() => cancelQueueEntry(row)}>
               Hủy lượt
             </Button>
           )}
@@ -485,6 +495,7 @@ function WalkInModal({
         payload.ownerFullName = form.ownerFullName;
         payload.newPet = {
           name: form.petName,
+          speciesId: form.speciesId || undefined,
           breedId: form.breedId,
           gender: form.gender,
         };
@@ -641,7 +652,7 @@ function WalkInModal({
         />
 
         <Input
-          label="Lý do đến khám"
+          label="Lý do khám / triệu chứng"
           value={form.reason}
           onChange={(e) => setForm({ ...form, reason: e.target.value })}
         />

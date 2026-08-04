@@ -234,6 +234,7 @@ export function BookingPage() {
     } else {
       payload.newPet = {
         name: newPet.name.trim(),
+        speciesId: newPet.speciesId || undefined,
         breedId: newPet.breedId,
         gender: newPet.gender,
         weight: newPet.weight ? Number(newPet.weight) : undefined,
@@ -721,7 +722,11 @@ export function BookingPage() {
             </div>
 
             <div className="mt-4">
-              <label className="mb-1 block text-sm font-medium text-foreground">Mô tả triệu chứng khác</label>
+              {/* FR-05-01 gọi trường này là `Reason`; xem ghi chú ánh xạ trong
+                  appointment.entity.ts về việc vì sao không có cột `reason` riêng. */}
+              <label className="mb-1 block text-sm font-medium text-foreground">
+                Lý do khám / triệu chứng
+              </label>
               <textarea
                 value={otherSymptoms}
                 onChange={(e) => setOtherSymptoms(e.target.value)}
@@ -803,7 +808,7 @@ export function BookingPage() {
                     : 'Không có'
                 }
               />
-              {otherSymptoms && <SummaryRow label="Mô tả thêm" value={otherSymptoms} />}
+              {otherSymptoms && <SummaryRow label="Lý do khám" value={otherSymptoms} />}
               <SummaryRow
                 label="Ảnh đính kèm"
                 value={`${photoItems.filter((p) => p.status === 'done').length} ảnh`}

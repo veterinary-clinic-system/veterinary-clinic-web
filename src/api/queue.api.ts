@@ -25,6 +25,8 @@ export interface WalkInPayload {
   petId?: string;
   newPet?: {
     name: string;
+    /** Gửi kèm để backend chặn giống không thuộc loài đã chọn (mục 16 SRS). */
+    speciesId?: string;
     breedId: string;
     gender: string;
     weight?: number;
@@ -55,6 +57,12 @@ export const queueApi = {
     apiClient.patch<QueueEntry>(`/queue/${id}/assign`, payload).then((r) => r.data),
   update: (
     id: string,
-    payload: { status?: QueueStatus; priorityColor?: PriorityColor; note?: string },
+    payload: {
+      status?: QueueStatus;
+      priorityColor?: PriorityColor;
+      note?: string;
+      /** Lý do hủy lượt chờ - chỉ có nghĩa khi `status = CANCELLED` (FR-05-04). */
+      reason?: string;
+    },
   ) => apiClient.patch<QueueEntry>(`/queue/${id}`, payload).then((r) => r.data),
 };

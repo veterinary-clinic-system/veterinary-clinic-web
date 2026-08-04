@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { branchesApi } from '@/api/branches.api';
 import { doctorsApi } from '@/api/doctors.api';
 import { appointmentsApi } from '@/api/appointments.api';
+import { useToast } from '@/components/basic';
 import { AppointmentStatus, PRIORITY_COLOR_LABEL_VI } from '@/types/enums';
+import { Appointment } from '@/types/models';
+import { getErrorMessage } from '@/utils/errors';
 import { formatDateTime } from '@/utils/format';
 import { APPOINTMENT_STATUS_LABEL_VI, triageColorClasses } from '@/utils/labels';
 
@@ -14,6 +17,8 @@ const LIMIT = 20;
 /** Paginated, filterable appointment list for Receptionist/Doctor/Admin. */
 export function AppointmentsListPage() {
   const { user } = useAuth();
+  const toast = useToast();
+  const queryClient = useQueryClient();
   const [branchId, setBranchId] = useState(user?.branchId ?? '');
   const [doctorId, setDoctorId] = useState('');
   const [status, setStatus] = useState<AppointmentStatus | ''>('');
@@ -40,6 +45,33 @@ export function AppointmentsListPage() {
 
   const data = listQuery.data;
   const totalPages = data ? Math.max(1, Math.ceil(data.total / data.limit)) : 1;
+
+  /**
+   * FR-06-03: đánh dấu khách không đến ngay từ danh sách - đây là trường hợp phổ biến
+   * nhất (lễ tân rà lại lịch cuối ngày) và không cần tạo lượt chờ trước.
+   */
+  const noShowMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
+      appointmentsApi.markNoShow(id, reason),
+    onSuccess: (appt) => {
+      toast.show(`Đã đánh dấu ${appt.pet?.name ?? 'lịch hẹn'} không đến.`, 'success');
+      void queryClient.invalidateQueries({ queryKey: ['appointments-list'] });
+    },
+    onError: (error) => toast.show(getErrorMessage(error), 'error'),
+  });
+
+  function markNoShow(appt: Appointment) {
+    const reason = window.prompt(
+      `Đánh dấu ${appt.pet?.name ?? 'thú cưng'} không đến. Ghi chú (tùy chọn):`,
+      'Khách không đến',
+    );
+    if (reason === null) return;
+    noShowMutation.mutate({ id: appt.id, reason: reason.trim() || undefined });
+  }
+
+  /** Chỉ lịch CHƯA tiếp nhận mới đánh vắng được - backend chặn các trạng thái còn lại. */
+  const canMarkNoShow = (appt: Appointment) =>
+    appt.status === AppointmentStatus.PENDING || appt.status === AppointmentStatus.CONFIRMED;
 
   return (
     <div className="flex flex-col gap-6">
@@ -117,19 +149,20 @@ export function AppointmentsListPage() {
               <th className="px-3 py-2">Bắt đầu</th>
               <th className="px-3 py-2">Trạng thái</th>
               <th className="px-3 py-2">Mức độ</th>
+              <th className="px-3 py-2"></th>
             </tr>
           </thead>
           <tbody>
             {listQuery.isLoading && (
               <tr>
-                <td colSpan={8} className="px-3 py-6 text-center text-muted">
+                <td colSpan={9} className="px-3 py-6 text-center text-muted">
                   Đang tải…
                 </td>
               </tr>
             )}
             {!listQuery.isLoading && (data?.data.length ?? 0) === 0 && (
               <tr>
-                <td colSpan={8} className="px-3 py-6 text-center text-muted">
+                <td colSpan={9} className="px-3 py-6 text-center text-muted">
                   Không có lịch hẹn nào.
                 </td>
               </tr>
@@ -154,6 +187,18 @@ export function AppointmentsListPage() {
                     >
                       {PRIORITY_COLOR_LABEL_VI[appt.priorityColor]}
                     </span>
+                  )}
+                </td>
+                <td className="px-3 py-2 text-right">
+                  {canMarkNoShow(appt) && (
+                    <button
+                      type="button"
+                      disabled={noShowMutation.isPending}
+                      onClick={() => markNoShow(appt)}
+                      className="rounded border border-border px-2 py-1 text-xs hover:bg-surface-muted disabled:opacity-50"
+                    >
+                      Không đến
+                    </button>
                   )}
                 </td>
               </tr>

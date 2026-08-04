@@ -32,7 +32,7 @@ export function PatientsSearchPage() {
           setSearch(e.target.value);
           setPage(1);
         }}
-        placeholder="Tìm theo tên thú cưng, số điện thoại chủ hoặc mã hồ sơ…"
+        placeholder="Tìm theo mã thú cưng, số microchip, tên thú cưng hoặc SĐT chủ nuôi…"
         className="w-full max-w-lg rounded border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
       />
 
@@ -40,9 +40,10 @@ export function PatientsSearchPage() {
         <table className="w-full min-w-[720px] border-collapse text-sm">
           <thead>
             <tr className="bg-surface-muted text-left">
-              <th className="px-3 py-2">Mã hồ sơ</th>
+              <th className="px-3 py-2">Mã thú cưng</th>
               <th className="px-3 py-2">Tên thú cưng</th>
               <th className="px-3 py-2">Giống loài</th>
+              <th className="px-3 py-2">Microchip</th>
               <th className="px-3 py-2">Chủ nuôi</th>
               <th className="px-3 py-2">SĐT chủ nuôi</th>
             </tr>
@@ -50,21 +51,21 @@ export function PatientsSearchPage() {
           <tbody>
             {query.isLoading && (
               <tr>
-                <td colSpan={5} className="px-3 py-6 text-center text-muted">
+                <td colSpan={6} className="px-3 py-6 text-center text-muted">
                   Đang tải…
                 </td>
               </tr>
             )}
             {!query.isLoading && (data?.data.length ?? 0) === 0 && (
               <tr>
-                <td colSpan={5} className="px-3 py-6 text-center text-muted">
+                <td colSpan={6} className="px-3 py-6 text-center text-muted">
                   Không tìm thấy hồ sơ nào.
                 </td>
               </tr>
             )}
             {data?.data.map((pet) => (
               <tr key={pet.id} className="border-t border-border hover:bg-surface-muted">
-                <td className="px-3 py-2 font-mono text-xs text-muted">{pet.id.slice(0, 8)}</td>
+                <td className="px-3 py-2 font-mono text-xs text-muted">{pet.petCode}</td>
                 <td className="px-3 py-2">
                   <Link to={`/staff/patients/${pet.id}`} className="font-medium text-primary hover:underline">
                     {pet.name}
@@ -73,6 +74,9 @@ export function PatientsSearchPage() {
                 <td className="px-3 py-2">
                   {pet.breed?.breedName ?? '—'}
                   {pet.breed?.species ? ` (${pet.breed.species.speciesName})` : ''}
+                </td>
+                <td className="px-3 py-2 font-mono text-xs text-muted">
+                  {pet.microchipId ?? '—'}
                 </td>
                 <td className="px-3 py-2">{pet.owner?.fullName ?? '—'}</td>
                 <td className="px-3 py-2">{pet.owner?.phone ?? '—'}</td>

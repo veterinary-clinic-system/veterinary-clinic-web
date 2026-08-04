@@ -4,12 +4,47 @@
  * shared package between the two projects.
  */
 
+/**
+ * 6 vai trò nghiệp vụ của SRS (mục 4) cộng PET_OWNER.
+ * `DOCTOR` chính là `Veterinarian` của SRS — không đổi tên, xem ghi chú trong
+ * `veterinary-clinic-backend/src/shared/common/enums/role.enum.ts`.
+ */
 export enum Role {
   ADMIN = 'ADMIN',
+  MANAGER = 'MANAGER',
   DOCTOR = 'DOCTOR',
   RECEPTIONIST = 'RECEPTIONIST',
+  PHARMACIST = 'PHARMACIST',
+  STAFF = 'STAFF',
   PET_OWNER = 'PET_OWNER',
 }
+
+/** Vai trò làm việc tại cơ sở — bắt buộc phải gán chi nhánh khi tạo tài khoản. */
+export const BRANCH_SCOPED_ROLES: Role[] = [
+  Role.MANAGER,
+  Role.DOCTOR,
+  Role.RECEPTIONIST,
+  Role.PHARMACIST,
+  Role.STAFF,
+];
+
+/** Mọi vai trò nhân viên (khác khách hàng). */
+export const STAFF_ROLES: Role[] = [Role.ADMIN, ...BRANCH_SCOPED_ROLES];
+
+/** Trạng thái làm việc của nhân viên — SRS FR-22. */
+export enum EmployeeStatus {
+  PROBATION = 'PROBATION',
+  ACTIVE = 'ACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  RESIGNED = 'RESIGNED',
+}
+
+export const EMPLOYEE_STATUS_LABEL_VI: Record<EmployeeStatus, string> = {
+  [EmployeeStatus.PROBATION]: 'Thử việc',
+  [EmployeeStatus.ACTIVE]: 'Đang làm việc',
+  [EmployeeStatus.SUSPENDED]: 'Tạm đình chỉ',
+  [EmployeeStatus.RESIGNED]: 'Đã nghỉ việc',
+};
 
 export enum Gender {
   MALE = 'MALE',

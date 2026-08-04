@@ -24,6 +24,7 @@ interface CustomerFormState {
   fullName: string;
   email: string;
   password: string;
+  dateOfBirth: string;
   address: string;
   note: string;
 }
@@ -33,6 +34,7 @@ const EMPTY_FORM: CustomerFormState = {
   fullName: '',
   email: '',
   password: '',
+  dateOfBirth: '',
   address: '',
   note: '',
 };
@@ -94,6 +96,7 @@ export function CustomersPage() {
         return customersApi.update(editing.id, {
           fullName: form.fullName,
           email: form.email || undefined,
+          dateOfBirth: form.dateOfBirth || undefined,
           address: form.address || undefined,
           note: form.note || undefined,
         });
@@ -103,6 +106,7 @@ export function CustomersPage() {
         fullName: form.fullName,
         email: form.email || undefined,
         password: form.password || undefined,
+        dateOfBirth: form.dateOfBirth || undefined,
         address: form.address || undefined,
         note: form.note || undefined,
       };
@@ -140,6 +144,7 @@ export function CustomersPage() {
       fullName: customer.fullName,
       email: customer.email ?? '',
       password: '',
+      dateOfBirth: customer.dateOfBirth ?? '',
       address: customer.address ?? '',
       note: customer.note ?? '',
     });
@@ -168,6 +173,13 @@ export function CustomersPage() {
   }
 
   const columns: Column<Customer>[] = [
+    {
+      key: 'customerCode',
+      header: 'Mã KH',
+      render: (row) => (
+        <span className="font-mono text-xs text-muted">{row.customerCode ?? '—'}</span>
+      ),
+    },
     {
       key: 'fullName',
       header: 'Họ tên',
@@ -243,7 +255,7 @@ export function CustomersPage() {
             setSearch(e.target.value);
             setPage(1);
           }}
-          placeholder="Họ tên, số điện thoại hoặc email…"
+          placeholder="Mã KH, họ tên, số điện thoại hoặc email…"
           className="w-72"
         />
         <Select
@@ -366,6 +378,12 @@ export function CustomersPage() {
             type="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
+          />
+          <Input
+            label="Ngày sinh (tùy chọn)"
+            type="date"
+            value={form.dateOfBirth}
+            onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
           />
           {!editing && (
             <Input

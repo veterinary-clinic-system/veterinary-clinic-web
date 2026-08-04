@@ -50,8 +50,11 @@ export const GENDER_LABEL_VI: Record<Gender, string> = {
 
 export const ROLE_LABEL_VI: Record<Role, string> = {
   [Role.ADMIN]: 'Quản trị viên',
-  [Role.DOCTOR]: 'Bác sĩ',
+  [Role.MANAGER]: 'Quản lý',
+  [Role.DOCTOR]: 'Bác sĩ thú y',
   [Role.RECEPTIONIST]: 'Lễ tân',
+  [Role.PHARMACIST]: 'Dược sĩ / thủ kho',
+  [Role.STAFF]: 'Nhân viên bán hàng',
   [Role.PET_OWNER]: 'Chủ thú cưng',
 };
 

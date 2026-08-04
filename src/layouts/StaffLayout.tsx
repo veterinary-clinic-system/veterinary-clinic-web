@@ -2,18 +2,30 @@ import { Link, Outlet } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Role } from '@/types/enums';
 
+const CLINIC_ROLES = [Role.ADMIN, Role.MANAGER, Role.DOCTOR, Role.RECEPTIONIST];
+const COUNTER_ROLES = [Role.ADMIN, Role.MANAGER, Role.RECEPTIONIST, Role.STAFF];
+
+/**
+ * `roles` bỏ trống = mọi vai trò nhân viên đều thấy.
+ *
+ * PHARMACIST hiện chỉ thấy Tổng quan — quầy thuốc và kho là việc của Phase 6/7,
+ * chưa có màn hình nào để gắn vào đây.
+ */
 const NAV_ITEMS: { to: string; label: string; roles?: Role[] }[] = [
   { to: '/staff', label: 'Tổng quan' },
-  { to: '/staff/calendar', label: 'Lịch làm việc' },
-  { to: '/staff/queue', label: 'Hàng chờ' },
-  { to: '/staff/customers', label: 'Khách hàng' },
-  { to: '/staff/patients', label: 'Hồ sơ thú cưng' },
-  { to: '/staff/appointments', label: 'Lịch hẹn' },
-  { to: '/staff/billing', label: 'Hóa đơn' },
-  { to: '/staff/reports', label: 'Báo cáo', roles: [Role.ADMIN, Role.RECEPTIONIST] },
-  { to: '/staff/catalog', label: 'Danh mục', roles: [Role.ADMIN] },
+  { to: '/staff/calendar', label: 'Lịch làm việc', roles: CLINIC_ROLES },
+  { to: '/staff/queue', label: 'Hàng chờ', roles: CLINIC_ROLES },
+  { to: '/staff/customers', label: 'Khách hàng', roles: [...CLINIC_ROLES, Role.STAFF] },
+  { to: '/staff/patients', label: 'Hồ sơ thú cưng', roles: CLINIC_ROLES },
+  { to: '/staff/appointments', label: 'Lịch hẹn', roles: CLINIC_ROLES },
+  { to: '/staff/billing', label: 'Hóa đơn', roles: COUNTER_ROLES },
+  // BR-15: chỉ Manager/Admin được xem báo cáo doanh thu.
+  { to: '/staff/reports', label: 'Báo cáo', roles: [Role.ADMIN, Role.MANAGER] },
+  { to: '/staff/catalog', label: 'Danh mục', roles: [Role.ADMIN, Role.MANAGER] },
   { to: '/staff/branches', label: 'Chi nhánh', roles: [Role.ADMIN] },
-  { to: '/staff/users', label: 'Nhân sự', roles: [Role.ADMIN] },
+  { to: '/staff/employees', label: 'Hồ sơ nhân sự', roles: [Role.ADMIN, Role.MANAGER] },
+  { to: '/staff/users', label: 'Tài khoản', roles: [Role.ADMIN] },
+  { to: '/staff/permissions', label: 'Phân quyền', roles: [Role.ADMIN] },
 ];
 
 /** Admin/Receptionist/Doctor management shell - "standard admin/dashboard layout" per Section 7.2. */
