@@ -517,9 +517,11 @@ function DiagnosesSection({ record, readOnly }: { record: MedicalRecord; readOnl
   const [diseaseId, setDiseaseId] = useState('');
   const [notes, setNotes] = useState('');
 
+  // `limit` tối đa 100 (PaginationQueryDto phía backend) - gửi 200 sẽ bị trả 400 và ô
+  // chọn bệnh lặng lẽ rỗng.
   const diseasesQuery = useQuery({
     queryKey: ['diseases', 'for-diagnosis'],
-    queryFn: () => catalogApi.diseases({ limit: 200 }),
+    queryFn: () => catalogApi.diseases({ limit: 100 }),
   });
   const diseaseOptions = [
     { value: '', label: '— Không chọn từ danh mục —' },
