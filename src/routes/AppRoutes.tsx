@@ -15,6 +15,9 @@ import { PetProfilePage } from '@/pages/owner/PetProfilePage';
 import { MyAppointmentsPage } from '@/pages/owner/MyAppointmentsPage';
 import { StaffDashboardPage } from '@/pages/staff/StaffDashboardPage';
 import { StaffCalendarPage } from '@/pages/staff/StaffCalendarPage';
+import { QueuePage } from '@/pages/staff/QueuePage';
+import { CustomersPage } from '@/pages/staff/CustomersPage';
+import { CustomerDetailPage } from '@/pages/staff/CustomerDetailPage';
 import { PatientsSearchPage } from '@/pages/staff/PatientsSearchPage';
 import { StaffPetProfilePage } from '@/pages/staff/StaffPetProfilePage';
 import { AppointmentsListPage } from '@/pages/staff/AppointmentsListPage';
@@ -51,6 +54,9 @@ export function AppRoutes() {
         <Route element={<StaffLayout />}>
           <Route path="/staff" element={<StaffDashboardPage />} />
           <Route path="/staff/calendar" element={<StaffCalendarPage />} />
+          <Route path="/staff/queue" element={<QueuePage />} />
+          <Route path="/staff/customers" element={<CustomersPage />} />
+          <Route path="/staff/customers/:id" element={<CustomerDetailPage />} />
           <Route path="/staff/patients" element={<PatientsSearchPage />} />
           <Route path="/staff/patients/:id" element={<StaffPetProfilePage />} />
           <Route path="/staff/appointments" element={<AppointmentsListPage />} />

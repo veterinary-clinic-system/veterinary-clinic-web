@@ -43,6 +43,10 @@ export const appointmentsApi = {
     branchId?: string;
     doctorId?: string;
     status?: AppointmentStatus;
+    sortBy?: string;
+    sortOrder?: 'ASC' | 'DESC';
+    /** 'yyyy-MM-dd' - chỉ lấy lịch hẹn bắt đầu trong ngày này. */
+    date?: string;
   }) => apiClient.get<PaginatedResult<Appointment>>('/appointments', { params }).then((r) => r.data),
   getOne: (id: string) => apiClient.get<Appointment>(`/appointments/${id}`).then((r) => r.data),
   update: (

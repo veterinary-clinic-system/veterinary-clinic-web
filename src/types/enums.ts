@@ -97,6 +97,32 @@ export enum LabTestStatus {
   COMPLETED = 'COMPLETED',
 }
 
+export enum QueueStatus {
+  WAITING = 'WAITING',
+  ASSIGNED = 'ASSIGNED',
+  IN_ROOM = 'IN_ROOM',
+  DONE = 'DONE',
+  CANCELLED = 'CANCELLED',
+}
+
+export const QUEUE_STATUS_LABEL_VI: Record<QueueStatus, string> = {
+  [QueueStatus.WAITING]: 'Chờ phân bác sĩ',
+  [QueueStatus.ASSIGNED]: 'Đã gán bác sĩ',
+  [QueueStatus.IN_ROOM]: 'Đang trong phòng khám',
+  [QueueStatus.DONE]: 'Đã khám xong',
+  [QueueStatus.CANCELLED]: 'Đã hủy lượt',
+};
+
+export enum QueueSource {
+  APPOINTMENT = 'APPOINTMENT',
+  WALK_IN = 'WALK_IN',
+}
+
+export const QUEUE_SOURCE_LABEL_VI: Record<QueueSource, string> = {
+  [QueueSource.APPOINTMENT]: 'Có đặt lịch',
+  [QueueSource.WALK_IN]: 'Khách vãng lai',
+};
+
 export enum SlotStatus {
   FREE = 'FREE',
   BOOKED = 'BOOKED',

@@ -5,6 +5,8 @@ import { Role } from '@/types/enums';
 const NAV_ITEMS: { to: string; label: string; roles?: Role[] }[] = [
   { to: '/staff', label: 'Tổng quan' },
   { to: '/staff/calendar', label: 'Lịch làm việc' },
+  { to: '/staff/queue', label: 'Hàng chờ' },
+  { to: '/staff/customers', label: 'Khách hàng' },
   { to: '/staff/patients', label: 'Hồ sơ thú cưng' },
   { to: '/staff/appointments', label: 'Lịch hẹn' },
   { to: '/staff/billing', label: 'Hóa đơn' },

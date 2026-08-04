@@ -6,6 +6,8 @@ import {
   LabTestStatus,
   PaymentMethod,
   PriorityColor,
+  QueueSource,
+  QueueStatus,
   Role,
   SlotStatus,
   Specialization,
@@ -221,6 +223,75 @@ export interface InvoiceItem {
   item: Item;
   price: number;
   quantity: number;
+}
+
+/**
+ * Khách hàng (User role PET_OWNER) nhìn từ quầy lễ tân - `GET /customers`.
+ * `petCount`/`lastVisitAt` do backend tính sẵn, không phải đếm ở client.
+ */
+export interface Customer {
+  id: string;
+  phone: string;
+  fullName: string;
+  email: string | null;
+  address: string | null;
+  note: string | null;
+  active: boolean;
+  createdAt: string;
+  petCount: number;
+  lastVisitAt: string | null;
+}
+
+/** `GET /customers/:id` - thêm các số liệu tổng hợp của màn hình chi tiết. */
+export interface CustomerDetail extends Customer {
+  appointmentCount: number;
+  completedAppointmentCount: number;
+  invoiceCount: number;
+  totalPaid: number;
+  totalUnpaid: number;
+}
+
+/** Một dòng lịch sử giao dịch - `GET /customers/:id/transactions`. */
+export interface CustomerTransaction {
+  invoiceId: string;
+  appointmentId: string;
+  visitedAt: string;
+  petId: string;
+  petName: string;
+  doctorName: string | null;
+  branchName: string | null;
+  serviceName: string | null;
+  appointmentStatus: AppointmentStatus;
+  paid: boolean;
+  paidAt: string | null;
+  paymentMethod: PaymentMethod | null;
+  totalAmount: number;
+}
+
+/** Một lượt chờ tại quầy lễ tân - `GET /queue`. */
+export interface QueueEntry {
+  id: string;
+  branchId: string;
+  branch?: Branch;
+  petId: string;
+  pet?: Pet;
+  appointmentId: string | null;
+  appointment?: Appointment | null;
+  doctorId: string | null;
+  doctor?: { id: string; fullName: string } | null;
+  serviceId: string;
+  service?: Service;
+  queueDate: string;
+  ticketNumber: number;
+  status: QueueStatus;
+  source: QueueSource;
+  priorityColor: PriorityColor | null;
+  commonSymptoms: CommonSymptom[];
+  reason: string | null;
+  note: string | null;
+  checkedInAt: string;
+  calledAt: string | null;
+  finishedAt: string | null;
 }
 
 export interface StaffUser {
