@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { petsApi } from '@/api/pets.api';
 import { Badge, Table } from '@/components/basic';
 import type { Column } from '@/components/basic';
-import { PRIORITY_COLOR_LABEL_VI } from '@/types/enums';
+import { MedicalRecordStatus, PRIORITY_COLOR_LABEL_VI } from '@/types/enums';
 import type {
   Pet,
   PetAppointment,
@@ -18,6 +18,7 @@ import {
   APPOINTMENT_STATUS_LABEL_VI,
   GENDER_LABEL_VI,
   LAB_TEST_STATUS_LABEL_VI,
+  MEDICAL_RECORD_STATUS_LABEL_VI,
   PAYMENT_METHOD_LABEL_VI,
   triageColorClasses,
 } from '@/utils/labels';
@@ -225,7 +226,32 @@ function MedicalHistoryTab({ petId }: { petId: string }) {
     { key: 'examinedAt', header: 'Ngày khám', render: (row) => formatDateTime(row.examinedAt) },
     { key: 'doctorName', header: 'Bác sĩ', render: (row) => row.doctorName ?? '—' },
     { key: 'branchName', header: 'Chi nhánh', render: (row) => row.branchName ?? '—' },
-    { key: 'diagnosisText', header: 'Chẩn đoán', render: (row) => row.diagnosisText ?? '—' },
+    {
+      key: 'diagnoses',
+      header: 'Chẩn đoán',
+      // Từ P4, một hồ sơ có nhiều chẩn đoán; backend đã xếp chẩn đoán chính lên đầu.
+      render: (row) =>
+        row.diagnoses.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {row.diagnoses.map((diagnosis) => (
+              <Badge key={diagnosis.id} variant={diagnosis.isPrimary ? 'default' : 'outline'}>
+                {diagnosis.diseaseName ?? diagnosis.diagnosisText}
+              </Badge>
+            ))}
+          </div>
+        ) : (
+          '—'
+        ),
+    },
+    {
+      key: 'status',
+      header: 'Trạng thái',
+      render: (row) => (
+        <Badge variant={row.status === MedicalRecordStatus.COMPLETED ? 'success' : 'warning'}>
+          {MEDICAL_RECORD_STATUS_LABEL_VI[row.status]}
+        </Badge>
+      ),
+    },
     {
       key: 'vitals',
       header: 'Sinh hiệu',
@@ -255,7 +281,7 @@ function MedicalHistoryTab({ petId }: { petId: string }) {
     <Table
       columns={columns}
       data={query.data ?? []}
-      getRowId={(row) => row.examinationId}
+      getRowId={(row) => row.medicalRecordId}
       loading={query.isLoading}
       emptyMessage="Thú cưng chưa có lần khám nào được ghi hồ sơ."
     />
