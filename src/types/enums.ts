@@ -183,3 +183,69 @@ export enum SlotStatus {
   BREAK = 'BREAK',
   OFF_SHIFT = 'OFF_SHIFT',
 }
+
+/** Loại giao dịch kho — SRS FR-18-02 (P6). */
+export enum InventoryTransactionType {
+  PURCHASE = 'PURCHASE',
+  SALE = 'SALE',
+  DISPENSE = 'DISPENSE',
+  DAMAGED = 'DAMAGED',
+  EXPIRED = 'EXPIRED',
+  ADJUSTMENT = 'ADJUSTMENT',
+  LOSS = 'LOSS',
+  RETURN = 'RETURN',
+}
+
+export const INVENTORY_TRANSACTION_TYPE_LABEL_VI: Record<InventoryTransactionType, string> = {
+  [InventoryTransactionType.PURCHASE]: 'Nhập hàng',
+  [InventoryTransactionType.SALE]: 'Bán lẻ',
+  [InventoryTransactionType.DISPENSE]: 'Cấp thuốc theo đơn',
+  [InventoryTransactionType.DAMAGED]: 'Hàng hỏng',
+  [InventoryTransactionType.EXPIRED]: 'Hủy hàng hết hạn',
+  [InventoryTransactionType.ADJUSTMENT]: 'Điều chỉnh kiểm kê',
+  [InventoryTransactionType.LOSS]: 'Thất lạc',
+  [InventoryTransactionType.RETURN]: 'Trả hàng',
+};
+
+/**
+ * Các lý do xuất kho nhân viên chọn được trên màn hình kho.
+ *
+ * `SALE`/`DISPENSE` cố ý không có: hai loại đó phải đi kèm hoá đơn (P8) hoặc đơn thuốc
+ * (P7) — backend cũng chặn ở `IssueInventoryDto`.
+ */
+export const MANUAL_ISSUE_TYPES: InventoryTransactionType[] = [
+  InventoryTransactionType.DAMAGED,
+  InventoryTransactionType.EXPIRED,
+  InventoryTransactionType.LOSS,
+  InventoryTransactionType.RETURN,
+];
+
+/** Vòng đời đơn đặt hàng — SRS UC-05 (P6). */
+export enum PurchaseOrderStatus {
+  DRAFT = 'DRAFT',
+  ORDERED = 'ORDERED',
+  PARTIALLY_RECEIVED = 'PARTIALLY_RECEIVED',
+  RECEIVED = 'RECEIVED',
+  CANCELLED = 'CANCELLED',
+}
+
+export const PURCHASE_ORDER_STATUS_LABEL_VI: Record<PurchaseOrderStatus, string> = {
+  [PurchaseOrderStatus.DRAFT]: 'Nháp',
+  [PurchaseOrderStatus.ORDERED]: 'Đã đặt',
+  [PurchaseOrderStatus.PARTIALLY_RECEIVED]: 'Đã nhận một phần',
+  [PurchaseOrderStatus.RECEIVED]: 'Đã nhận đủ',
+  [PurchaseOrderStatus.CANCELLED]: 'Đã hủy',
+};
+
+/** Trạng thái phiếu kiểm kê — SRS FR-18-03 (P6). */
+export enum StockTakeStatus {
+  DRAFT = 'DRAFT',
+  CONFIRMED = 'CONFIRMED',
+  CANCELLED = 'CANCELLED',
+}
+
+export const STOCK_TAKE_STATUS_LABEL_VI: Record<StockTakeStatus, string> = {
+  [StockTakeStatus.DRAFT]: 'Đang kiểm kê',
+  [StockTakeStatus.CONFIRMED]: 'Đã xác nhận',
+  [StockTakeStatus.CANCELLED]: 'Đã hủy',
+};

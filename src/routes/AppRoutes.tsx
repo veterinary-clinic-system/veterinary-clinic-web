@@ -29,6 +29,11 @@ import { CatalogAdminPage } from '@/pages/staff/CatalogAdminPage';
 import { ProductsPage } from '@/pages/staff/ProductsPage';
 import { CategoriesPage } from '@/pages/staff/CategoriesPage';
 import { SuppliersPage } from '@/pages/staff/SuppliersPage';
+import { InventoryPage } from '@/pages/staff/InventoryPage';
+import { InventoryAlertsPage } from '@/pages/staff/InventoryAlertsPage';
+import { PurchaseOrdersPage } from '@/pages/staff/PurchaseOrdersPage';
+import { GoodsReceiptPage } from '@/pages/staff/GoodsReceiptPage';
+import { StockTakePage } from '@/pages/staff/StockTakePage';
 import { BranchesAdminPage } from '@/pages/staff/BranchesAdminPage';
 import { UsersAdminPage } from '@/pages/staff/UsersAdminPage';
 import { EmployeesPage } from '@/pages/staff/EmployeesPage';
@@ -70,6 +75,14 @@ export function AppRoutes() {
           <Route path="/staff/billing" element={<BillingListPage />} />
           <Route path="/staff/billing/:id" element={<InvoiceDetailPage />} />
 
+          {/*
+            Tồn kho và cảnh báo mở cho MỌI vai trò nhân viên: ma trận `role_permissions`
+            cho tất cả họ `INVENTORY_VIEW` (kể cả STAFF bán hàng và bác sĩ). Các nút ghi
+            trên trang tự ẩn theo vai trò, và backend vẫn là hàng rào thật.
+          */}
+          <Route path="/staff/inventory" element={<InventoryPage />} />
+          <Route path="/staff/inventory/alerts" element={<InventoryAlertsPage />} />
+
           <Route element={<RequireAuth allow={[Role.ADMIN, Role.MANAGER]} />}>
             <Route path="/staff/catalog" element={<CatalogAdminPage />} />
             {/* BR-15: chỉ Manager/Admin được xem báo cáo doanh thu. */}
@@ -85,6 +98,13 @@ export function AppRoutes() {
             <Route path="/staff/products" element={<ProductsPage />} />
             <Route path="/staff/categories" element={<CategoriesPage />} />
             <Route path="/staff/suppliers" element={<SuppliersPage />} />
+            {/*
+              Đặt hàng / nhận hàng / kiểm kê cần INVENTORY_IMPORT hoặc INVENTORY_EXPORT,
+              mà ma trận quyền chỉ cho ba vai trò này — cùng nhóm với danh mục hàng hoá.
+            */}
+            <Route path="/staff/purchase-orders" element={<PurchaseOrdersPage />} />
+            <Route path="/staff/goods-receipts" element={<GoodsReceiptPage />} />
+            <Route path="/staff/stock-takes" element={<StockTakePage />} />
           </Route>
           <Route element={<RequireAuth allow={[Role.ADMIN, Role.MANAGER]} />}>
             <Route path="/staff/employees" element={<EmployeesPage />} />

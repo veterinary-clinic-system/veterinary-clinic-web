@@ -4,12 +4,14 @@ import { Role } from '@/types/enums';
 
 const CLINIC_ROLES = [Role.ADMIN, Role.MANAGER, Role.DOCTOR, Role.RECEPTIONIST];
 const COUNTER_ROLES = [Role.ADMIN, Role.MANAGER, Role.RECEPTIONIST, Role.STAFF];
+/** Ba vai trò duy nhất có INVENTORY_IMPORT/INVENTORY_EXPORT trong ma trận quyền. */
+const WAREHOUSE_ROLES = [Role.ADMIN, Role.MANAGER, Role.PHARMACIST];
 
 /**
  * `roles` bỏ trống = mọi vai trò nhân viên đều thấy.
  *
- * PHARMACIST thấy Tổng quan cộng ba màn hình danh mục hàng hoá (P5). Quầy thuốc và
- * kho là việc của Phase 6/7, chưa có màn hình nào để gắn vào đây.
+ * PHARMACIST thấy Tổng quan, ba màn hình danh mục hàng hoá (P5) và toàn bộ nhóm kho
+ * (P6). Quầy thuốc là việc của Phase 7.
  */
 const NAV_ITEMS: { to: string; label: string; roles?: Role[] }[] = [
   { to: '/staff', label: 'Tổng quan' },
@@ -39,6 +41,13 @@ const NAV_ITEMS: { to: string; label: string; roles?: Role[] }[] = [
     label: 'Nhà cung cấp',
     roles: [Role.ADMIN, Role.MANAGER, Role.PHARMACIST],
   },
+  // Kho (P6). Tồn kho và cảnh báo bỏ trống `roles`: mọi vai trò nhân viên đều có
+  // INVENTORY_VIEW trong ma trận quyền, kể cả STAFF bán hàng và bác sĩ.
+  { to: '/staff/inventory', label: 'Tồn kho' },
+  { to: '/staff/inventory/alerts', label: 'Cảnh báo kho' },
+  { to: '/staff/purchase-orders', label: 'Đơn đặt hàng', roles: WAREHOUSE_ROLES },
+  { to: '/staff/goods-receipts', label: 'Nhận hàng', roles: WAREHOUSE_ROLES },
+  { to: '/staff/stock-takes', label: 'Kiểm kê', roles: WAREHOUSE_ROLES },
   { to: '/staff/branches', label: 'Chi nhánh', roles: [Role.ADMIN] },
   { to: '/staff/employees', label: 'Hồ sơ nhân sự', roles: [Role.ADMIN, Role.MANAGER] },
   { to: '/staff/users', label: 'Tài khoản', roles: [Role.ADMIN] },

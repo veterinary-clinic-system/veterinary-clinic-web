@@ -1,11 +1,13 @@
 import { FormEvent, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { purchaseOrdersApi } from '@/api/inventory.api';
 import { SupplierListParams, suppliersApi } from '@/api/suppliers.api';
 import { Badge, Button, Input, Modal, Select, Table, Textarea, useToast } from '@/components/basic';
 import type { Column, SortOrder } from '@/components/basic';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { Supplier } from '@/types/models';
+import { PURCHASE_ORDER_STATUS_LABEL_VI, Supplier } from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';
+import { formatCurrency, formatDate } from '@/utils/format';
 
 const LIMIT = 20;
 
@@ -62,6 +64,12 @@ export function SuppliersPage() {
     queryKey: ['suppliers', params],
     queryFn: () => suppliersApi.list(params),
     placeholderData: (prev) => prev,
+  });
+
+  const ordersQuery = useQuery({
+    queryKey: ['purchase-orders', 'by-supplier', detail?.id],
+    queryFn: () => purchaseOrdersApi.list({ supplierId: detail!.id, limit: 10 }),
+    enabled: detail !== null,
   });
 
   const saveMutation = useMutation({
@@ -342,15 +350,34 @@ export function SuppliersPage() {
             </dl>
 
             <section>
-              <h3 className="mb-2 font-medium">Lịch sử nhập hàng</h3>
-              {/*
-                Trạng thái rỗng có chủ đích: bảng `purchase_orders` ra đời ở Phase 6.
-                Ghi rõ ra thay vì gọi một API chưa tồn tại hay hiện dữ liệu giả.
-              */}
-              <p className="rounded border border-border bg-surface-muted p-3 text-sm text-muted">
-                Chưa có dữ liệu nhập hàng. Chức năng đơn nhập hàng sẽ có ở Phase 6 (Kho &amp; Nhập
-                hàng).
-              </p>
+              <h3 className="mb-2 font-medium">Đơn đặt hàng gần đây</h3>
+              {/* Chỗ trống của P5 đã được thay bằng dữ liệu thật — `purchase_orders` ra đời ở P6. */}
+              <Table
+                columns={[
+                  {
+                    key: 'poCode',
+                    header: 'Mã đơn',
+                    render: (row) => <span className="font-mono text-xs">{row.poCode}</span>,
+                  },
+                  { key: 'orderDate', header: 'Ngày đặt', render: (row) => formatDate(row.orderDate) },
+                  {
+                    key: 'totalAmount',
+                    header: 'Tổng tiền',
+                    render: (row) => formatCurrency(row.totalAmount),
+                  },
+                  {
+                    key: 'status',
+                    header: 'Trạng thái',
+                    render: (row) => (
+                      <Badge>{PURCHASE_ORDER_STATUS_LABEL_VI[row.status]}</Badge>
+                    ),
+                  },
+                ]}
+                data={ordersQuery.data?.data ?? []}
+                getRowId={(row) => row.id}
+                loading={ordersQuery.isLoading}
+                emptyMessage="Chưa có đơn đặt hàng nào cho nhà cung cấp này."
+              />
             </section>
           </div>
         )}

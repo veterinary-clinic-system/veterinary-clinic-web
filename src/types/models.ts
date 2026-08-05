@@ -3,16 +3,19 @@ import {
   CommonSymptom,
   DiagnosisSeverity,
   Gender,
+  InventoryTransactionType,
   ItemType,
   LabTestStatus,
   MedicalRecordStatus,
   PaymentMethod,
   PriorityColor,
+  PurchaseOrderStatus,
   QueueSource,
   QueueStatus,
   Role,
   SlotStatus,
   Specialization,
+  StockTakeStatus,
 } from './enums';
 
 // Tang api client (src/api/*.api.ts) lay ca interface lan enum tu '@/types/models',
@@ -547,4 +550,163 @@ export interface StaffUser {
   role: Role;
   active: boolean;
   branchId: string | null;
+}
+
+// ------------------------------------------------------------ Kho (Phase 6, FR-18)
+
+/**
+ * Tồn của một mặt hàng tại một chi nhánh.
+ *
+ * `inventoryQuantity` là **số tổng** — bản cache của tổng các lô, backend cập nhật
+ * trong cùng transaction với lô (quyết định (B) ở `docs/plan/phase-06`). Số **dùng
+ * được** có thể nhỏ hơn: lô hết hạn vẫn nằm trong số tổng nhưng không bán được (BR-11).
+ */
+export interface InventoryItem {
+  id: string;
+  itemId: string;
+  item?: Item;
+  branchId: string;
+  branch?: Branch;
+  inventoryQuantity: number;
+  active: boolean;
+}
+
+/** Lô hàng — SRS FR-18-01. `expiryDate` null = hàng không có hạn dùng. */
+export interface InventoryBatch {
+  id: string;
+  inventoryItemId: string;
+  batchNo: string;
+  expiryDate: string | null;
+  quantity: number;
+  costPrice: number;
+  receivedAt: string;
+  supplierId: string | null;
+  goodsReceiptId: string | null;
+}
+
+/** Một dòng sổ cái xuất-nhập — SRS FR-18-02. Bất biến: không sửa, không xoá. */
+export interface InventoryTransaction {
+  id: string;
+  inventoryItemId: string;
+  inventoryItem?: InventoryItem;
+  batchId: string | null;
+  batch?: InventoryBatch | null;
+  branchId: string;
+  type: InventoryTransactionType;
+  quantityChange: number;
+  quantityAfter: number;
+  referenceType: string;
+  referenceId: string | null;
+  performedByUserId: string | null;
+  note: string | null;
+  createdAt: string;
+}
+
+export interface PurchaseOrderItem {
+  id: string;
+  purchaseOrderId: string;
+  itemId: string;
+  item: Item;
+  quantity: number;
+  unitCost: number;
+  receivedQuantity: number;
+}
+
+/** Đơn đặt hàng — SRS UC-05. `totalAmount` là số ĐẶT, không phải số tiền thực trả. */
+export interface PurchaseOrder {
+  id: string;
+  poCode: string;
+  supplierId: string;
+  supplier?: Supplier;
+  branchId: string;
+  branch?: Branch;
+  status: PurchaseOrderStatus;
+  orderDate: string;
+  expectedDate: string | null;
+  totalAmount: number;
+  createdByUserId: string | null;
+  note: string | null;
+  items?: PurchaseOrderItem[];
+}
+
+export interface GoodsReceiptItem {
+  id: string;
+  goodsReceiptId: string;
+  purchaseOrderItemId: string | null;
+  itemId: string;
+  item: Item;
+  quantity: number;
+  unitCost: number;
+  batchNo: string;
+  expiryDate: string | null;
+  batchId: string | null;
+}
+
+/** Phiếu nhập kho — SRS UC-05, BR-13. Không có trạng thái: phiếu tồn tại là hàng đã vào kho. */
+export interface GoodsReceipt {
+  id: string;
+  receiptCode: string;
+  purchaseOrderId: string | null;
+  purchaseOrder?: PurchaseOrder | null;
+  supplierId: string;
+  supplier?: Supplier;
+  branchId: string;
+  branch?: Branch;
+  receivedDate: string;
+  totalAmount: number;
+  receivedByUserId: string | null;
+  note: string | null;
+  items?: GoodsReceiptItem[];
+}
+
+export interface StockTakeItem {
+  id: string;
+  stockTakeId: string;
+  inventoryItemId: string;
+  itemId: string;
+  item: Item;
+  /** Số hệ thống **chụp lúc tạo phiếu**, không đọc lại lúc xác nhận. */
+  systemQuantity: number;
+  /** `null` = chưa đếm đến dòng này (khác 0 = đếm được không còn cái nào). */
+  countedQuantity: number | null;
+  note: string | null;
+}
+
+/** Phiếu kiểm kê — SRS FR-18-03. */
+export interface StockTake {
+  id: string;
+  stockTakeCode: string;
+  branchId: string;
+  branch?: Branch;
+  status: StockTakeStatus;
+  takenDate: string;
+  createdByUserId: string | null;
+  confirmedByUserId: string | null;
+  confirmedAt: string | null;
+  note: string | null;
+  items?: StockTakeItem[];
+}
+
+/** Một dòng cảnh báo tồn kho — SRS FR-18-04. */
+export interface InventoryAlertRow {
+  inventoryItemId: string;
+  itemId: string;
+  itemCode: string;
+  itemName: string;
+  branchId: string;
+  branchName: string;
+  quantity: number;
+  minimumStock: number;
+  batchId?: string;
+  batchNo?: string;
+  expiryDate?: string;
+  daysUntilExpiry?: number;
+}
+
+/** Bốn nhóm cảnh báo của `GET /catalog/inventory/alerts`. */
+export interface InventoryAlerts {
+  lowStock: InventoryAlertRow[];
+  outOfStock: InventoryAlertRow[];
+  expiringSoon: InventoryAlertRow[];
+  expired: InventoryAlertRow[];
 }
