@@ -7,12 +7,15 @@ import type { Column } from '@/components/basic';
 import {
   CustomerAppointment,
   CustomerMedicalHistory,
+  CustomerPurchase,
   CustomerTransaction,
   Pet,
 } from '@/types/models';
 import { MedicalRecordStatus, PRIORITY_COLOR_LABEL_VI } from '@/types/enums';
 import {
   APPOINTMENT_STATUS_LABEL_VI,
+  INVOICE_STATUS_LABEL_VI,
+  INVOICE_STATUS_VARIANT,
   MEDICAL_RECORD_STATUS_LABEL_VI,
   PAYMENT_METHOD_LABEL_VI,
   triageColorClasses,
@@ -24,9 +27,12 @@ import { formatCurrency, formatDate, formatDateTime } from '@/utils/format';
  * Hồ sơ một khách hàng - sáu khối theo sơ đồ FR-03-04 của SRS:
  * Thông tin → Thú cưng → Lịch hẹn → Lịch sử khám → Hóa đơn → Lịch sử mua hàng.
  *
- * "Hóa đơn" ở đây chính là lịch sử giao dịch khám (mỗi hóa đơn = một lần khám đã lập
- * hóa đơn); "Lịch sử mua hàng" là bán lẻ tại quầy - POS chưa tồn tại nên tab đó nói
- * thẳng là chưa có, không dựng dữ liệu giả.
+ * "Hóa đơn" là lịch sử giao dịch **khám** (mỗi hóa đơn = một lần khám đã lập hóa đơn);
+ * "Lịch sử mua hàng" là bán lẻ tại quầy (hoá đơn POS, có từ P8). Hai tab tách riêng vì
+ * hai loại giao dịch trả lời hai câu hỏi khác nhau — xem `CustomersService.findPurchases`.
+ *
+ * Khối thống kê đầu trang cộng **cả hai loại**: "Đã chi tiêu" là tiền khách thực trả cho
+ * cả khám lẫn mua hàng.
  */
 type Tab = 'info' | 'pets' | 'appointments' | 'medical' | 'invoices' | 'purchases';
 
@@ -72,7 +78,7 @@ export function CustomerDetailPage() {
         <Stat label="Thú cưng" value={String(customer.petCount)} />
         <Stat label="Lượt hẹn" value={String(customer.appointmentCount)} />
         <Stat label="Đã hoàn tất" value={String(customer.completedAppointmentCount)} />
-        <Stat label="Đã thanh toán" value={formatCurrency(customer.totalPaid)} />
+        <Stat label="Đã chi tiêu" value={formatCurrency(customer.totalPaid)} />
         <Stat
           label="Còn nợ"
           value={formatCurrency(customer.totalUnpaid)}
@@ -97,7 +103,7 @@ export function CustomerDetailPage() {
           Hóa đơn ({customer.invoiceCount})
         </TabButton>
         <TabButton active={tab === 'purchases'} onClick={() => setTab('purchases')}>
-          Lịch sử mua hàng
+          Lịch sử mua hàng ({customer.purchaseCount})
         </TabButton>
       </div>
 
@@ -124,7 +130,7 @@ export function CustomerDetailPage() {
       {tab === 'appointments' && <AppointmentsTab customerId={id} />}
       {tab === 'medical' && <MedicalHistoryTab customerId={id} />}
       {tab === 'invoices' && <TransactionsTab customerId={id} />}
-      {tab === 'purchases' && <PurchasesTab />}
+      {tab === 'purchases' && <PurchasesTab customerId={id} />}
     </div>
   );
 }
@@ -414,16 +420,80 @@ function TransactionsTab({ customerId }: { customerId: string }) {
 }
 
 /**
- * Khối 6 - Lịch sử mua hàng (bán lẻ tại quầy). Chưa có module POS nên tab này nói
- * thẳng là chưa có dữ liệu thay vì hiển thị số liệu bịa.
+ * Khối 6 - Lịch sử mua hàng: hoá đơn bán lẻ tại quầy (P8-T9).
+ *
+ * Không có cột thú cưng / bác sĩ như tab "Hóa đơn": bán lẻ không gắn với lần khám nào.
+ * Thay vào đó là danh sách mặt hàng — thứ nhân viên cần khi khách hỏi "lần trước tôi mua
+ * loại nào".
  */
-function PurchasesTab() {
+function PurchasesTab({ customerId }: { customerId: string }) {
+  const query = useQuery({
+    queryKey: ['customer-purchases', customerId],
+    queryFn: () => customersApi.purchases(customerId),
+  });
+
+  const columns: Column<CustomerPurchase>[] = [
+    {
+      key: 'invoiceCode',
+      header: 'Mã hóa đơn',
+      render: (row) => (
+        <Link
+          to={`/staff/billing/${row.invoiceId}`}
+          className="font-mono text-xs text-primary hover:underline"
+        >
+          {row.invoiceCode}
+        </Link>
+      ),
+    },
+    { key: 'purchasedAt', header: 'Thời gian', render: (row) => formatDateTime(row.purchasedAt) },
+    { key: 'branchName', header: 'Chi nhánh', render: (row) => row.branchName ?? '—' },
+    {
+      key: 'itemSummary',
+      header: 'Mặt hàng',
+      render: (row) => (
+        <span className="block max-w-xs truncate" title={row.itemSummary}>
+          {row.itemSummary || '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'totalAmount',
+      header: 'Số tiền',
+      render: (row) => <span className="tabular-nums">{formatCurrency(row.totalAmount)}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Trạng thái',
+      render: (row) => (
+        <div className="flex flex-col gap-0.5">
+          <Badge variant={INVOICE_STATUS_VARIANT[row.status]}>
+            {INVOICE_STATUS_LABEL_VI[row.status]}
+          </Badge>
+          {row.paymentMethod && (
+            <span className="text-xs text-muted">{PAYMENT_METHOD_LABEL_VI[row.paymentMethod]}</span>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  const total = (query.data ?? []).reduce((sum, row) => sum + row.totalAmount, 0);
+
   return (
-    <div className="rounded border border-dashed border-border bg-surface p-8 text-center">
-      <p className="font-medium">Chưa có dữ liệu mua hàng</p>
-      <p className="mt-1 text-sm text-muted">
-        Bán lẻ tại quầy (POS) sẽ có ở Phase 8. Hóa đơn khám bệnh nằm ở tab “Hóa đơn”.
-      </p>
+    <div className="flex flex-col gap-3">
+      <Table
+        columns={columns}
+        data={query.data ?? []}
+        getRowId={(row) => row.invoiceId}
+        loading={query.isLoading}
+        emptyMessage="Khách hàng chưa mua hàng lẻ tại quầy lần nào."
+      />
+      {(query.data?.length ?? 0) > 0 && (
+        <p className="text-right text-sm text-muted">
+          Tổng giá trị {query.data?.length} lần mua:{' '}
+          <strong className="text-foreground">{formatCurrency(total)}</strong>
+        </p>
+      )}
     </div>
   );
 }

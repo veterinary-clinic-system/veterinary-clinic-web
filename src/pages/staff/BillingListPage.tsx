@@ -4,18 +4,17 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { branchesApi } from '@/api/branches.api';
 import { billingApi } from '@/api/billing.api';
-import { PAYMENT_METHOD_LABEL_VI } from '@/utils/labels';
+import { INVOICE_SOURCE_LABEL_VI, PAYMENT_METHOD_LABEL_VI } from '@/utils/labels';
+import { formatCurrency } from '@/utils/format';
 
 const LIMIT = 20;
 
 /**
- * Paginated invoice list. `billingApi.list`'s declared return type is
- * `PaginatedResult<Invoice>` and `Invoice.items` is typed as always-present, but list
- * endpoints commonly skip eager-loading nested relations for performance - since that
- * can't be confirmed without backend source, this view shows the item count (as
- * requested) but intentionally omits a computed grand-total column here; the total is
- * shown reliably on the single-invoice detail page instead, where `getOne` is a
- * single-record fetch.
+ * Danh sách hoá đơn có phân trang.
+ *
+ * Từ P8-T1 cột "Thành tiền" đọc `totalAmount` — con số backend đã chốt lúc lập hoá đơn,
+ * có mặt trên mọi dòng của danh sách. Trước đó trang này cố tình bỏ trống cột tổng vì
+ * chỉ cộng được từ `items`, mà quan hệ đó không chắc được nạp trong danh sách.
  */
 export function BillingListPage() {
   const { user } = useAuth();
@@ -86,8 +85,9 @@ export function BillingListPage() {
           <thead>
             <tr className="bg-surface-muted text-left">
               <th className="px-3 py-2">Mã hóa đơn</th>
-              <th className="px-3 py-2">Mã lịch hẹn</th>
-              <th className="px-3 py-2">Số mục</th>
+              <th className="px-3 py-2">Nguồn</th>
+              <th className="px-3 py-2">Khách hàng</th>
+              <th className="px-3 py-2 text-right">Thành tiền</th>
               <th className="px-3 py-2">Phương thức</th>
               <th className="px-3 py-2">Trạng thái</th>
             </tr>
@@ -95,14 +95,14 @@ export function BillingListPage() {
           <tbody>
             {listQuery.isLoading && (
               <tr>
-                <td colSpan={5} className="px-3 py-6 text-center text-muted">
+                <td colSpan={6} className="px-3 py-6 text-center text-muted">
                   Đang tải…
                 </td>
               </tr>
             )}
             {!listQuery.isLoading && (data?.data.length ?? 0) === 0 && (
               <tr>
-                <td colSpan={5} className="px-3 py-6 text-center text-muted">
+                <td colSpan={6} className="px-3 py-6 text-center text-muted">
                   Không có hóa đơn nào.
                 </td>
               </tr>
@@ -111,11 +111,12 @@ export function BillingListPage() {
               <tr key={inv.id} className="border-t border-border hover:bg-surface-muted">
                 <td className="px-3 py-2">
                   <Link to={`/staff/billing/${inv.id}`} className="font-mono text-xs text-primary hover:underline">
-                    {inv.id.slice(0, 8)}
+                    {inv.invoiceCode}
                   </Link>
                 </td>
-                <td className="px-3 py-2 font-mono text-xs text-muted">{inv.appointmentId.slice(0, 8)}</td>
-                <td className="px-3 py-2">{inv.items?.length ?? 0}</td>
+                <td className="px-3 py-2">{INVOICE_SOURCE_LABEL_VI[inv.source]}</td>
+                <td className="px-3 py-2">{inv.customer?.fullName ?? 'Khách vãng lai'}</td>
+                <td className="px-3 py-2 text-right tabular-nums">{formatCurrency(inv.totalAmount)}</td>
                 <td className="px-3 py-2">{inv.paymentMethod ? PAYMENT_METHOD_LABEL_VI[inv.paymentMethod] : '—'}</td>
                 <td className="px-3 py-2">
                   <span

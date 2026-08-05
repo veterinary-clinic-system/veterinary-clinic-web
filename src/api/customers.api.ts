@@ -4,6 +4,7 @@ import {
   CustomerAppointment,
   CustomerDetail,
   CustomerMedicalHistory,
+  CustomerPurchase,
   CustomerTransaction,
   PaginatedResult,
   Pet,
@@ -57,4 +58,7 @@ export const customersApi = {
     apiClient.get<CustomerMedicalHistory[]>(`/customers/${id}/medical-history`).then((r) => r.data),
   transactions: (id: string) =>
     apiClient.get<CustomerTransaction[]>(`/customers/${id}/transactions`).then((r) => r.data),
+  /** Lịch sử mua hàng tại quầy (hoá đơn POS) — tách khỏi `transactions` (hoá đơn khám). */
+  purchases: (id: string) =>
+    apiClient.get<CustomerPurchase[]>(`/customers/${id}/purchases`).then((r) => r.data),
 };

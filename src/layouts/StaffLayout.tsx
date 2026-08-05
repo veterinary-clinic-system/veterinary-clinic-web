@@ -20,6 +20,7 @@ const NAV_ITEMS: { to: string; label: string; roles?: Role[] }[] = [
   { to: '/staff/customers', label: 'Khách hàng', roles: [...CLINIC_ROLES, Role.STAFF] },
   { to: '/staff/patients', label: 'Hồ sơ thú cưng', roles: CLINIC_ROLES },
   { to: '/staff/appointments', label: 'Lịch hẹn', roles: CLINIC_ROLES },
+  { to: '/staff/pos', label: 'Bán hàng', roles: COUNTER_ROLES },
   { to: '/staff/billing', label: 'Hóa đơn', roles: COUNTER_ROLES },
   // BR-15: chỉ Manager/Admin được xem báo cáo doanh thu.
   { to: '/staff/reports', label: 'Báo cáo', roles: [Role.ADMIN, Role.MANAGER] },

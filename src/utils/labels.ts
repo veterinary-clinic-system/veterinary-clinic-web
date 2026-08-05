@@ -2,9 +2,12 @@ import {
   AppointmentStatus,
   DiagnosisSeverity,
   Gender,
+  InvoiceSource,
+  InvoiceStatus,
   LabTestStatus,
   MedicalRecordStatus,
   PaymentMethod,
+  PaymentStatus,
   Role,
   SlotStatus,
   Specialization,
@@ -28,6 +31,40 @@ export const PAYMENT_METHOD_LABEL_VI: Record<PaymentMethod, string> = {
   [PaymentMethod.CASH]: 'Tiền mặt',
   [PaymentMethod.E_WALLET]: 'Ví điện tử',
   [PaymentMethod.CREDIT_CARD]: 'Thẻ tín dụng',
+  [PaymentMethod.BANK_TRANSFER]: 'Chuyển khoản',
+  [PaymentMethod.QR]: 'Quét mã QR',
+};
+
+export const INVOICE_SOURCE_LABEL_VI: Record<InvoiceSource, string> = {
+  [InvoiceSource.CLINIC]: 'Khám bệnh',
+  [InvoiceSource.POS]: 'Bán lẻ',
+};
+
+export const INVOICE_STATUS_LABEL_VI: Record<InvoiceStatus, string> = {
+  [InvoiceStatus.PENDING]: 'Chưa thanh toán',
+  [InvoiceStatus.PARTIALLY_PAID]: 'Trả một phần',
+  [InvoiceStatus.PAID]: 'Đã thanh toán',
+  [InvoiceStatus.CANCELLED]: 'Đã hủy',
+  [InvoiceStatus.REFUNDED]: 'Đã hoàn tiền',
+};
+
+/** Màu badge của từng trạng thái hoá đơn — dùng chung cho danh sách và trang chi tiết. */
+export const INVOICE_STATUS_VARIANT: Record<
+  InvoiceStatus,
+  'default' | 'success' | 'warning' | 'destructive' | 'outline'
+> = {
+  [InvoiceStatus.PENDING]: 'warning',
+  [InvoiceStatus.PARTIALLY_PAID]: 'warning',
+  [InvoiceStatus.PAID]: 'success',
+  [InvoiceStatus.CANCELLED]: 'outline',
+  [InvoiceStatus.REFUNDED]: 'destructive',
+};
+
+export const PAYMENT_STATUS_LABEL_VI: Record<PaymentStatus, string> = {
+  [PaymentStatus.PENDING]: 'Chờ xác nhận',
+  [PaymentStatus.SUCCESS]: 'Thành công',
+  [PaymentStatus.FAILED]: 'Thất bại',
+  [PaymentStatus.REFUNDED]: 'Hoàn tiền',
 };
 
 export const LAB_TEST_STATUS_LABEL_VI: Record<LabTestStatus, string> = {

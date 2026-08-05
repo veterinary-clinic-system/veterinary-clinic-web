@@ -1,14 +1,18 @@
 import {
   AppointmentStatus,
+  CartStatus,
   CommonSymptom,
   DiagnosisSeverity,
   Gender,
   InventoryTransactionType,
+  InvoiceSource,
+  InvoiceStatus,
   MedicationRoute,
   ItemType,
   LabTestStatus,
   MedicalRecordStatus,
   PaymentMethod,
+  PaymentStatus,
   PrescriptionStatus,
   PriorityColor,
   PurchaseOrderStatus,
@@ -379,13 +383,53 @@ export interface LabTestOrder {
   resultFileUrls: string[];
 }
 
+/**
+ * Hoá đơn — từ P8-T1 không còn buộc phải gắn vào một lịch hẹn.
+ *
+ * Bốn con số tiền được backend **chốt cứng** lúc lập hoá đơn. Không cộng lại từ `items`
+ * ở client: hoá đơn có giảm giá sẽ ra số khác, và số phải thu là số trên chứng từ.
+ */
 export interface Invoice {
   id: string;
-  appointmentId: string;
+  /** Mã nghiệp vụ `HD000123` — backend sinh từ sequence, không nhận từ client. */
+  invoiceCode: string;
+  source: InvoiceSource;
+  /** `null` với hoá đơn POS — bán lẻ tại quầy không có lịch hẹn nào. */
+  appointmentId: string | null;
+  /** `null` khi khách mua lẻ không có hồ sơ. */
+  customerId: string | null;
+  customer?: { id: string; fullName: string; phone: string } | null;
+  branchId: string;
+  branch?: Branch;
+  subtotal: number;
+  discountAmount: number;
+  taxAmount: number;
+  /** `subtotal - discountAmount + taxAmount`. */
+  totalAmount: number;
+  /** Backend tính từ tổng các lần thanh toán — chỉ đọc. */
+  status: InvoiceStatus;
+  /** Phương thức của lần trả gần nhất; lịch sử đầy đủ ở `GET .../payments`. */
   paymentMethod: PaymentMethod | null;
   paid: boolean;
   paidAt: string | null;
   items: InvoiceItem[];
+}
+
+/**
+ * Một lần thanh toán — SRS FR-21. `amount` âm là dòng hoàn tiền
+ * (`status === PaymentStatus.REFUNDED`).
+ */
+export interface Payment {
+  id: string;
+  invoiceId: string;
+  amount: number;
+  method: PaymentMethod;
+  status: PaymentStatus;
+  paidAt: string | null;
+  referenceCode: string | null;
+  receivedByUserId: string | null;
+  note: string | null;
+  createdAt: string;
 }
 
 export interface InvoiceItem {
@@ -394,6 +438,73 @@ export interface InvoiceItem {
   item: Item;
   price: number;
   quantity: number;
+}
+
+// ------------------------------------------------------- POS (Phase 8, FR-19)
+
+/**
+ * Một dòng trong lưới tìm sản phẩm của màn hình POS — `GET /pos/products`.
+ *
+ * `availableQuantity` là số **bán được**: backend đã loại lô hết hạn (BR-11), nên nó có
+ * thể nhỏ hơn nhiều so với `InventoryItem.inventoryQuantity` của màn hình kho.
+ */
+export interface PosProduct {
+  itemId: string;
+  itemName: string;
+  code: string;
+  itemType: ItemType;
+  unitPrice: number;
+  sku: string | null;
+  unit: string | null;
+  availableQuantity: number;
+}
+
+export interface CartItem {
+  id: string;
+  cartId: string;
+  itemId: string;
+  item: Item;
+  quantity: number;
+  /** Giá lúc thêm vào giỏ. Giá **cuối** được chốt lại lúc thanh toán. */
+  unitPrice: number;
+}
+
+export interface Cart {
+  id: string;
+  branchId: string;
+  branch?: Branch;
+  customerId: string | null;
+  customer?: { id: string; fullName: string; phone: string } | null;
+  staffUserId: string | null;
+  status: CartStatus;
+  discountAmount: number;
+  discountByUserId: string | null;
+  discountNote: string | null;
+  invoiceId: string | null;
+  note: string | null;
+  items?: CartItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Tình trạng kho của một dòng giỏ, backend tính tại thời điểm đọc. */
+export interface CartItemStock {
+  cartItemId: string;
+  itemId: string;
+  itemName: string;
+  requested: number;
+  availableQuantity: number;
+  insufficientStock: boolean;
+}
+
+/** Dạng trả về của mọi endpoint đọc/sửa một giỏ hàng. */
+export interface CartView {
+  cart: Cart;
+  subtotal: number;
+  discountAmount: number;
+  totalAmount: number;
+  stockCheck: CartItemStock[];
+  hasInsufficientStock: boolean;
 }
 
 /**
@@ -420,9 +531,28 @@ export interface Customer {
 export interface CustomerDetail extends Customer {
   appointmentCount: number;
   completedAppointmentCount: number;
+  /** Số hoá đơn khám (`CLINIC`). */
   invoiceCount: number;
+  /** Số hoá đơn bán lẻ (`POS`) — P8-T9. */
+  purchaseCount: number;
+  /** Tổng chi tiêu: tiền khách đã thực trả, **gồm cả** hoá đơn khám lẫn bán lẻ. */
   totalPaid: number;
   totalUnpaid: number;
+}
+
+/** Một dòng tab "Lịch sử mua hàng" — `GET /customers/:id/purchases` (P8-T9). */
+export interface CustomerPurchase {
+  invoiceId: string;
+  invoiceCode: string;
+  purchasedAt: string;
+  branchName: string | null;
+  status: InvoiceStatus;
+  /** "Thức ăn hạt x1, Vitamin x2" — backend gộp sẵn. */
+  itemSummary: string;
+  itemCount: number;
+  totalAmount: number;
+  paidAt: string | null;
+  paymentMethod: PaymentMethod | null;
 }
 
 /** Một dòng tab "Lịch hẹn" của hồ sơ khách - `GET /customers/:id/appointments`. */

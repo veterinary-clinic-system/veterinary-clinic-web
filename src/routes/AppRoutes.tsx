@@ -23,6 +23,7 @@ import { StaffPetProfilePage } from '@/pages/staff/StaffPetProfilePage';
 import { AppointmentsListPage } from '@/pages/staff/AppointmentsListPage';
 import { AppointmentDetailPage } from '@/pages/staff/AppointmentDetailPage';
 import { ExamEntryPage } from '@/pages/staff/ExamEntryPage';
+import { PosPage } from '@/pages/staff/PosPage';
 import { BillingListPage } from '@/pages/staff/BillingListPage';
 import { InvoiceDetailPage } from '@/pages/staff/InvoiceDetailPage';
 import { CatalogAdminPage } from '@/pages/staff/CatalogAdminPage';
@@ -73,6 +74,17 @@ export function AppRoutes() {
           <Route path="/staff/appointments" element={<AppointmentsListPage />} />
           <Route path="/staff/appointments/:id" element={<AppointmentDetailPage />} />
           <Route path="/staff/appointments/:id/exam" element={<ExamEntryPage />} />
+          {/*
+            Bán hàng tại quầy (P8). Quyền POS_SELL trong ma trận thuộc về STAFF,
+            RECEPTIONIST, MANAGER, ADMIN - đúng bốn vai trò của COUNTER_ROLES ở nav.
+          */}
+          <Route
+            element={
+              <RequireAuth allow={[Role.ADMIN, Role.MANAGER, Role.RECEPTIONIST, Role.STAFF]} />
+            }
+          >
+            <Route path="/staff/pos" element={<PosPage />} />
+          </Route>
           <Route path="/staff/billing" element={<BillingListPage />} />
           <Route path="/staff/billing/:id" element={<InvoiceDetailPage />} />
 

@@ -94,7 +94,44 @@ export const COMMON_SYMPTOM_LABEL_VI: Record<CommonSymptom, string> = {
 export enum PaymentMethod {
   CASH = 'CASH',
   E_WALLET = 'E_WALLET',
+  /** = `CARD` của SRS — thẻ tín dụng/ghi nợ quẹt tại quầy. */
   CREDIT_CARD = 'CREDIT_CARD',
+  BANK_TRANSFER = 'BANK_TRANSFER',
+  QR = 'QR',
+}
+
+/** Nguồn sinh hoá đơn (P8-T1). POS = bán lẻ tại quầy, không có lịch hẹn. */
+export enum InvoiceSource {
+  CLINIC = 'CLINIC',
+  POS = 'POS',
+}
+
+/**
+ * Trạng thái hoá đơn (P8-T2) — backend tính từ tổng các lần thanh toán, **không** đặt
+ * bằng tay. Client chỉ đọc.
+ */
+export enum InvoiceStatus {
+  PENDING = 'PENDING',
+  PARTIALLY_PAID = 'PARTIALLY_PAID',
+  PAID = 'PAID',
+  CANCELLED = 'CANCELLED',
+  REFUNDED = 'REFUNDED',
+}
+
+/** Vòng đời giỏ hàng POS (P8-T4, FR-19). */
+export enum CartStatus {
+  OPEN = 'OPEN',
+  CHECKED_OUT = 'CHECKED_OUT',
+  ABANDONED = 'ABANDONED',
+}
+
+/** Trạng thái một lần thanh toán (P8-T2, FR-21). */
+export enum PaymentStatus {
+  PENDING = 'PENDING',
+  SUCCESS = 'SUCCESS',
+  FAILED = 'FAILED',
+  /** Dòng hoàn tiền — `amount` luôn âm. */
+  REFUNDED = 'REFUNDED',
 }
 
 export enum Specialization {
