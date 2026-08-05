@@ -249,3 +249,37 @@ export const STOCK_TAKE_STATUS_LABEL_VI: Record<StockTakeStatus, string> = {
   [StockTakeStatus.CONFIRMED]: 'Đã xác nhận',
   [StockTakeStatus.CANCELLED]: 'Đã hủy',
 };
+
+/** Đường dùng thuốc — SRS FR-11-01 (P7). */
+export enum MedicationRoute {
+  ORAL = 'ORAL',
+  INJECTION = 'INJECTION',
+  TOPICAL = 'TOPICAL',
+  OPHTHALMIC = 'OPHTHALMIC',
+  OTIC = 'OTIC',
+  OTHER = 'OTHER',
+}
+
+export const MEDICATION_ROUTE_LABEL_VI: Record<MedicationRoute, string> = {
+  [MedicationRoute.ORAL]: 'Uống',
+  [MedicationRoute.INJECTION]: 'Tiêm',
+  [MedicationRoute.TOPICAL]: 'Bôi ngoài da',
+  [MedicationRoute.OPHTHALMIC]: 'Nhỏ mắt',
+  [MedicationRoute.OTIC]: 'Nhỏ tai',
+  [MedicationRoute.OTHER]: 'Khác',
+};
+
+/** Vòng đời đơn thuốc — SRS FR-11-03 (P7). */
+export enum PrescriptionStatus {
+  PRESCRIBED = 'PRESCRIBED',
+  DISPENSING = 'DISPENSING',
+  DISPENSED = 'DISPENSED',
+  CANCELLED = 'CANCELLED',
+}
+
+export const PRESCRIPTION_STATUS_LABEL_VI: Record<PrescriptionStatus, string> = {
+  [PrescriptionStatus.PRESCRIBED]: 'Chờ cấp phát',
+  [PrescriptionStatus.DISPENSING]: 'Đang soạn',
+  [PrescriptionStatus.DISPENSED]: 'Đã cấp phát',
+  [PrescriptionStatus.CANCELLED]: 'Đã hủy',
+};

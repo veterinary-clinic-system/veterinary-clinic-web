@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import { Examination, LabTestOrder, Prescription } from '@/types/models';
+import { Examination, LabTestOrder, PrescriptionView } from '@/types/models';
 
 export const examinationsApi = {
   create: (payload: Record<string, unknown>) =>
@@ -8,8 +8,18 @@ export const examinationsApi = {
     apiClient.patch<Examination>(`/examinations/${id}`, payload).then((r) => r.data),
   getByAppointment: (appointmentId: string) =>
     apiClient.get<Examination>(`/examinations/by-appointment/${appointmentId}`).then((r) => r.data),
-  addPrescription: (examinationId: string, payload: { notes?: string; items: Record<string, unknown>[] }) =>
-    apiClient.post<Prescription>(`/examinations/${examinationId}/prescriptions`, payload).then((r) => r.data),
+  /**
+   * Cửa vào cũ của việc kê đơn — vẫn dùng được, nhưng từ P7 nó trả về `PrescriptionView`
+   * (đơn **kèm** `stockCheck` từng dòng) chứ không còn trả `Prescription` trần.
+   * Kê đơn không trừ kho nữa: thiếu tồn chỉ là cảnh báo (FR-11-02).
+   */
+  addPrescription: (
+    examinationId: string,
+    payload: { notes?: string; items: Record<string, unknown>[] },
+  ) =>
+    apiClient
+      .post<PrescriptionView>(`/examinations/${examinationId}/prescriptions`, payload)
+      .then((r) => r.data),
   addLabTest: (examinationId: string, testName: string) =>
     apiClient
       .post<LabTestOrder>(`/examinations/${examinationId}/lab-tests`, { testName })

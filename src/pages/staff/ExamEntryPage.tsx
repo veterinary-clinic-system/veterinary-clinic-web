@@ -18,7 +18,14 @@ import {
   Prescription,
   Treatment,
 } from '@/types/models';
-import { DiagnosisSeverity, LabTestStatus, MedicalRecordStatus } from '@/types/enums';
+import {
+  DiagnosisSeverity,
+  LabTestStatus,
+  MEDICATION_ROUTE_LABEL_VI,
+  MedicalRecordStatus,
+  MedicationRoute,
+  PRESCRIPTION_STATUS_LABEL_VI,
+} from '@/types/enums';
 import { formatDate, formatDateTime } from '@/utils/format';
 import {
   DIAGNOSIS_SEVERITY_LABEL_VI,
@@ -957,15 +964,26 @@ function LabTestRow({
 
 interface PrescriptionLine {
   medicationId: string;
+  /**
+   * Số lượng thực cấp (P7, FR-11-01). Bác sĩ nhập tay chứ hệ thống **không** suy ra từ
+   * liều × tần suất × số ngày: y lệnh thực tế có những dạng không quy về một con số
+   * được ("khi sốt trên 39 độ"), mà đây lại là con số trừ kho và tính tiền.
+   */
+  quantity: string;
   dosage: string;
+  frequency: string;
   durationDays: string;
+  route: MedicationRoute;
   instructions: string;
 }
 
 const EMPTY_LINE: PrescriptionLine = {
   medicationId: '',
+  quantity: '',
   dosage: '',
+  frequency: '',
   durationDays: '',
+  route: MedicationRoute.ORAL,
   instructions: '',
 };
 
@@ -996,15 +1014,30 @@ function PrescriptionsSection({ record, readOnly }: { record: MedicalRecord; rea
           .filter((l) => l.medicationId)
           .map((l) => ({
             medicationId: l.medicationId,
+            quantity: Number(l.quantity) || 0,
             dosage: l.dosage,
+            frequency: l.frequency || undefined,
             durationDays: Number(l.durationDays) || 0,
+            route: l.route,
             instructions: l.instructions || undefined,
           })),
       }),
-    onSuccess: () => {
+    onSuccess: (view) => {
       setLines([{ ...EMPTY_LINE }]);
       setNotes('');
-      toast.show('Đã lưu đơn thuốc', 'success');
+      // FR-11-02: thiếu tồn thì CẢNH BÁO chứ không chặn - đơn đã lưu, bác sĩ vẫn kê
+      // được thuốc bệnh nhân cần. Nói rõ thiếu thuốc nào để dược sĩ biết đường nhập.
+      const short = view.stockCheck.filter((s) => s.insufficientStock);
+      if (short.length > 0) {
+        toast.show(
+          `Đã lưu đơn thuốc. Lưu ý kho đang thiếu: ${short
+            .map((s) => `${s.medicationName} (cần ${s.requested}, còn ${s.availableQuantity})`)
+            .join('; ')}`,
+          'error',
+        );
+      } else {
+        toast.show('Đã lưu đơn thuốc', 'success');
+      }
       void queryClient.invalidateQueries({ queryKey: ['medical-record'] });
     },
     onError: (error) => toast.show(extractApiMessage(error) ?? 'Lưu đơn thuốc thất bại', 'error'),
@@ -1025,12 +1058,17 @@ function PrescriptionsSection({ record, readOnly }: { record: MedicalRecord; rea
               <ul className="list-inside list-disc">
                 {prescription.items.map((item) => (
                   <li key={item.id}>
-                    {item.medication?.item.itemName ?? item.medicationId} — {item.dosage} —{' '}
-                    {item.durationDays} ngày
+                    {item.medication?.item.itemName ?? item.medicationId} — {item.quantity}{' '}
+                    {item.medication?.unit ?? ''} — {item.dosage}
+                    {item.frequency ? ` — ${item.frequency}` : ''} — {item.durationDays} ngày —{' '}
+                    {MEDICATION_ROUTE_LABEL_VI[item.route] ?? item.route}
                     {item.instructions ? ` — ${item.instructions}` : ''}
                   </li>
                 ))}
               </ul>
+              <p className="mt-1 text-muted">
+                Trạng thái: {PRESCRIPTION_STATUS_LABEL_VI[prescription.status] ?? prescription.status}
+              </p>
               {prescription.notes && (
                 <p className="mt-1 text-muted">Ghi chú: {prescription.notes}</p>
               )}
@@ -1051,7 +1089,7 @@ function PrescriptionsSection({ record, readOnly }: { record: MedicalRecord; rea
             {lines.map((line, index) => (
               <div
                 key={index}
-                className="grid grid-cols-1 gap-2 sm:grid-cols-[2fr_1fr_1fr_2fr]"
+                className="grid grid-cols-1 gap-2 sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_2fr]"
               >
                 <Select
                   value={line.medicationId}
@@ -1059,15 +1097,35 @@ function PrescriptionsSection({ record, readOnly }: { record: MedicalRecord; rea
                   options={medicationOptions}
                 />
                 <Input
+                  type="number"
+                  min={1}
+                  placeholder="Số lượng"
+                  value={line.quantity}
+                  onChange={(e) => updateLine(index, { quantity: e.target.value })}
+                />
+                <Input
                   placeholder="Liều dùng"
                   value={line.dosage}
                   onChange={(e) => updateLine(index, { dosage: e.target.value })}
+                />
+                <Input
+                  placeholder="Tần suất"
+                  value={line.frequency}
+                  onChange={(e) => updateLine(index, { frequency: e.target.value })}
                 />
                 <Input
                   type="number"
                   placeholder="Số ngày"
                   value={line.durationDays}
                   onChange={(e) => updateLine(index, { durationDays: e.target.value })}
+                />
+                <Select
+                  value={line.route}
+                  onChange={(value) => updateLine(index, { route: value as MedicationRoute })}
+                  options={Object.values(MedicationRoute).map((route) => ({
+                    value: route,
+                    label: MEDICATION_ROUTE_LABEL_VI[route],
+                  }))}
                 />
                 <Input
                   placeholder="Hướng dẫn (tuỳ chọn)"

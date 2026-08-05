@@ -4,10 +4,12 @@ import {
   DiagnosisSeverity,
   Gender,
   InventoryTransactionType,
+  MedicationRoute,
   ItemType,
   LabTestStatus,
   MedicalRecordStatus,
   PaymentMethod,
+  PrescriptionStatus,
   PriorityColor,
   PurchaseOrderStatus,
   QueueSource,
@@ -325,6 +327,11 @@ export interface Prescription {
   id: string;
   medicalRecordId: string;
   notes: string | null;
+  /** Vòng đời FR-11-03 (P7). Đơn có trước P7 được backfill thành `DISPENSED`. */
+  status: PrescriptionStatus;
+  dispensedByUserId: string | null;
+  dispensedAt: string | null;
+  createdAt: string;
   items: PrescriptionItem[];
 }
 
@@ -332,9 +339,35 @@ export interface PrescriptionItem {
   id: string;
   medicationId: string;
   medication?: Medication;
+  /**
+   * Số lượng thực cấp (P7) — đây là con số trừ kho và tính tiền, **không** suy ra từ
+   * `dosage` × `durationDays`.
+   */
+  quantity: number;
   dosage: string;
+  frequency: string | null;
   durationDays: number;
+  route: MedicationRoute;
   instructions: string | null;
+}
+
+/** Tình trạng kho của một dòng thuốc, backend tính tại thời điểm đọc — FR-11-02. */
+export interface PrescriptionItemStock {
+  prescriptionItemId: string;
+  medicationId: string;
+  medicationName: string;
+  requested: number;
+  /** Số dùng được ở chi nhánh khám, đã loại lô hết hạn (BR-11). */
+  availableQuantity: number;
+  insufficientStock: boolean;
+}
+
+/** Dạng trả về của mọi endpoint đọc một đơn thuốc. */
+export interface PrescriptionView {
+  prescription: Prescription;
+  branchId: string;
+  stockCheck: PrescriptionItemStock[];
+  hasInsufficientStock: boolean;
 }
 
 export interface LabTestOrder {

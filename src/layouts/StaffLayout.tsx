@@ -41,6 +41,9 @@ const NAV_ITEMS: { to: string; label: string; roles?: Role[] }[] = [
     label: 'Nhà cung cấp',
     roles: [Role.ADMIN, Role.MANAGER, Role.PHARMACIST],
   },
+  // Quầy thuốc (P7) - cùng nhóm vai trò với kho: chỉ ADMIN/MANAGER/PHARMACIST có
+  // PRESCRIPTION_DISPENSE hoặc quyền giám sát tương ứng.
+  { to: '/staff/pharmacy', label: 'Quầy thuốc', roles: WAREHOUSE_ROLES },
   // Kho (P6). Tồn kho và cảnh báo bỏ trống `roles`: mọi vai trò nhân viên đều có
   // INVENTORY_VIEW trong ma trận quyền, kể cả STAFF bán hàng và bác sĩ.
   { to: '/staff/inventory', label: 'Tồn kho' },

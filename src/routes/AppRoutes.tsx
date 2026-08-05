@@ -34,6 +34,7 @@ import { InventoryAlertsPage } from '@/pages/staff/InventoryAlertsPage';
 import { PurchaseOrdersPage } from '@/pages/staff/PurchaseOrdersPage';
 import { GoodsReceiptPage } from '@/pages/staff/GoodsReceiptPage';
 import { StockTakePage } from '@/pages/staff/StockTakePage';
+import { PharmacyPage } from '@/pages/staff/PharmacyPage';
 import { BranchesAdminPage } from '@/pages/staff/BranchesAdminPage';
 import { UsersAdminPage } from '@/pages/staff/UsersAdminPage';
 import { EmployeesPage } from '@/pages/staff/EmployeesPage';
@@ -105,6 +106,12 @@ export function AppRoutes() {
             <Route path="/staff/purchase-orders" element={<PurchaseOrdersPage />} />
             <Route path="/staff/goods-receipts" element={<GoodsReceiptPage />} />
             <Route path="/staff/stock-takes" element={<StockTakePage />} />
+            {/*
+              Quầy thuốc (P7). Cấp phát cần `PRESCRIPTION_DISPENSE`, mà ma trận quyền
+              chỉ cho PHARMACIST và ADMIN. MANAGER vào được để xem — họ có
+              `PRESCRIPTION_VIEW`, và backend vẫn chặn nút cấp phát của họ.
+            */}
+            <Route path="/staff/pharmacy" element={<PharmacyPage />} />
           </Route>
           <Route element={<RequireAuth allow={[Role.ADMIN, Role.MANAGER]} />}>
             <Route path="/staff/employees" element={<EmployeesPage />} />
