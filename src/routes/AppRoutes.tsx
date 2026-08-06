@@ -43,6 +43,7 @@ import { UsersAdminPage } from '@/pages/staff/UsersAdminPage';
 import { EmployeesPage } from '@/pages/staff/EmployeesPage';
 import { RolePermissionsPage } from '@/pages/staff/RolePermissionsPage';
 import { ReportsPage } from '@/pages/staff/ReportsPage';
+import { AuditLogsPage } from '@/pages/staff/AuditLogsPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 
 export function AppRoutes() {
@@ -152,6 +153,8 @@ export function AppRoutes() {
             <Route path="/staff/users" element={<UsersAdminPage />} />
             {/* BR-16: chỉ Admin được quản lý role và permission. */}
             <Route path="/staff/permissions" element={<RolePermissionsPage />} />
+            {/* FR-26/BR-17: `AUDIT_VIEW` trong ma trận mặc định chỉ thuộc về Admin. */}
+            <Route path="/staff/audit-logs" element={<AuditLogsPage />} />
           </Route>
         </Route>
       </Route>

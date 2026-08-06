@@ -353,3 +353,39 @@ export const PRESCRIPTION_STATUS_LABEL_VI: Record<PrescriptionStatus, string> = 
   [PrescriptionStatus.DISPENSED]: 'Đã cấp phát',
   [PrescriptionStatus.CANCELLED]: 'Đã hủy',
 };
+
+/**
+ * Nhãn cho nhật ký kiểm toán — FR-26 (P10-T2).
+ *
+ * Cố tình để kiểu `Record<string, string>` chứ không phải `Record<Enum, string>`: hai
+ * danh sách này đến từ `GET /audit-logs/filters`, và bảng `audit_logs` là bất biến nên
+ * nó còn giữ những giá trị của các phiên bản trước. Tra không thấy thì hiện nguyên mã —
+ * một dòng nhật ký cũ vẫn phải đọc được, chỉ là không có nhãn tiếng Việt.
+ */
+export const AUDIT_ACTION_LABEL_VI: Record<string, string> = {
+  CREATE: 'Tạo mới',
+  UPDATE: 'Cập nhật',
+  DELETE: 'Xóa',
+  LOGIN: 'Đăng nhập',
+  LOGOUT: 'Đăng xuất',
+  APPROVE: 'Duyệt / Xác nhận',
+  CANCEL: 'Hủy',
+  PAYMENT: 'Thanh toán / Hoàn tiền',
+  DISPENSE: 'Cấp phát',
+  STOCK_ADJUSTMENT: 'Điều chỉnh kho',
+};
+
+export const AUDIT_ENTITY_LABEL_VI: Record<string, string> = {
+  User: 'Tài khoản',
+  Pet: 'Thú cưng',
+  Appointment: 'Lịch hẹn',
+  MedicalRecord: 'Hồ sơ bệnh án',
+  Prescription: 'Đơn thuốc',
+  Vaccination: 'Mũi tiêm',
+  LabTestOrder: 'Phiếu xét nghiệm',
+  Invoice: 'Hóa đơn',
+  Payment: 'Thanh toán',
+  InventoryItem: 'Tồn kho',
+  StockTake: 'Phiếu kiểm kê',
+  RolePermission: 'Phân quyền',
+};

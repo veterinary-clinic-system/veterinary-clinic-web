@@ -1,5 +1,6 @@
 import { Link, Outlet } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { NotificationBell } from '@/components/NotificationBell';
 import { Role } from '@/types/enums';
 
 const CLINIC_ROLES = [Role.ADMIN, Role.MANAGER, Role.DOCTOR, Role.RECEPTIONIST];
@@ -60,6 +61,8 @@ const NAV_ITEMS: { to: string; label: string; roles?: Role[] }[] = [
   { to: '/staff/employees', label: 'Hồ sơ nhân sự', roles: [Role.ADMIN, Role.MANAGER] },
   { to: '/staff/users', label: 'Tài khoản', roles: [Role.ADMIN] },
   { to: '/staff/permissions', label: 'Phân quyền', roles: [Role.ADMIN] },
+  // FR-26/BR-17: `AUDIT_VIEW` trong ma trận mặc định chỉ thuộc về Admin.
+  { to: '/staff/audit-logs', label: 'Nhật ký kiểm toán', roles: [Role.ADMIN] },
 ];
 
 /** Admin/Receptionist/Doctor management shell - "standard admin/dashboard layout" per Section 7.2. */
@@ -80,6 +83,7 @@ export function StaffLayout() {
       </aside>
       <div className="flex-1">
         <header className="flex items-center justify-end gap-3 border-b border-border px-6 py-3 text-sm">
+          <NotificationBell />
           <span className="text-muted">{user?.phone}</span>
           <button onClick={() => void logout()}>Đăng xuất</button>
         </header>
