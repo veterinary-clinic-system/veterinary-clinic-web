@@ -4,6 +4,7 @@ import {
   Gender,
   InvoiceSource,
   InvoiceStatus,
+  LabResultFlag,
   LabTestStatus,
   MedicalRecordStatus,
   PaymentMethod,
@@ -11,6 +12,7 @@ import {
   Role,
   SlotStatus,
   Specialization,
+  VaccinationDueStatus,
 } from '@/types/enums';
 
 /**
@@ -120,6 +122,43 @@ export const SPECIALIZATION_LABEL_VI: Record<Specialization, string> = {
   [Specialization.NUTRITION]: 'Dinh dưỡng',
   [Specialization.ANESTHESIOLOGY]: 'Gây mê',
 };
+
+/**
+ * Màu ô của một chỉ số xét nghiệm theo cờ bất thường — acceptance P9-T6.
+ *
+ * `NORMAL` cố ý **không** tô gì: tô cả bảng thì không còn gì nổi bật, mà cái bác sĩ cần
+ * là liếc một cái thấy ngay ô nào lệch. Dùng lại đúng bộ token `triage-*` đã có nên
+ * bảng chỉ số và thẻ phân loại ưu tiên nói cùng một ngôn ngữ màu.
+ */
+export function labResultFlagClasses(flag: LabResultFlag): string {
+  switch (flag) {
+    case LabResultFlag.CRITICAL:
+      return 'bg-triage-red/15 text-triage-red font-semibold';
+    case LabResultFlag.HIGH:
+      return 'bg-triage-orange/10 text-triage-orange font-medium';
+    case LabResultFlag.LOW:
+      return 'bg-triage-blue/10 text-triage-blue font-medium';
+    case LabResultFlag.NORMAL:
+      return '';
+  }
+}
+
+/**
+ * Màu dòng sổ tiêm chủng theo lịch nhắc — acceptance P9-T3: "mũi quá hạn nhắc tô đỏ,
+ * sắp đến hạn tô vàng".
+ */
+export function vaccinationDueClasses(status: VaccinationDueStatus): string {
+  switch (status) {
+    case 'OVERDUE':
+      return 'bg-triage-red/10 text-triage-red border border-triage-red/30';
+    case 'DUE_SOON':
+      return 'bg-triage-yellow/10 text-triage-yellow border border-triage-yellow/30';
+    case 'SCHEDULED':
+      return 'bg-triage-green/10 text-triage-green border border-triage-green/30';
+    case 'NONE':
+      return 'bg-surface-muted text-muted border border-border';
+  }
+}
 
 /** Tailwind classes per triage PriorityColor, using only the fixed `bg-triage-*` tokens. */
 export function triageColorClasses(color: string | null | undefined): string {

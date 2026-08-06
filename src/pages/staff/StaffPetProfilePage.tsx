@@ -2,16 +2,24 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { petsApi } from '@/api/pets.api';
-import { Badge, Table } from '@/components/basic';
+import { laboratoriesApi } from '@/api/laboratories.api';
+import { vaccinationsApi } from '@/api/vaccinations.api';
+import { Badge, Select, Table } from '@/components/basic';
 import type { Column } from '@/components/basic';
-import { MedicalRecordStatus, PRIORITY_COLOR_LABEL_VI } from '@/types/enums';
+import { LabTrendChart } from '@/components/LabTrendChart';
+import {
+  LAB_RESULT_FLAG_LABEL_VI,
+  MedicalRecordStatus,
+  PRIORITY_COLOR_LABEL_VI,
+  VACCINATION_DUE_STATUS_LABEL_VI,
+} from '@/types/enums';
 import type {
   Pet,
   PetAppointment,
   PetInvoice,
-  PetLabTest,
   PetMedicalHistory,
   PetPrescription,
+  VaccinationRecordView,
 } from '@/types/models';
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/format';
 import {
@@ -20,7 +28,9 @@ import {
   LAB_TEST_STATUS_LABEL_VI,
   MEDICAL_RECORD_STATUS_LABEL_VI,
   PAYMENT_METHOD_LABEL_VI,
+  labResultFlagClasses,
   triageColorClasses,
+  vaccinationDueClasses,
 } from '@/utils/labels';
 
 /**
@@ -28,9 +38,9 @@ import {
  * Basic Info → Owner → Medical History → Appointment → Vaccination → Prescription →
  * Laboratory → Invoice.
  *
- * Tab "Tiêm chủng" chưa có dữ liệu thật: bảng tiêm chủng ra đời ở Phase 9. Cấu trúc
- * tab dựng sẵn đúng vị trí để P9 chỉ việc đổ dữ liệu vào, và tab hiện trạng thái rỗng
- * trung thực thay vì số liệu bịa.
+ * Từ Phase 9, hai tab "Tiêm chủng" và "Xét nghiệm" có dữ liệu thật: sổ tiêm chủng kèm
+ * lịch nhắc (FR-12) và bảng chỉ số xét nghiệm theo thời gian (FR-13-02). Trước đó chúng
+ * là hai khối rỗng dựng sẵn đúng vị trí — nay chỉ việc đổ dữ liệu vào.
  */
 type Tab =
   | 'basic'
@@ -160,7 +170,7 @@ export function StaffPetProfilePage() {
       {tab === 'owner' && <OwnerTab pet={pet} />}
       {tab === 'medical' && <MedicalHistoryTab petId={id} />}
       {tab === 'appointments' && <AppointmentsTab petId={id} />}
-      {tab === 'vaccination' && <VaccinationTab />}
+      {tab === 'vaccination' && <VaccinationTab petId={id} />}
       {tab === 'prescriptions' && <PrescriptionsTab petId={id} />}
       {tab === 'laboratory' && <LaboratoryTab petId={id} />}
       {tab === 'invoices' && <InvoicesTab petId={id} />}
@@ -344,12 +354,92 @@ function AppointmentsTab({ petId }: { petId: string }) {
   );
 }
 
-/** Khối 5 - Vaccination. Chưa có bảng tiêm chủng (Phase 9) - không dựng dữ liệu giả. */
-function VaccinationTab() {
+/**
+ * Khối 5 - Vaccination (P9-T3).
+ *
+ * Trạng thái nhắc (`dueStatus`) do **backend** tính, không tự so ngày ở client: lễ tân
+ * gọi nhắc theo `GET /vaccinations/due` và bác sĩ nhìn sổ này, hai chỗ phải tô cùng một
+ * màu cho cùng một mũi. Tự so ở client là mở đường cho hai ngưỡng lệch nhau.
+ */
+function VaccinationTab({ petId }: { petId: string }) {
+  const query = useQuery({
+    queryKey: ['pet-vaccinations', petId],
+    queryFn: () => vaccinationsApi.byPet(petId),
+  });
+
+  const columns: Column<VaccinationRecordView>[] = [
+    {
+      key: 'vaccinatedAt',
+      header: 'Ngày tiêm',
+      render: (row) => formatDate(row.vaccination.vaccinatedAt),
+    },
+    {
+      key: 'vaccine',
+      header: 'Vaccine',
+      render: (row) => (
+        <div className="flex flex-col gap-0.5">
+          <span className="font-medium">{row.vaccination.vaccine?.item.itemName ?? '—'}</span>
+          <span className="text-xs text-muted">
+            {row.vaccination.vaccine?.diseasePrevented ?? ''}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: 'doseNumber',
+      header: 'Mũi',
+      render: (row) =>
+        row.vaccination.vaccine
+          ? `${row.vaccination.doseNumber}/${row.vaccination.vaccine.doseCount}`
+          : String(row.vaccination.doseNumber),
+    },
+    {
+      key: 'batch',
+      header: 'Lô / HSD',
+      render: (row) =>
+        row.vaccination.batchNo ? (
+          <div className="flex flex-col gap-0.5">
+            <span className="font-mono text-xs">{row.vaccination.batchNo}</span>
+            <span className="text-xs text-muted">
+              {row.vaccination.expiryDate ? `HSD ${formatDate(row.vaccination.expiryDate)}` : '—'}
+            </span>
+          </div>
+        ) : (
+          '—'
+        ),
+    },
+    {
+      key: 'doctor',
+      header: 'Bác sĩ',
+      render: (row) => row.vaccination.doctor?.fullName ?? '—',
+    },
+    {
+      key: 'nextDueDate',
+      header: 'Hẹn nhắc lại',
+      render: (row) => (
+        <span
+          className={`rounded-full px-2 py-0.5 text-xs font-medium ${vaccinationDueClasses(row.dueStatus)}`}
+        >
+          {row.vaccination.nextDueDate
+            ? `${formatDate(row.vaccination.nextDueDate)} · ${VACCINATION_DUE_STATUS_LABEL_VI[row.dueStatus]}`
+            : VACCINATION_DUE_STATUS_LABEL_VI.NONE}
+        </span>
+      ),
+    },
+    {
+      key: 'notes',
+      header: 'Ghi chú',
+      render: (row) => row.vaccination.notes ?? '—',
+    },
+  ];
+
   return (
-    <EmptyState
-      title="Chưa có sổ tiêm chủng"
-      description="Quản lý vaccine và lịch tiêm nhắc sẽ có ở Phase 9."
+    <Table
+      columns={columns}
+      data={query.data ?? []}
+      getRowId={(row) => row.vaccination.id}
+      loading={query.isLoading}
+      emptyMessage="Thú cưng chưa có mũi tiêm nào được ghi nhận."
     />
   );
 }
@@ -404,55 +494,195 @@ function PrescriptionsTab({ petId }: { petId: string }) {
   );
 }
 
-/** Khối 7 - Laboratory. */
+/**
+ * Khối 7 - Laboratory (P9-T6).
+ *
+ * Ba tầng, theo đúng thứ tự bác sĩ cần: bảng **chỉ số × ngày** để so ngang, biểu đồ một
+ * chỉ số để nhìn xu hướng, rồi danh sách yêu cầu kèm kết quả dạng chữ và tệp đính kèm.
+ * Bảng đặt ngày MỚI NHẤT ở cột đầu — ngược với biểu đồ (trái sang phải theo thời gian),
+ * vì đọc bảng là để xem "lần này ra sao so với lần trước", còn đọc biểu đồ là để xem
+ * đường đi.
+ */
 function LaboratoryTab({ petId }: { petId: string }) {
-  const query = useQuery({
-    queryKey: ['pet-lab-tests', petId],
-    queryFn: () => petsApi.labTests(petId),
+  const [parameter, setParameter] = useState<string>('');
+
+  const ordersQuery = useQuery({
+    queryKey: ['pet-laboratories', petId],
+    queryFn: () => laboratoriesApi.byPet(petId),
   });
 
-  const columns: Column<PetLabTest>[] = [
-    { key: 'orderedAt', header: 'Ngày chỉ định', render: (row) => formatDateTime(row.orderedAt) },
-    { key: 'testName', header: 'Xét nghiệm' },
-    {
-      key: 'status',
-      header: 'Trạng thái',
-      render: (row) => <Badge>{LAB_TEST_STATUS_LABEL_VI[row.status]}</Badge>,
-    },
-    { key: 'resultText', header: 'Kết quả', render: (row) => row.resultText ?? 'Chưa có kết quả' },
-    {
-      key: 'files',
-      header: 'Tệp',
-      render: (row) =>
-        row.resultFileUrls.length > 0 ? (
-          <div className="flex flex-col gap-1">
-            {row.resultFileUrls.map((url, index) => (
-              <a
-                key={url}
-                href={url}
-                target="_blank"
-                rel="noreferrer"
-                className="text-sm text-primary hover:underline"
-              >
-                Tệp {index + 1}
-              </a>
-            ))}
-          </div>
-        ) : (
-          '—'
-        ),
-    },
-  ];
+  const orders = ordersQuery.data ?? [];
+  // Chỉ giữ các lần đo CÓ chỉ số định lượng: yêu cầu mới chỉ định (chưa có kết quả) mà
+  // thành một cột rỗng trong bảng thì bảng loãng ra mà không thêm thông tin nào.
+  const measuredOrders = orders.filter((order) => (order.results ?? []).length > 0);
+  const parameters = [
+    ...new Set(measuredOrders.flatMap((order) => (order.results ?? []).map((r) => r.parameter))),
+  ].sort();
+
+  const trendQuery = useQuery({
+    queryKey: ['pet-lab-trends', petId, parameter],
+    queryFn: () => laboratoriesApi.trends(petId, parameter),
+    enabled: Boolean(parameter),
+  });
+
+  if (ordersQuery.isLoading) {
+    return <p className="text-muted">Đang tải kết quả xét nghiệm…</p>;
+  }
+
+  // Acceptance P9-T6: thú cưng chưa xét nghiệm lần nào thì hiện empty state, không phải
+  // một biểu đồ rỗng.
+  if (orders.length === 0) {
+    return (
+      <EmptyState
+        title="Thú cưng chưa có chỉ định xét nghiệm nào"
+        description="Bác sĩ chỉ định xét nghiệm ngay trong màn hình khám; kết quả sẽ hiện ở đây."
+      />
+    );
+  }
 
   return (
-    <Table
-      columns={columns}
-      data={query.data ?? []}
-      getRowId={(row) => row.labTestId}
-      loading={query.isLoading}
-      emptyMessage="Thú cưng chưa có chỉ định xét nghiệm nào."
-    />
+    <div className="flex flex-col gap-6">
+      {measuredOrders.length > 0 && (
+        <section className="rounded border border-border bg-surface p-4">
+          <h2 className="mb-3 font-medium">Bảng chỉ số theo thời gian</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[520px] border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-border text-left">
+                  <th className="py-2 pr-4 font-medium">Chỉ số</th>
+                  <th className="py-2 pr-4 font-medium">Khoảng tham chiếu</th>
+                  {measuredOrders.map((order) => (
+                    <th key={order.id} className="py-2 pr-4 text-right font-medium">
+                      {formatDate(order.resultDate ?? order.createdAt)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {parameters.map((name) => {
+                  const latest = measuredOrders
+                    .flatMap((order) => order.results ?? [])
+                    .find((result) => result.parameter === name);
+                  return (
+                    <tr key={name} className="border-b border-border/60">
+                      <td className="py-2 pr-4">
+                        <button
+                          type="button"
+                          onClick={() => setParameter(name)}
+                          className={`font-medium hover:underline ${
+                            parameter === name ? 'text-primary' : ''
+                          }`}
+                        >
+                          {name}
+                        </button>
+                      </td>
+                      <td className="py-2 pr-4 text-xs text-muted">
+                        {formatRange(latest?.referenceMin ?? null, latest?.referenceMax ?? null)}
+                        {latest?.unit ? ` ${latest.unit}` : ''}
+                      </td>
+                      {measuredOrders.map((order) => {
+                        const cell = (order.results ?? []).find((r) => r.parameter === name);
+                        return (
+                          <td key={order.id} className="py-2 pr-4 text-right tabular-nums">
+                            {cell ? (
+                              <span
+                                className={`rounded px-1.5 py-0.5 ${labResultFlagClasses(cell.flag)}`}
+                                title={
+                                  cell.flagOverridden
+                                    ? `${LAB_RESULT_FLAG_LABEL_VI[cell.flag]} (kỹ thuật viên ghi đè)`
+                                    : LAB_RESULT_FLAG_LABEL_VI[cell.flag]
+                                }
+                              >
+                                {cell.value}
+                              </span>
+                            ) : (
+                              <span className="text-muted">—</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-2 text-xs text-muted">Bấm vào tên chỉ số để xem biểu đồ xu hướng.</p>
+        </section>
+      )}
+
+      {parameter && (
+        <section className="rounded border border-border bg-surface p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-medium">Xu hướng {parameter}</h2>
+            <Select
+              value={parameter}
+              onChange={setParameter}
+              options={parameters.map((name) => ({ value: name, label: name }))}
+            />
+          </div>
+          {trendQuery.isLoading ? (
+            <p className="text-sm text-muted">Đang tải xu hướng…</p>
+          ) : (
+            <LabTrendChart
+              points={trendQuery.data?.points ?? []}
+              unit={trendQuery.data?.unit ?? null}
+            />
+          )}
+        </section>
+      )}
+
+      <section className="flex flex-col gap-3">
+        <h2 className="font-medium">Các lần xét nghiệm</h2>
+        {orders.map((order) => (
+          <article key={order.id} className="rounded border border-border bg-surface p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="font-medium">{order.testName}</p>
+                <p className="text-sm text-muted">
+                  Chỉ định {formatDateTime(order.createdAt)}
+                  {order.resultDate ? ` · Có kết quả ${formatDateTime(order.resultDate)}` : ''}
+                  {order.technician ? ` · KTV ${order.technician.fullName}` : ''}
+                </p>
+              </div>
+              <Badge>{LAB_TEST_STATUS_LABEL_VI[order.status]}</Badge>
+            </div>
+
+            {/* Kết quả dạng chữ đi SONG SONG với bảng chỉ số, không thay thế nó - kết
+                quả định tính ("Parvo: dương tính") không quy về số được. */}
+            {order.resultText && <p className="mt-2 text-sm">{order.resultText}</p>}
+
+            {order.resultFileUrls.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-3">
+                {order.resultFileUrls.map((url, index) => (
+                  <a
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Tệp {index + 1}
+                  </a>
+                ))}
+              </div>
+            )}
+
+            {(order.results ?? []).length === 0 && !order.resultText && (
+              <p className="mt-2 text-sm text-muted">Chưa có kết quả.</p>
+            )}
+          </article>
+        ))}
+      </section>
+    </div>
   );
+}
+
+function formatRange(min: number | null, max: number | null): string {
+  if (min === null && max === null) return '—';
+  if (min === null) return `≤ ${max}`;
+  if (max === null) return `≥ ${min}`;
+  return `${min} – ${max}`;
 }
 
 /** Khối 8 - Invoice. */

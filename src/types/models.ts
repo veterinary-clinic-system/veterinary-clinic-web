@@ -9,6 +9,7 @@ import {
   InvoiceStatus,
   MedicationRoute,
   ItemType,
+  LabResultFlag,
   LabTestStatus,
   MedicalRecordStatus,
   PaymentMethod,
@@ -22,6 +23,7 @@ import {
   SlotStatus,
   Specialization,
   StockTakeStatus,
+  VaccinationDueStatus,
 } from './enums';
 
 // Tang api client (src/api/*.api.ts) lay ca interface lan enum tu '@/types/models',
@@ -299,6 +301,8 @@ export interface MedicalRecord {
   treatments?: Treatment[];
   prescriptions?: Prescription[];
   labTestOrders?: LabTestOrder[];
+  /** Các mũi tiêm ghi nhận trong lần khám này (P9). */
+  vaccinations?: Vaccination[];
 }
 
 /** Một chẩn đoán trong hồ sơ — SRS FR-09. */
@@ -377,10 +381,148 @@ export interface PrescriptionView {
 export interface LabTestOrder {
   id: string;
   medicalRecordId: string;
+  /** Thời điểm bác sĩ **chỉ định** — khác `resultDate` (thời điểm có kết quả). */
+  createdAt: string;
   testName: string;
   status: LabTestStatus;
   resultText: string | null;
   resultFileUrls: string[];
+  // ------------------------------------------------------------- P9-T5 (FR-13)
+  technicianUserId?: string | null;
+  technician?: { id: string; fullName: string } | null;
+  /** Thời điểm **có kết quả**, khác `createdAt` (thời điểm chỉ định). */
+  resultDate?: string | null;
+  results?: LaboratoryResult[];
+}
+
+/**
+ * Một chỉ số trong kết quả xét nghiệm — SRS FR-13-02 (P9-T5).
+ *
+ * Đi **song song** với `LabTestOrder.resultText`, không thay thế nó: kết quả định tính
+ * ("Parvo: dương tính") và file PDF/ảnh vẫn nằm ở đơn, bảng này chỉ chứa phần định
+ * lượng — và chính vì nó là số nên P9-T6 mới vẽ được biểu đồ theo thời gian.
+ */
+export interface LaboratoryResult {
+  id: string;
+  labTestOrderId: string;
+  /** Đã chuẩn hoá về CHỮ HOA ở backend, để gom nhóm xu hướng không bị vỡ. */
+  parameter: string;
+  value: number;
+  unit: string | null;
+  referenceMin: number | null;
+  referenceMax: number | null;
+  flag: LabResultFlag;
+  /** Kỹ thuật viên đã ghi đè cờ — lần lưu sau không tính lại. */
+  flagOverridden: boolean;
+  note: string | null;
+}
+
+/** Một điểm trên đường xu hướng — `GET /laboratories/by-pet/:id/trends`. */
+export interface LabTrendPoint {
+  labTestOrderId: string;
+  testName: string;
+  /** `resultDate` nếu có, không thì thời điểm chỉ định. */
+  measuredAt: string;
+  value: number;
+  unit: string | null;
+  referenceMin: number | null;
+  referenceMax: number | null;
+  flag: LabResultFlag;
+}
+
+export interface LabTrendSeries {
+  parameter: string;
+  unit: string | null;
+  points: LabTrendPoint[];
+}
+
+/** Một dòng hàng chờ xét nghiệm — `GET /laboratories/queue` (P9-T7). */
+export interface LabQueueRow {
+  labTestOrderId: string;
+  testName: string;
+  status: LabTestStatus;
+  orderedAt: string;
+  medicalRecordId: string;
+  petId: string;
+  petCode: string;
+  petName: string;
+  doctorName: string | null;
+  branchId: string;
+  resultCount: number;
+}
+
+/**
+ * Vaccine trong danh mục — SRS FR-12 (P9-T1).
+ *
+ * Mở rộng `Item` 1:1 y hệt `Medication`/`Product`, nên nó có giá, có mã nghiệp vụ và
+ * nằm trong kho có lô + hạn dùng như mọi mặt hàng khác.
+ */
+export interface Vaccine {
+  id: string;
+  itemId: string;
+  item: Item;
+  diseasePrevented: string;
+  /** Danh sách **rỗng** = dùng được cho mọi loài (ví dụ vaccine dại). */
+  speciesApplicable?: Species[];
+  doseCount: number;
+  intervalDays: number | null;
+  boosterIntervalDays: number | null;
+  manufacturer: string | null;
+  supplierId: string | null;
+  supplier?: Supplier | null;
+  costPrice: number;
+  minimumStock: number;
+  active: boolean;
+}
+
+/**
+ * Một mũi tiêm đã thực hiện — SRS FR-12 (P9-T2).
+ *
+ * `batchNo`/`expiryDate` là **bản chép** của lô kho đã xuất, không phải khoá ngoại: sổ
+ * tiêm chủng phải đọc được nguyên vẹn kể cả khi lô đó đã biến mất khỏi kho.
+ */
+export interface Vaccination {
+  id: string;
+  petId: string;
+  vaccineId: string;
+  vaccine?: Vaccine;
+  /** `null` khi tiêm dịch vụ đơn lẻ, không đi kèm lần khám nào. */
+  medicalRecordId: string | null;
+  doctorId: string;
+  doctor?: DoctorSummary;
+  branchId: string;
+  vaccinatedAt: string;
+  doseNumber: number;
+  batchNo: string | null;
+  expiryDate: string | null;
+  notes: string | null;
+  nextDueDate: string | null;
+}
+
+/** Dạng trả về của mọi endpoint đọc mũi tiêm — trạng thái nhắc do backend tính sẵn. */
+export interface VaccinationRecordView {
+  vaccination: Vaccination;
+  dueStatus: VaccinationDueStatus;
+}
+
+/** Một dòng trong danh sách gọi nhắc — `GET /vaccinations/due`. */
+export interface VaccinationDueRow {
+  vaccinationId: string;
+  petId: string;
+  petCode: string;
+  petName: string;
+  ownerId: string;
+  ownerName: string;
+  ownerPhone: string;
+  vaccineId: string;
+  vaccineName: string;
+  diseasePrevented: string;
+  doseNumber: number;
+  vaccinatedAt: string;
+  nextDueDate: string;
+  /** Âm = đã quá hạn. */
+  daysUntilDue: number;
+  branchId: string;
 }
 
 /**

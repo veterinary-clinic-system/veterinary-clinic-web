@@ -36,6 +36,8 @@ import { PurchaseOrdersPage } from '@/pages/staff/PurchaseOrdersPage';
 import { GoodsReceiptPage } from '@/pages/staff/GoodsReceiptPage';
 import { StockTakePage } from '@/pages/staff/StockTakePage';
 import { PharmacyPage } from '@/pages/staff/PharmacyPage';
+import { LaboratoryQueuePage } from '@/pages/staff/LaboratoryQueuePage';
+import { VaccinationDuePage } from '@/pages/staff/VaccinationDuePage';
 import { BranchesAdminPage } from '@/pages/staff/BranchesAdminPage';
 import { UsersAdminPage } from '@/pages/staff/UsersAdminPage';
 import { EmployeesPage } from '@/pages/staff/EmployeesPage';
@@ -87,6 +89,23 @@ export function AppRoutes() {
           </Route>
           <Route path="/staff/billing" element={<BillingListPage />} />
           <Route path="/staff/billing/:id" element={<InvoiceDetailPage />} />
+
+          {/*
+            Xét nghiệm và nhắc lịch tiêm (P9) mở cho các vai trò phòng khám: ma trận
+            `role_permissions` cho ADMIN/MANAGER/DOCTOR/RECEPTIONIST cả LABORATORY_VIEW
+            lẫn VACCINATION_VIEW. Backend vẫn là hàng rào thật; chặn ở đây chỉ để không
+            đưa người dùng tới một trang họ chắc chắn nhận 403.
+          */}
+          <Route
+            element={
+              <RequireAuth
+                allow={[Role.ADMIN, Role.MANAGER, Role.DOCTOR, Role.RECEPTIONIST]}
+              />
+            }
+          >
+            <Route path="/staff/laboratory" element={<LaboratoryQueuePage />} />
+            <Route path="/staff/vaccinations/due" element={<VaccinationDuePage />} />
+          </Route>
 
           {/*
             Tồn kho và cảnh báo mở cho MỌI vai trò nhân viên: ma trận `role_permissions`

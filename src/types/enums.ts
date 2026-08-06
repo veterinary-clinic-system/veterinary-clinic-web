@@ -162,6 +162,8 @@ export enum ItemType {
   LAB_TEST = 'LAB_TEST',
   /** Hàng hoá bán lẻ — SRS FR-16 (P5). Gắn vào `items` giống Service và Medication. */
   PRODUCT = 'PRODUCT',
+  /** Vaccine — SRS FR-12 (P9). Cũng là hàng tồn kho có lô và hạn dùng. */
+  VACCINE = 'VACCINE',
   OTHER = 'OTHER',
 }
 
@@ -170,6 +172,37 @@ export enum LabTestStatus {
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETED = 'COMPLETED',
 }
+
+/**
+ * Cờ bất thường của một chỉ số xét nghiệm — SRS FR-13-02 (P9-T5).
+ *
+ * `CRITICAL` không bao giờ do hệ thống tự tính: nó chỉ đến từ việc kỹ thuật viên ghi
+ * đè. Hệ thống chỉ so giá trị với khoảng tham chiếu, tức chỉ kết luận được trong /
+ * dưới / trên khoảng — ngưỡng nguy kịch là một phán đoán lâm sàng.
+ */
+export enum LabResultFlag {
+  NORMAL = 'NORMAL',
+  LOW = 'LOW',
+  HIGH = 'HIGH',
+  CRITICAL = 'CRITICAL',
+}
+
+export const LAB_RESULT_FLAG_LABEL_VI: Record<LabResultFlag, string> = {
+  [LabResultFlag.NORMAL]: 'Bình thường',
+  [LabResultFlag.LOW]: 'Thấp',
+  [LabResultFlag.HIGH]: 'Cao',
+  [LabResultFlag.CRITICAL]: 'Nguy kịch',
+};
+
+/** Trạng thái lịch nhắc của một mũi tiêm — backend tính sẵn (P9-T3). */
+export type VaccinationDueStatus = 'OVERDUE' | 'DUE_SOON' | 'SCHEDULED' | 'NONE';
+
+export const VACCINATION_DUE_STATUS_LABEL_VI: Record<VaccinationDueStatus, string> = {
+  OVERDUE: 'Quá hạn',
+  DUE_SOON: 'Sắp đến hạn',
+  SCHEDULED: 'Đã hẹn',
+  NONE: 'Không nhắc lại',
+};
 
 /**
  * Vòng đời hồ sơ bệnh án — SRS FR-08 / BR-08. `COMPLETED` là ranh giới BR-08 bảo vệ:

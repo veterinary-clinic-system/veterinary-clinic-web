@@ -6,6 +6,8 @@ import { appointmentsApi } from '@/api/appointments.api';
 import { examinationsApi } from '@/api/examinations.api';
 import { medicalRecordsApi } from '@/api/medical-records.api';
 import { catalogApi } from '@/api/catalog.api';
+import { laboratoriesApi } from '@/api/laboratories.api';
+import { vaccinationsApi } from '@/api/vaccinations.api';
 import { branchesApi } from '@/api/branches.api';
 import { doctorsApi } from '@/api/doctors.api';
 import { filesApi } from '@/api/files.api';
@@ -20,7 +22,8 @@ import {
 } from '@/types/models';
 import {
   DiagnosisSeverity,
-  LabTestStatus,
+  LAB_RESULT_FLAG_LABEL_VI,
+  LabResultFlag,
   MEDICATION_ROUTE_LABEL_VI,
   MedicalRecordStatus,
   MedicationRoute,
@@ -31,6 +34,7 @@ import {
   DIAGNOSIS_SEVERITY_LABEL_VI,
   LAB_TEST_STATUS_LABEL_VI,
   MEDICAL_RECORD_STATUS_LABEL_VI,
+  labResultFlagClasses,
 } from '@/utils/labels';
 
 /**
@@ -262,6 +266,7 @@ function CurrentVisitPanel({
       <DiagnosesSection record={record} readOnly={readOnly} />
       <TreatmentsSection record={record} readOnly={readOnly} />
       <LabTestsSection record={record} readOnly={readOnly} />
+      <VaccinationsSection record={record} readOnly={readOnly} />
       <PrescriptionsSection record={record} readOnly={readOnly} />
       <CompleteSection record={record} readOnly={readOnly} />
       {readOnly && <FollowUpSection appointmentId={appointmentId} appt={appt} />}
@@ -829,6 +834,9 @@ function TreatmentRow({
 /**
  * Khối xét nghiệm. Chỉ định phải đi qua `POST /examinations/:id/lab-tests`, nên phải có
  * phiếu sinh hiệu trước - đó là lý do khối này nhắc bác sĩ lưu sinh hiệu khi chưa có.
+ *
+ * `readOnly` chỉ khoá việc CHỈ ĐỊNH THÊM, không khoá việc nhập kết quả - xem ghi chú ở
+ * `LabTestRow` về ngoại lệ có chủ đích của BR-08 (P9-T7).
  */
 function LabTestsSection({ record, readOnly }: { record: MedicalRecord; readOnly: boolean }) {
   const queryClient = useQueryClient();
@@ -837,28 +845,14 @@ function LabTestsSection({ record, readOnly }: { record: MedicalRecord; readOnly
   const labTests = record.labTestOrders ?? [];
   const [testName, setTestName] = useState('');
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['medical-record'] });
-
   const addMutation = useMutation({
     mutationFn: () => examinationsApi.addLabTest(examination!.id, testName),
     onSuccess: () => {
       setTestName('');
-      void invalidate();
+      toast.show('Đã chỉ định xét nghiệm - yêu cầu đã vào hàng chờ xét nghiệm', 'success');
+      void queryClient.invalidateQueries({ queryKey: ['medical-record'] });
     },
     onError: (error) => toast.show(extractApiMessage(error) ?? 'Thêm thất bại', 'error'),
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: (payload: { id: string; status: LabTestStatus; resultText: string }) =>
-      examinationsApi.updateLabTest(payload.id, {
-        status: payload.status,
-        resultText: payload.resultText || undefined,
-      }),
-    onSuccess: () => {
-      toast.show('Đã cập nhật kết quả xét nghiệm', 'success');
-      void invalidate();
-    },
-    onError: (error) => toast.show(extractApiMessage(error) ?? 'Cập nhật thất bại', 'error'),
   });
 
   return (
@@ -868,17 +862,17 @@ function LabTestsSection({ record, readOnly }: { record: MedicalRecord; readOnly
       ) : (
         <div className="flex flex-col gap-2">
           {labTests.map((test) => (
-            <LabTestRow
-              key={test.id}
-              test={test}
-              readOnly={readOnly}
-              saving={updateMutation.isPending}
-              onSave={(status, resultText) =>
-                updateMutation.mutate({ id: test.id, status, resultText })
-              }
-            />
+            <LabTestRow key={test.id} test={test} />
           ))}
         </div>
+      )}
+
+      {readOnly && labTests.length > 0 && (
+        <p className="mt-3 text-xs text-muted">
+          Hồ sơ đã hoàn tất nhưng kết quả xét nghiệm vẫn nhập được — kết quả về muộn là
+          chuyện bình thường, và ghi một con số đo được không sửa kết luận chuyên môn nào
+          (ngoại lệ có chủ đích của BR-08).
+        </p>
       )}
 
       {!readOnly &&
@@ -908,57 +902,368 @@ function LabTestsSection({ record, readOnly }: { record: MedicalRecord; readOnly
   );
 }
 
-function LabTestRow({
-  test,
-  readOnly,
-  onSave,
-  saving,
-}: {
-  test: LabTestOrder;
-  readOnly: boolean;
-  onSave: (status: LabTestStatus, resultText: string) => void;
-  saving: boolean;
-}) {
-  const [status, setStatus] = useState<LabTestStatus>(test.status);
+/**
+ * Một yêu cầu xét nghiệm kèm bảng chỉ số — P9-T5, P9-T7.
+ *
+ * `readOnly` (hồ sơ đã COMPLETED) **không** khoá phần nhập kết quả, khác mọi khối khác
+ * trên màn hình này. Đây là ngoại lệ có chủ đích của BR-08: kết quả xét nghiệm về muộn
+ * là chuyện bình thường, và bắt hồ sơ mở chờ kết quả thì hoặc hồ sơ bị treo hàng loạt,
+ * hoặc kết quả về rồi không có chỗ ghi vào. Ghi một con số đo được không sửa kết luận
+ * chuyên môn nào — chẩn đoán, điều trị, đơn thuốc vẫn khoá cứng. Xem `LaboratoriesService`
+ * ở backend, nơi cùng quyết định này được ghi lại đầy đủ.
+ */
+function LabTestRow({ test }: { test: LabTestOrder }) {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const [editing, setEditing] = useState(false);
+  const [rows, setRows] = useState<LabResultLine[]>([]);
   const [resultText, setResultText] = useState(test.resultText ?? '');
 
-  if (readOnly) {
-    return (
-      <div className="rounded border border-border p-3 text-sm">
-        <p className="font-medium">{test.testName}</p>
-        <p className="text-muted">
-          {LAB_TEST_STATUS_LABEL_VI[test.status]}
-          {test.resultText ? ` — ${test.resultText}` : ''}
-        </p>
-      </div>
+  const results = test.results ?? [];
+
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      laboratoriesApi.saveResults(test.id, {
+        resultText: resultText || undefined,
+        results: rows
+          .filter((row) => row.parameter.trim() && row.value.trim())
+          .map((row) => ({
+            parameter: row.parameter.trim(),
+            value: Number(row.value),
+            unit: row.unit || undefined,
+            referenceMin: row.referenceMin === '' ? null : Number(row.referenceMin),
+            referenceMax: row.referenceMax === '' ? null : Number(row.referenceMax),
+            // Bỏ trống = để backend tự tính từ khoảng tham chiếu. Chỉ gửi `flag` khi kỹ
+            // thuật viên chủ động chọn - gửi kèm mọi lần lưu sẽ biến mọi kết quả thành
+            // "đã ghi đè" và cờ tự động không bao giờ chạy nữa.
+            flag: row.flag === '' ? undefined : (row.flag as LabResultFlag),
+          })),
+      }),
+    onSuccess: () => {
+      toast.show('Đã lưu kết quả xét nghiệm', 'success');
+      setEditing(false);
+      void queryClient.invalidateQueries({ queryKey: ['medical-record'] });
+    },
+    onError: (error) => toast.show(extractApiMessage(error) ?? 'Lưu kết quả thất bại', 'error'),
+  });
+
+  function startEditing() {
+    setRows(
+      results.length > 0
+        ? results.map((result) => ({
+            parameter: result.parameter,
+            value: String(result.value),
+            unit: result.unit ?? '',
+            referenceMin: result.referenceMin === null ? '' : String(result.referenceMin),
+            referenceMax: result.referenceMax === null ? '' : String(result.referenceMax),
+            flag: result.flagOverridden ? result.flag : '',
+          }))
+        : [{ ...EMPTY_RESULT_LINE }],
     );
+    setResultText(test.resultText ?? '');
+    setEditing(true);
   }
 
   return (
-    <div className="grid grid-cols-1 items-end gap-2 rounded border border-border p-3 sm:grid-cols-[2fr_1fr_2fr_auto]">
-      <span className="self-center text-sm font-medium">{test.testName}</span>
-      <Select
-        value={status}
-        onChange={(value) => setStatus(value as LabTestStatus)}
-        options={Object.values(LabTestStatus).map((s) => ({
-          value: s,
-          label: LAB_TEST_STATUS_LABEL_VI[s],
-        }))}
-      />
-      <Input
-        value={resultText}
-        onChange={(e) => setResultText(e.target.value)}
-        placeholder="Kết quả"
-      />
-      <Button
-        type="button"
-        variant="secondary"
-        loading={saving}
-        onClick={() => onSave(status, resultText)}
-      >
-        Lưu
-      </Button>
+    <div className="rounded border border-border p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-sm font-medium">{test.testName}</p>
+          <p className="text-xs text-muted">
+            {LAB_TEST_STATUS_LABEL_VI[test.status]}
+            {test.resultDate ? ` · Có kết quả ${formatDateTime(test.resultDate)}` : ''}
+            {test.technician ? ` · KTV ${test.technician.fullName}` : ''}
+          </p>
+        </div>
+        {!editing && (
+          <Button type="button" variant="secondary" size="sm" onClick={startEditing}>
+            {results.length > 0 ? 'Sửa kết quả' : 'Nhập kết quả'}
+          </Button>
+        )}
+      </div>
+
+      {!editing && results.length > 0 && (
+        <table className="mt-3 w-full border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-border text-left text-xs text-muted">
+              <th className="py-1 pr-3 font-medium">Chỉ số</th>
+              <th className="py-1 pr-3 text-right font-medium">Giá trị</th>
+              <th className="py-1 pr-3 font-medium">Đơn vị</th>
+              <th className="py-1 pr-3 font-medium">Tham chiếu</th>
+            </tr>
+          </thead>
+          <tbody>
+            {results.map((result) => (
+              <tr key={result.id} className="border-b border-border/60">
+                <td className="py-1 pr-3">{result.parameter}</td>
+                <td className="py-1 pr-3 text-right tabular-nums">
+                  <span className={`rounded px-1.5 py-0.5 ${labResultFlagClasses(result.flag)}`}>
+                    {result.value}
+                  </span>
+                </td>
+                <td className="py-1 pr-3 text-muted">{result.unit ?? '—'}</td>
+                <td className="py-1 pr-3 text-xs text-muted">
+                  {result.referenceMin ?? '—'} – {result.referenceMax ?? '—'}
+                  {result.flagOverridden ? ' · KTV ghi đè' : ''}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {!editing && test.resultText && <p className="mt-2 text-sm">{test.resultText}</p>}
+      {!editing && results.length === 0 && !test.resultText && (
+        <p className="mt-2 text-sm text-muted">Chưa có kết quả.</p>
+      )}
+
+      {editing && (
+        <form
+          className="mt-3 flex flex-col gap-2 border-t border-border pt-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            saveMutation.mutate();
+          }}
+        >
+          {rows.map((row, index) => (
+            <div
+              key={index}
+              className="grid grid-cols-1 gap-2 sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_1.5fr_auto]"
+            >
+              <Input
+                placeholder="Chỉ số (WBC)"
+                value={row.parameter}
+                onChange={(e) => updateRow(setRows, index, { parameter: e.target.value })}
+              />
+              <Input
+                type="number"
+                step="any"
+                placeholder="Giá trị"
+                value={row.value}
+                onChange={(e) => updateRow(setRows, index, { value: e.target.value })}
+              />
+              <Input
+                placeholder="Đơn vị"
+                value={row.unit}
+                onChange={(e) => updateRow(setRows, index, { unit: e.target.value })}
+              />
+              <Input
+                type="number"
+                step="any"
+                placeholder="Cận dưới"
+                value={row.referenceMin}
+                onChange={(e) => updateRow(setRows, index, { referenceMin: e.target.value })}
+              />
+              <Input
+                type="number"
+                step="any"
+                placeholder="Cận trên"
+                value={row.referenceMax}
+                onChange={(e) => updateRow(setRows, index, { referenceMax: e.target.value })}
+              />
+              <Select
+                value={row.flag}
+                onChange={(value) => updateRow(setRows, index, { flag: value })}
+                options={[
+                  { value: '', label: 'Cờ: tự tính' },
+                  ...Object.values(LabResultFlag).map((flag) => ({
+                    value: flag,
+                    label: LAB_RESULT_FLAG_LABEL_VI[flag],
+                  })),
+                ]}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setRows((prev) => prev.filter((_, i) => i !== index))}
+              >
+                Xoá
+              </Button>
+            </div>
+          ))}
+
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="w-fit"
+            onClick={() => setRows((prev) => [...prev, { ...EMPTY_RESULT_LINE }])}
+          >
+            + Thêm chỉ số
+          </Button>
+
+          <Textarea
+            label="Kết quả dạng chữ / diễn giải (tuỳ chọn)"
+            value={resultText}
+            onChange={(e) => setResultText(e.target.value)}
+            rows={2}
+          />
+
+          <div className="flex gap-2">
+            <Button type="submit" loading={saveMutation.isPending}>
+              Lưu kết quả
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => setEditing(false)}>
+              Huỷ
+            </Button>
+          </div>
+        </form>
+      )}
     </div>
+  );
+}
+
+interface LabResultLine {
+  parameter: string;
+  value: string;
+  unit: string;
+  referenceMin: string;
+  referenceMax: string;
+  /** Chuỗi rỗng = để backend tự tính cờ từ khoảng tham chiếu. */
+  flag: string;
+}
+
+const EMPTY_RESULT_LINE: LabResultLine = {
+  parameter: '',
+  value: '',
+  unit: '',
+  referenceMin: '',
+  referenceMax: '',
+  flag: '',
+};
+
+function updateRow(
+  setRows: React.Dispatch<React.SetStateAction<LabResultLine[]>>,
+  index: number,
+  patch: Partial<LabResultLine>,
+) {
+  setRows((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));
+}
+
+/**
+ * Khối tiêm chủng trong lúc khám — acceptance P9-T3: "ghi nhận được ngay trong màn hình
+ * khám, không phải rời trang".
+ *
+ * Danh mục vaccine được lọc theo `petId`: backend suy ra loài từ giống của con này, và
+ * chỉ trả vaccine dùng được cho loài đó (cộng các vaccine dùng cho mọi loài). Đưa cả
+ * danh mục ra rồi để bác sĩ tự tránh là mở đường cho một mũi vaccine chó tiêm vào mèo.
+ */
+function VaccinationsSection({
+  record,
+  readOnly,
+}: {
+  record: MedicalRecord;
+  readOnly: boolean;
+}) {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const [vaccineId, setVaccineId] = useState('');
+  const [notes, setNotes] = useState('');
+
+  const vaccinesQuery = useQuery({
+    queryKey: ['vaccines', 'for-pet', record.petId],
+    queryFn: () => vaccinationsApi.catalog({ petId: record.petId, limit: 100 }),
+  });
+  const vaccines = vaccinesQuery.data?.data ?? [];
+
+  const givenQuery = useQuery({
+    queryKey: ['vaccinations', 'by-record', record.id],
+    queryFn: () => vaccinationsApi.byMedicalRecord(record.id),
+  });
+  const given = givenQuery.data ?? [];
+
+  const addMutation = useMutation({
+    mutationFn: () =>
+      vaccinationsApi.create({
+        petId: record.petId,
+        vaccineId,
+        medicalRecordId: record.id,
+        notes: notes || undefined,
+      }),
+    onSuccess: (view) => {
+      setVaccineId('');
+      setNotes('');
+      toast.show(
+        view.vaccination.nextDueDate
+          ? `Đã ghi nhận mũi tiêm. Hẹn nhắc lại ${formatDate(view.vaccination.nextDueDate)}.`
+          : 'Đã ghi nhận mũi tiêm.',
+        'success',
+      );
+      void queryClient.invalidateQueries({ queryKey: ['vaccinations'] });
+      void queryClient.invalidateQueries({ queryKey: ['medical-record'] });
+    },
+    // BR-11 (vaccine hết hạn) và hết hàng đều trả 409 kèm thông báo đã đủ rõ - hiện
+    // nguyên văn thay vì dịch lại một lần nữa ở client.
+    onError: (error) => toast.show(extractApiMessage(error) ?? 'Ghi nhận thất bại', 'error'),
+  });
+
+  return (
+    <Section title="Tiêm chủng">
+      {given.length === 0 ? (
+        <p className="text-sm text-muted">Chưa ghi nhận mũi tiêm nào trong lần khám này.</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {given.map((view) => (
+            <li key={view.vaccination.id} className="rounded border border-border p-3 text-sm">
+              <p className="font-medium">
+                {view.vaccination.vaccine?.item.itemName ?? '—'} — mũi {view.vaccination.doseNumber}
+                {view.vaccination.vaccine ? `/${view.vaccination.vaccine.doseCount}` : ''}
+              </p>
+              <p className="text-muted">
+                Lô {view.vaccination.batchNo ?? '—'}
+                {view.vaccination.expiryDate
+                  ? ` · HSD ${formatDate(view.vaccination.expiryDate)}`
+                  : ''}
+                {view.vaccination.nextDueDate
+                  ? ` · Hẹn nhắc ${formatDate(view.vaccination.nextDueDate)}`
+                  : ' · Không nhắc lại'}
+              </p>
+              {view.vaccination.notes && (
+                <p className="mt-1 text-muted">{view.vaccination.notes}</p>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {!readOnly && (
+        <form
+          className="mt-4 flex flex-wrap items-end gap-2 border-t border-border pt-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (vaccineId) addMutation.mutate();
+          }}
+        >
+          <Select
+            label="Vaccine"
+            value={vaccineId}
+            onChange={setVaccineId}
+            options={[
+              { value: '', label: '— Chọn vaccine —' },
+              ...vaccines.map((vaccine) => ({
+                value: vaccine.id,
+                label: `${vaccine.item.itemName} (${vaccine.diseasePrevented})`,
+              })),
+            ]}
+          />
+          <Input
+            label="Ghi chú"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
+          <Button type="submit" loading={addMutation.isPending} disabled={!vaccineId}>
+            Ghi nhận mũi tiêm
+          </Button>
+        </form>
+      )}
+
+      {!readOnly && vaccines.length === 0 && !vaccinesQuery.isLoading && (
+        <p className="mt-2 text-sm text-muted">
+          Chưa có vaccine nào trong danh mục dùng được cho loài này.
+        </p>
+      )}
+    </Section>
   );
 }
 
