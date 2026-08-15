@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { customersApi } from '@/api/customers.api';
-import { Badge, Table } from '@/components/basic';
+import { Badge, ClientPagedTable } from '@/components/basic';
 import type { Column } from '@/components/basic';
 import {
   CustomerAppointment,
@@ -192,7 +192,7 @@ function PetsTab({ customerId }: { customerId: string }) {
   ];
 
   return (
-    <Table
+    <ClientPagedTable
       columns={columns}
       data={query.data ?? []}
       getRowId={(row) => row.id}
@@ -257,7 +257,7 @@ function AppointmentsTab({ customerId }: { customerId: string }) {
   ];
 
   return (
-    <Table
+    <ClientPagedTable
       columns={columns}
       data={query.data ?? []}
       getRowId={(row) => row.appointmentId}
@@ -332,7 +332,7 @@ function MedicalHistoryTab({ customerId }: { customerId: string }) {
   ];
 
   return (
-    <Table
+    <ClientPagedTable
       columns={columns}
       data={query.data ?? []}
       getRowId={(row) => row.medicalRecordId}
@@ -402,7 +402,7 @@ function TransactionsTab({ customerId }: { customerId: string }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <Table
+      <ClientPagedTable
         columns={columns}
         data={query.data ?? []}
         getRowId={(row) => row.invoiceId}
@@ -481,7 +481,7 @@ function PurchasesTab({ customerId }: { customerId: string }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <Table
+      <ClientPagedTable
         columns={columns}
         data={query.data ?? []}
         getRowId={(row) => row.invoiceId}

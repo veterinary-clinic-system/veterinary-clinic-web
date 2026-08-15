@@ -1,3 +1,5 @@
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -6,8 +8,36 @@ import { AppointmentStatus, PRIORITY_COLOR_LABEL_VI, PriorityColor } from '@/typ
 import { Appointment } from '@/types/models';
 import { APPOINTMENT_STATUS_LABEL_VI, triageColorClasses } from '@/utils/labels';
 import { getErrorMessage } from '@/utils/errors';
+import { Pagination, usePagination } from '@/components/basic/Pagination';
 
 const CANCELLABLE_STATUSES: AppointmentStatus[] = [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED];
+
+/**
+ * Bộ lọc theo phản hồi nghiệm thu: "Danh sách các lịch hẹn bao gồm là đã khám, chuẩn bị
+ * khám, đã hủy (có thể thêm các trạng thái khác cho tùy trường hợp)."
+ *
+ * Mỗi thẻ gom nhiều `AppointmentStatus` lại - chủ nuôi không cần biết sự khác nhau giữa
+ * "đã check-in" và "đang khám", họ chỉ cần biết ca đó đang diễn ra.
+ */
+const TABS: { key: string; label: string; statuses: AppointmentStatus[] | null }[] = [
+  { key: 'all', label: 'Tất cả', statuses: null },
+  {
+    key: 'upcoming',
+    label: 'Chuẩn bị khám',
+    statuses: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED],
+  },
+  {
+    key: 'in-clinic',
+    label: 'Đang tại phòng khám',
+    statuses: [AppointmentStatus.CHECKED_IN, AppointmentStatus.IN_PROGRESS],
+  },
+  { key: 'done', label: 'Đã khám', statuses: [AppointmentStatus.COMPLETED] },
+  {
+    key: 'closed',
+    label: 'Đã hủy / không đến',
+    statuses: [AppointmentStatus.CANCELLED, AppointmentStatus.NO_SHOW],
+  },
+];
 
 function AppointmentCard({ appointment }: { appointment: Appointment }) {
   const queryClient = useQueryClient();
@@ -36,7 +66,7 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
   };
 
   return (
-    <div className="rounded border border-border bg-surface p-5">
+    <div className="rounded-xl border border-border bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-semibold text-foreground">
@@ -44,6 +74,9 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
           </p>
           <p className="mt-1 text-sm text-muted">
             {appointment.service?.item.itemName ?? 'Dịch vụ khám'}
+          </p>
+          <p className="text-sm text-muted">
+            Thú cưng: {appointment.pet?.name ?? 'Chưa xác định'}
           </p>
           <p className="text-sm text-muted">
             Bác sĩ: {appointment.doctor?.fullName ?? 'Chưa xác định'}
@@ -72,45 +105,88 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
         </p>
       )}
 
-      {canCancel && (
-        <button
-          onClick={onCancel}
-          disabled={cancelMutation.isPending}
-          className="mt-3 rounded border border-destructive px-3 py-1.5 text-sm font-medium text-destructive disabled:opacity-60"
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Link
+          to={`/my/appointments/${appointment.id}`}
+          className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:border-primary/50"
         >
-          {cancelMutation.isPending ? 'Đang hủy...' : 'Hủy lịch hẹn'}
-        </button>
-      )}
+          Xem chi tiết
+        </Link>
+        {canCancel && (
+          <button
+            onClick={onCancel}
+            disabled={cancelMutation.isPending}
+            className="rounded-lg border border-destructive px-3 py-1.5 text-sm font-medium text-destructive disabled:opacity-60"
+          >
+            {cancelMutation.isPending ? 'Đang hủy...' : 'Hủy lịch hẹn'}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
 
 export function MyAppointmentsPage() {
+  const [tab, setTab] = useState('all');
+
   const {
     data: appointments,
     isLoading,
     isError,
   } = useQuery({ queryKey: ['appointments', 'mine'], queryFn: appointmentsApi.mine });
 
-  const sorted = [...(appointments ?? [])].sort(
-    (a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime(),
-  );
+  const filtered = useMemo(() => {
+    const statuses = TABS.find((t) => t.key === tab)?.statuses ?? null;
+    return [...(appointments ?? [])]
+      .filter((a) => !statuses || statuses.includes(a.status))
+      .sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime());
+  }, [appointments, tab]);
+
+  // `GET /appointments/mine` trả toàn bộ lịch sử của chủ nuôi trong một lần - phân
+  // trang ở phía client là đủ và không cần thêm một cửa API nữa.
+  const { page, setPage, pageItems, totalPages } = usePagination(filtered, 10, [tab]);
+
+  const countFor = (key: string) => {
+    const statuses = TABS.find((t) => t.key === key)?.statuses ?? null;
+    return (appointments ?? []).filter((a) => !statuses || statuses.includes(a.status)).length;
+  };
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
       <h1 className="text-2xl font-semibold text-foreground">Lịch hẹn của tôi</h1>
 
+      <div className="mt-5 flex flex-wrap gap-2">
+        {TABS.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => setTab(item.key)}
+            className={
+              'rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ' +
+              (tab === item.key
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-surface-muted text-muted hover:text-foreground')
+            }
+          >
+            {item.label}
+            <span className="ml-1.5 opacity-70">{countFor(item.key)}</span>
+          </button>
+        ))}
+      </div>
+
       {isLoading && <p className="mt-8 text-muted">Đang tải danh sách lịch hẹn...</p>}
       {isError && <p className="mt-8 text-destructive">Không thể tải danh sách lịch hẹn.</p>}
 
       <div className="mt-6 space-y-4">
-        {sorted.map((appointment) => (
+        {pageItems.map((appointment) => (
           <AppointmentCard key={appointment.id} appointment={appointment} />
         ))}
       </div>
 
-      {appointments && appointments.length === 0 && (
-        <p className="mt-8 text-muted">Bạn chưa có lịch hẹn nào.</p>
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} total={filtered.length} />
+
+      {!isLoading && filtered.length === 0 && (
+        <p className="mt-8 text-muted">Không có lịch hẹn nào trong mục này.</p>
       )}
     </div>
   );

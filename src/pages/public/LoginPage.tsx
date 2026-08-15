@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Role } from '@/types/enums';
+import { STAFF_ROLES } from '@/types/enums';
 import { tokenStore } from '@/api/token-store';
 import { decodeAccessToken } from '@/utils/jwt';
 import { getErrorMessage } from '@/utils/errors';
@@ -43,8 +43,11 @@ export function LoginPage() {
       await login(values.phone.trim(), values.password);
       const accessToken = tokenStore.getAccessToken();
       const payload = accessToken ? decodeAccessToken(accessToken) : null;
-      const roleHome = payload?.role === Role.PET_OWNER ? '/my/appointments' : '/staff';
-      const target = from ? `${from.pathname}${from.search ?? ''}` : roleHome;
+      const isStaff = !!payload && STAFF_ROLES.includes(payload.role);
+      const roleHome = isStaff ? '/staff' : '/my/appointments';
+      // Nhân viên luôn về /staff kể cả khi `from` trỏ tới một trang công khai - nếu đi
+      // theo `from`, `StaffConsoleOnly` cũng lập tức đẩy họ về đây, chỉ tốn một nhịp.
+      const target = from && !isStaff ? `${from.pathname}${from.search ?? ''}` : roleHome;
       navigate(target, { replace: true });
     } catch (error) {
       setServerError(getErrorMessage(error, 'Số điện thoại hoặc mật khẩu không đúng.'));

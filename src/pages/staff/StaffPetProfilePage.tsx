@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { petsApi } from '@/api/pets.api';
 import { laboratoriesApi } from '@/api/laboratories.api';
 import { vaccinationsApi } from '@/api/vaccinations.api';
-import { Badge, Select, Table } from '@/components/basic';
+import { Badge, ClientPagedTable, Select } from '@/components/basic';
 import type { Column } from '@/components/basic';
 import { LabTrendChart } from '@/components/LabTrendChart';
 import {
@@ -288,7 +288,7 @@ function MedicalHistoryTab({ petId }: { petId: string }) {
   ];
 
   return (
-    <Table
+    <ClientPagedTable
       columns={columns}
       data={query.data ?? []}
       getRowId={(row) => row.medicalRecordId}
@@ -344,7 +344,7 @@ function AppointmentsTab({ petId }: { petId: string }) {
   ];
 
   return (
-    <Table
+    <ClientPagedTable
       columns={columns}
       data={query.data ?? []}
       getRowId={(row) => row.appointmentId}
@@ -434,7 +434,7 @@ function VaccinationTab({ petId }: { petId: string }) {
   ];
 
   return (
-    <Table
+    <ClientPagedTable
       columns={columns}
       data={query.data ?? []}
       getRowId={(row) => row.vaccination.id}
@@ -726,7 +726,7 @@ function InvoicesTab({ petId }: { petId: string }) {
   ];
 
   return (
-    <Table
+    <ClientPagedTable
       columns={columns}
       data={query.data ?? []}
       getRowId={(row) => row.invoiceId}

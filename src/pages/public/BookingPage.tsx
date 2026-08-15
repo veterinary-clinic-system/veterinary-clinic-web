@@ -1,15 +1,16 @@
-import { ChangeEvent, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { ChangeEvent, useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { addWeeks, format, parseISO, subWeeks } from 'date-fns';
+import { addWeeks, format, parseISO, startOfDay, subWeeks } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { useAuth } from '@/context/AuthContext';
 import { branchesApi } from '@/api/branches.api';
-import { doctorsApi } from '@/api/doctors.api';
+import { doctorsApi, usersApi } from '@/api/doctors.api';
 import { speciesApi, petsApi } from '@/api/pets.api';
 import { catalogApi } from '@/api/catalog.api';
 import { filesApi } from '@/api/files.api';
 import { appointmentsApi, CreateBookingPayload } from '@/api/appointments.api';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { CommonSymptom, COMMON_SYMPTOM_LABEL_VI, Gender, Role, SlotStatus } from '@/types/enums';
 import { Appointment, SlotInfo } from '@/types/models';
 import { formatCurrency } from '@/utils/format';
@@ -18,7 +19,14 @@ import { getErrorMessage, isConflictError } from '@/utils/errors';
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
-const STEP_LABELS = ['Chi nhánh', 'Bác sĩ', 'Dịch vụ', 'Thời gian', 'Thông tin', 'Triệu chứng', 'Xác nhận'];
+/**
+ * Dịch vụ đứng TRƯỚC bác sĩ: khách nghĩ theo "tôi cần khám gì" chứ không phải "tôi
+ * muốn gặp ai", và thời lượng của dịch vụ mới là thứ quyết định khung giờ nào đủ dài.
+ */
+const STEP_LABELS = ['Chi nhánh', 'Dịch vụ', 'Bác sĩ', 'Thời gian', 'Thông tin', 'Triệu chứng', 'Xác nhận'];
+
+/** Giá trị `doctorId` mang nghĩa "để phòng khám tự sắp xếp" (backend nhận `undefined`). */
+const ANY_DOCTOR = '';
 
 interface NewPetFormState {
   name: string;
@@ -45,6 +53,19 @@ interface PhotoItem {
   url?: string;
 }
 
+/** Trạng thái tra cứu chủ nuôi theo số điện thoại ở bước "Thông tin". */
+type LookupState = 'idle' | 'loading' | 'found' | 'new';
+
+interface BookingHandoffState {
+  /** Bác sĩ chọn sẵn từ trang "Bác sĩ" (nút "Đặt lịch hẹn ngay"). */
+  doctorId?: string;
+  branchId?: string;
+  /** Dịch vụ chọn sẵn từ trang "Dịch vụ". */
+  serviceId?: string;
+  /** Thú cưng chọn sẵn từ trang hồ sơ thú cưng. */
+  petId?: string;
+}
+
 function SummaryRow({ label, value }: { label: string; value?: string }) {
   if (!value) return null;
   return (
@@ -56,32 +77,47 @@ function SummaryRow({ label, value }: { label: string; value?: string }) {
 }
 
 /**
- * Multi-step booking wizard (branch -> doctor -> service -> date/time -> owner/pet ->
+ * Multi-step booking wizard (branch -> service -> doctor -> date/time -> owner/pet ->
  * symptoms -> confirm). Step state lives in plain useState per prompt.md's explicit
  * instruction - no routing-per-step, no external state store.
  */
 export function BookingPage() {
   const { user } = useAuth();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const isOwner = user?.role === Role.PET_OWNER;
+  const handoff = (location.state as BookingHandoffState | null) ?? {};
 
   const [step, setStep] = useState<Step>(1);
 
   // Step 1-3
-  const [branchId, setBranchId] = useState('');
-  const [doctorId, setDoctorId] = useState('');
-  const [serviceId, setServiceId] = useState('');
+  const [branchId, setBranchId] = useState(handoff.branchId ?? '');
+  /** `null` = chưa chọn gì; `ANY_DOCTOR` = cố ý để phòng khám sắp xếp. */
+  const [doctorId, setDoctorId] = useState<string | null>(handoff.doctorId ?? null);
+  const [serviceId, setServiceId] = useState(handoff.serviceId ?? '');
 
   // Step 4
-  const [weekOf, setWeekOf] = useState(() => format(new Date(), 'yyyy-MM-dd'));
+  //
+  // Mở ở tuần chứa NGÀY MAI chứ không phải hôm nay: sớm nhất đặt được là ngày mai, nên
+  // nếu hôm nay là thứ Sáu thì cả tuần hiện tại đều đã khóa - khách mở bước chọn giờ ra
+  // và thấy một bảng trống trơn không bấm được gì.
+  //
+  // Riêng "tuần chứa ngày mai" vẫn chưa đủ: tuần bắt đầu từ thứ Hai, nên khi hôm nay là
+  // thứ Bảy thì ngày mai (Chủ nhật) là ngày CUỐI của tuần đó và mọi ngày còn lại đều đã
+  // qua. `autoAdvanced` ở dưới xử lý nốt trường hợp đó bằng chính dữ liệu trả về.
+  const [weekOf, setWeekOf] = useState(() =>
+    format(startOfDay(new Date(Date.now() + 24 * 60 * 60 * 1000)), 'yyyy-MM-dd'),
+  );
+  const [autoAdvanced, setAutoAdvanced] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<(SlotInfo & { dayDate: string }) | null>(null);
 
   // Step 5
   const [phone, setPhone] = useState(user?.phone ?? '');
   const [ownerFullName, setOwnerFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [lookupState, setLookupState] = useState<LookupState>('idle');
   const [petMode, setPetMode] = useState<'existing' | 'new'>('existing');
-  const [petId, setPetId] = useState('');
+  const [petId, setPetId] = useState(handoff.petId ?? '');
   const [newPet, setNewPet] = useState<NewPetFormState>(emptyNewPet);
 
   // Step 6
@@ -117,13 +153,23 @@ export function BookingPage() {
     isError: calendarError,
   } = useQuery({
     queryKey: calendarQueryKey,
-    queryFn: () => appointmentsApi.publicCalendar(branchId, doctorId, weekOf),
-    enabled: !!branchId && !!doctorId,
+    queryFn: () => appointmentsApi.publicCalendar(branchId, doctorId || undefined, weekOf),
+    enabled: !!branchId && doctorId !== null,
   });
 
   const { data: myPets } = useQuery({
     queryKey: ['pets', 'mine'],
     queryFn: petsApi.mine,
+    enabled: isOwner,
+  });
+
+  /**
+   * Đã đăng nhập thì phần thông tin chủ nuôi tự điền - JWT chỉ mang số điện thoại nên
+   * họ tên phải lấy từ hồ sơ.
+   */
+  const { data: me } = useQuery({
+    queryKey: ['users', 'me'],
+    queryFn: usersApi.me,
     enabled: isOwner,
   });
 
@@ -134,12 +180,59 @@ export function BookingPage() {
     enabled: !!newPet.speciesId,
   });
 
+  useEffect(() => {
+    if (!me) return;
+    setOwnerFullName((prev) => prev || me.fullName);
+    setEmail((prev) => prev || me.email || '');
+    setLookupState('found');
+  }, [me]);
+
+  /**
+   * Tra cứu theo số điện thoại cho KHÁCH CHƯA ĐĂNG NHẬP: đã có hồ sơ thì lấy tên lên
+   * và tự điền, chưa có thì mới để khách tự nhập. Người đã đăng nhập bỏ qua - hồ sơ
+   * của chính họ đã được `me` điền rồi.
+   */
+  const debouncedPhone = useDebouncedValue(phone.trim(), 500);
+  useEffect(() => {
+    if (isOwner) return;
+    // Số Việt Nam ngắn nhất là 10 chữ số - gọi sớm hơn chỉ tốn request và chắc chắn 400.
+    if (debouncedPhone.replace(/\D/g, '').length < 10) {
+      setLookupState('idle');
+      return;
+    }
+
+    let cancelled = false;
+    setLookupState('loading');
+    appointmentsApi
+      .ownerLookup(debouncedPhone)
+      .then((result) => {
+        if (cancelled) return;
+        if (result.found && result.fullName) {
+          setOwnerFullName(result.fullName);
+          setLookupState('found');
+        } else {
+          setLookupState('new');
+        }
+      })
+      .catch(() => {
+        // Tra cứu hỏng thì quay về nhập tay - không được chặn đường đặt lịch.
+        if (!cancelled) setLookupState('new');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedPhone, isOwner]);
+
   const selectedBranch = branches?.find((b) => b.id === branchId);
   const selectedDoctor = doctors?.find((d) => d.id === doctorId);
   const selectedService = services.find((s) => s.id === serviceId);
   const hasExistingPets = isOwner && (myPets?.length ?? 0) > 0;
   const effectivePetMode: 'existing' | 'new' = hasExistingPets ? petMode : 'new';
   const selectedExistingPet = myPets?.find((p) => p.id === petId);
+  /** Tên đã lấy được từ hệ thống thì khoá lại, có nút "Sửa" nếu khách muốn đổi. */
+  const [nameLocked, setNameLocked] = useState(true);
+  const nameIsReadOnly = lookupState === 'found' && nameLocked;
 
   const bookingMutation = useMutation({
     mutationFn: (payload: CreateBookingPayload) => appointmentsApi.createPublicBooking(payload),
@@ -147,11 +240,11 @@ export function BookingPage() {
 
   function selectBranch(id: string) {
     setBranchId(id);
-    setDoctorId('');
+    setDoctorId(null);
     setSelectedSlot(null);
   }
 
-  function selectDoctor(id: string) {
+  function selectDoctor(id: string | null) {
     setDoctorId(id);
     setSelectedSlot(null);
   }
@@ -190,7 +283,69 @@ export function BookingPage() {
   function goToWeek(direction: 'prev' | 'next') {
     const base = parseISO(weekOf);
     const next = direction === 'prev' ? subWeeks(base, 1) : addWeeks(base, 1);
+    // Khách đã tự chọn tuần thì thôi tự nhảy - xem `autoAdvanced` ở dưới.
+    setAutoAdvanced(true);
     setWeekOf(format(next, 'yyyy-MM-dd'));
+  }
+
+  /**
+   * Sớm nhất đặt được là 00:00 NGÀY MAI - cùng luật với
+   * `earliestSelfBookableStart()` phía backend. Tính ở đây để tuần hiện tại không mở
+   * được nút "Tuần trước" và để nhãn ngày tự làm mờ.
+   */
+  const earliestBookable = startOfDay(new Date(Date.now() + 24 * 60 * 60 * 1000));
+  const canGoPrevWeek = subWeeks(parseISO(weekOf), 1) >= startOfDay(new Date());
+
+  /**
+   * Tuần mở đầu có thể không còn ô nào đặt được - hay gặp nhất khi hôm nay là thứ Bảy:
+   * ngày mai là Chủ nhật, tức ngày cuối tuần, nên bảng hiện ra toàn ô đã qua hoặc đóng
+   * cửa. Nhảy sang tuần sau ĐÚNG MỘT LẦN, dựa trên dữ liệu thật chứ không đoán theo thứ
+   * trong tuần (một tuần kín lịch cũng rơi vào đúng tình cảnh này).
+   *
+   * Chỉ chạy khi khách chưa tự bấm chuyển tuần - `goToWeek` đặt `autoAdvanced` để lần
+   * điều hướng thủ công không bị kéo đi tiếp.
+   */
+  useEffect(() => {
+    if (autoAdvanced || !calendarDays || calendarDays.length === 0) return;
+    const hasFreeSlot = calendarDays.some((day) =>
+      day.slots.some((slot) => slot.status === SlotStatus.FREE),
+    );
+    if (hasFreeSlot) return;
+
+    setAutoAdvanced(true);
+    setWeekOf(format(addWeeks(parseISO(weekOf), 1), 'yyyy-MM-dd'));
+  }, [autoAdvanced, calendarDays, weekOf]);
+
+  /**
+   * Dịch vụ dài hơn một ô 30 phút chiếm NHIỀU ô liên tiếp, nên không phải ô FREE nào
+   * cũng đặt được: "Phẫu thuật nhỏ" (60 phút) không thể bắt đầu ở ô cuối buổi hay ở ô
+   * ngay trước giờ nghỉ trưa. Backend từ chối những giờ đó (`slotsCovering`); ở đây làm
+   * mờ chúng luôn để khách không chọn một ô rồi mới nhận lỗi ở bước cuối.
+   *
+   * Cùng ba điều kiện với backend: bắt đầu đúng mép ô, các ô phủ liên tục, ô cuối chạm
+   * tới thời điểm kết thúc.
+   */
+  function slotFitsService(day: { slots: SlotInfo[] }, slot: SlotInfo): boolean {
+    const duration = selectedService?.durationMinutes ?? 30;
+    const start = parseISO(slot.startAt).getTime();
+    const end = start + duration * 60_000;
+
+    const covered = day.slots
+      .filter((other) => {
+        const otherStart = parseISO(other.startAt).getTime();
+        return otherStart < end && start < parseISO(other.endAt).getTime();
+      })
+      .sort((a, b) => parseISO(a.startAt).getTime() - parseISO(b.startAt).getTime());
+
+    if (covered.length === 0) return false;
+    if (parseISO(covered[covered.length - 1].endAt).getTime() < end) return false;
+    for (let i = 1; i < covered.length; i++) {
+      if (parseISO(covered[i].startAt).getTime() !== parseISO(covered[i - 1].endAt).getTime()) {
+        return false;
+      }
+    }
+
+    return covered.every((other) => other.status === SlotStatus.FREE);
   }
 
   const canProceed = (() => {
@@ -198,9 +353,9 @@ export function BookingPage() {
       case 1:
         return !!branchId;
       case 2:
-        return !!doctorId;
-      case 3:
         return !!serviceId;
+      case 3:
+        return doctorId !== null;
       case 4:
         return !!selectedSlot;
       case 5:
@@ -213,7 +368,7 @@ export function BookingPage() {
   })();
 
   function handleSubmit() {
-    if (!selectedSlot || !branchId || !doctorId || !serviceId) return;
+    if (!selectedSlot || !branchId || doctorId === null || !serviceId) return;
     setSubmitError(null);
 
     const payload: CreateBookingPayload = {
@@ -221,7 +376,8 @@ export function BookingPage() {
       ownerFullName: ownerFullName.trim(),
       email: email.trim() || undefined,
       branchId,
-      doctorId,
+      // Chuỗi rỗng = "để phòng khám sắp xếp" - gửi `undefined` để backend tự chọn.
+      doctorId: doctorId || undefined,
       serviceId,
       startAt: selectedSlot.startAt,
       commonSymptoms: commonSymptoms.length > 0 ? commonSymptoms : undefined,
@@ -260,28 +416,31 @@ export function BookingPage() {
   if (bookingResult) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <h1 className="text-2xl font-semibold text-foreground">Đặt lịch thành công</h1>
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-3xl">
+          ✓
+        </div>
+        <h1 className="mt-4 text-2xl font-semibold text-foreground">Đặt lịch thành công</h1>
         <p className="mt-2 text-muted">Mã lịch hẹn: {bookingResult.id}</p>
-        <dl className="mt-6 rounded border border-border bg-surface p-6 text-left text-sm">
+        <dl className="mt-6 rounded-xl border border-border bg-surface p-6 text-left text-sm">
           <SummaryRow
             label="Thời gian"
             value={format(parseISO(bookingResult.startAt), 'HH:mm, EEEE dd/MM/yyyy', { locale: vi })}
           />
-          <SummaryRow label="Bác sĩ" value={selectedDoctor?.fullName} />
+          <SummaryRow label="Bác sĩ" value={bookingResult.doctor?.fullName ?? selectedDoctor?.fullName} />
           <SummaryRow label="Chi nhánh" value={selectedBranch?.branchName} />
           <SummaryRow label="Dịch vụ" value={selectedService?.item.itemName} />
         </dl>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           {user ? (
-            <Link to="/my/appointments" className="rounded bg-primary px-5 py-2.5 font-medium text-primary-foreground">
+            <Link to="/my/appointments" className="rounded-lg bg-primary px-5 py-2.5 font-medium text-primary-foreground">
               Xem lịch hẹn của tôi
             </Link>
           ) : (
-            <Link to="/login" className="rounded bg-primary px-5 py-2.5 font-medium text-primary-foreground">
+            <Link to="/login" className="rounded-lg bg-primary px-5 py-2.5 font-medium text-primary-foreground">
               Đăng nhập để theo dõi lịch hẹn
             </Link>
           )}
-          <Link to="/" className="rounded border border-border px-5 py-2.5 font-medium text-foreground">
+          <Link to="/" className="rounded-lg border border-border px-5 py-2.5 font-medium text-foreground">
             Về trang chủ
           </Link>
         </div>
@@ -317,12 +476,12 @@ export function BookingPage() {
         })}
       </div>
 
-      <div className="mt-8">
+      <div className="mt-8 rounded-xl border border-border bg-surface p-6">
         {/* Step 1: Branch */}
         {step === 1 && (
           <div>
             <h2 className="text-lg font-semibold text-foreground">Chọn chi nhánh</h2>
-            <p className="mt-1 text-sm text-muted">Vui lòng chọn chi nhánh trước - đây là bước bắt buộc trước khi chọn bác sĩ.</p>
+            <p className="mt-1 text-sm text-muted">Vui lòng chọn chi nhánh trước - đây là bước bắt buộc.</p>
             {branchesLoading && <p className="mt-4 text-muted">Đang tải danh sách chi nhánh...</p>}
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {branches?.map((branch) => (
@@ -331,7 +490,7 @@ export function BookingPage() {
                   key={branch.id}
                   onClick={() => selectBranch(branch.id)}
                   className={
-                    'rounded border p-4 text-left transition-colors ' +
+                    'rounded-xl border p-4 text-left transition-colors ' +
                     (branchId === branch.id
                       ? 'border-primary bg-primary/5'
                       : 'border-border bg-surface hover:border-primary/50')
@@ -346,12 +505,78 @@ export function BookingPage() {
           </div>
         )}
 
-        {/* Step 2: Doctor */}
+        {/* Step 2: Service */}
         {step === 2 && (
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">Chọn dịch vụ</h2>
+            <p className="mt-1 text-sm text-muted">
+              Thời lượng của dịch vụ quyết định khung giờ nào còn đặt được ở bước sau.
+            </p>
+            {servicesLoading && <p className="mt-4 text-muted">Đang tải danh sách dịch vụ...</p>}
+            <div className="mt-4 space-y-3">
+              {services.map((service) => (
+                <button
+                  type="button"
+                  key={service.id}
+                  onClick={() => {
+                    setServiceId(service.id);
+                    // Đổi dịch vụ là đổi thời lượng - khung giờ đã chọn có thể không
+                    // còn đủ chỗ, nên bỏ chọn để khách chọn lại trên lưới mới.
+                    setSelectedSlot(null);
+                  }}
+                  className={
+                    'flex w-full items-center justify-between gap-4 rounded-xl border p-4 text-left transition-colors ' +
+                    (serviceId === service.id
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border bg-surface hover:border-primary/50')
+                  }
+                >
+                  <div>
+                    <p className="font-medium text-foreground">{service.item.itemName}</p>
+                    {service.item.describe && <p className="mt-0.5 text-sm text-muted">{service.item.describe}</p>}
+                    <p className="mt-0.5 text-xs text-muted">{service.durationMinutes} phút</p>
+                  </div>
+                  <p className="whitespace-nowrap font-semibold text-primary">
+                    {formatCurrency(service.item.unitPrice)}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Doctor */}
+        {step === 3 && (
           <div>
             <h2 className="text-lg font-semibold text-foreground">Chọn bác sĩ</h2>
             <p className="mt-1 text-sm text-muted">Bác sĩ đang công tác tại {selectedBranch?.branchName}.</p>
             {doctorsLoading && <p className="mt-4 text-muted">Đang tải danh sách bác sĩ...</p>}
+
+            {/*
+              Không phải khách nào cũng có bác sĩ ruột. Lựa chọn này gửi `doctorId`
+              rỗng và để backend chọn người đang trống đúng khung giờ khách chọn.
+            */}
+            <button
+              type="button"
+              onClick={() => selectDoctor(ANY_DOCTOR)}
+              className={
+                'mt-4 flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-colors ' +
+                (doctorId === ANY_DOCTOR
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border bg-surface hover:border-primary/50')
+              }
+            >
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xl">
+                ✨
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">Để phòng khám sắp xếp</p>
+                <p className="text-sm text-muted">
+                  Hệ thống tự chọn một bác sĩ đang trống vào khung giờ bạn chọn.
+                </p>
+              </div>
+            </button>
+
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {doctors?.map((doctor) => (
                 <button
@@ -359,7 +584,7 @@ export function BookingPage() {
                   key={doctor.id}
                   onClick={() => selectDoctor(doctor.id)}
                   className={
-                    'flex gap-3 rounded border p-4 text-left transition-colors ' +
+                    'flex gap-3 rounded-xl border p-4 text-left transition-colors ' +
                     (doctorId === doctor.id
                       ? 'border-primary bg-primary/5'
                       : 'border-border bg-surface hover:border-primary/50')
@@ -392,54 +617,33 @@ export function BookingPage() {
           </div>
         )}
 
-        {/* Step 3: Service */}
-        {step === 3 && (
-          <div>
-            <h2 className="text-lg font-semibold text-foreground">Chọn dịch vụ</h2>
-            {servicesLoading && <p className="mt-4 text-muted">Đang tải danh sách dịch vụ...</p>}
-            <div className="mt-4 space-y-3">
-              {services.map((service) => (
-                <button
-                  type="button"
-                  key={service.id}
-                  onClick={() => setServiceId(service.id)}
-                  className={
-                    'flex w-full items-center justify-between rounded border p-4 text-left transition-colors ' +
-                    (serviceId === service.id
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border bg-surface hover:border-primary/50')
-                  }
-                >
-                  <div>
-                    <p className="font-medium text-foreground">{service.item.itemName}</p>
-                    {service.item.describe && <p className="mt-0.5 text-sm text-muted">{service.item.describe}</p>}
-                    <p className="mt-0.5 text-xs text-muted">{service.durationMinutes} phút</p>
-                  </div>
-                  <p className="whitespace-nowrap font-semibold text-primary">
-                    {formatCurrency(service.item.unitPrice)}
-                  </p>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Step 4: Date & time */}
         {step === 4 && (
           <div>
             <h2 className="text-lg font-semibold text-foreground">Chọn ngày và giờ khám</h2>
+            <p className="mt-1 text-sm text-muted">
+              Lịch hẹn sớm nhất là ngày mai ({format(earliestBookable, 'dd/MM/yyyy')}). Cần khám trong
+              hôm nay, vui lòng đến trực tiếp phòng khám.
+            </p>
+            {selectedService && (
+              <p className="mt-1 text-sm text-muted">
+                {selectedService.item.itemName} cần {selectedService.durationMinutes} phút liên
+                tục - những khung giờ không đủ chỗ đã được làm mờ.
+              </p>
+            )}
             <div className="mt-3 flex items-center justify-between">
               <button
                 type="button"
+                disabled={!canGoPrevWeek}
                 onClick={() => goToWeek('prev')}
-                className="rounded border border-border px-3 py-1.5 text-sm text-foreground"
+                className="rounded-lg border border-border px-3 py-1.5 text-sm text-foreground disabled:opacity-40"
               >
                 ← Tuần trước
               </button>
               <button
                 type="button"
                 onClick={() => goToWeek('next')}
-                className="rounded border border-border px-3 py-1.5 text-sm text-foreground"
+                className="rounded-lg border border-border px-3 py-1.5 text-sm text-foreground"
               >
                 Tuần sau →
               </button>
@@ -477,21 +681,35 @@ export function BookingPage() {
                                 </td>
                               );
                             }
-                            const isFree = slot.status === SlotStatus.FREE;
+                            const isPast = slot.status === SlotStatus.PAST;
+                            // Ô trống nhưng dịch vụ dài không đủ chỗ thì cũng không
+                            // chọn được - backend sẽ từ chối, nên khoá luôn ở đây.
+                            const isFree =
+                              slot.status === SlotStatus.FREE && slotFitsService(day, slot);
+                            const tooShort = slot.status === SlotStatus.FREE && !isFree;
                             const isSelected = selectedSlot?.startAt === slot.startAt;
                             return (
                               <td key={day.date} className="border-b border-border p-1 text-center">
                                 <button
                                   type="button"
                                   disabled={!isFree}
+                                  title={
+                                    isPast
+                                      ? 'Đã qua - chỉ đặt được từ ngày mai'
+                                      : tooShort
+                                        ? `Không đủ ${selectedService?.durationMinutes ?? 30} phút liên tục cho dịch vụ đã chọn`
+                                        : undefined
+                                  }
                                   onClick={() => setSelectedSlot({ ...slot, dayDate: day.date })}
                                   className={
-                                    'w-full rounded px-2 py-1.5 text-xs font-medium ' +
+                                    'w-full rounded-lg px-2 py-1.5 text-xs font-medium ' +
                                     (isSelected
                                       ? 'bg-primary text-primary-foreground'
                                       : isFree
                                         ? 'bg-primary/10 text-primary hover:bg-primary/20'
-                                        : 'cursor-not-allowed bg-surface-muted text-muted')
+                                        : isPast
+                                          ? 'cursor-not-allowed bg-transparent text-muted/40 line-through'
+                                          : 'cursor-not-allowed bg-surface-muted text-muted')
                                   }
                                 >
                                   {time}
@@ -506,20 +724,46 @@ export function BookingPage() {
                 {calendarDays.every((d) => d.slots.length === 0) && (
                   <p className="mt-3 text-muted">Không có khung giờ nào trong tuần này.</p>
                 )}
+
+                {/*
+                  Tuần đang xem có thể không còn ô nào đặt được - hay gặp nhất là khi đặt
+                  vào cuối tuần, lúc mọi ngày còn lại đều đã qua hoặc phòng khám đóng cửa.
+                  Nói thẳng ra và đưa luôn nút sang tuần sau, thay vì để khách nhìn một
+                  bảng xám và tự đoán.
+                */}
+                {calendarDays.some((d) => d.slots.length > 0) &&
+                  calendarDays.every((d) => d.slots.every((s) => !slotFitsService(d, s))) && (
+                    <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg bg-surface-muted px-4 py-3 text-sm">
+                      <span className="text-muted">
+                        Tuần này không còn khung giờ nào đủ{' '}
+                        {selectedService?.durationMinutes ?? 30} phút liên tục cho dịch vụ đã chọn.
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => goToWeek('next')}
+                        className="rounded-lg bg-primary px-3 py-1.5 font-medium text-primary-foreground"
+                      >
+                        Xem tuần sau →
+                      </button>
+                    </div>
+                  )}
               </div>
             )}
 
-            <div className="mt-3 flex gap-4 text-xs text-muted">
+            <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted">
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-3 w-3 rounded bg-primary/20" /> Còn trống
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-3 w-3 rounded border border-border bg-surface-muted" /> Không khả dụng
               </span>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-3 w-3 rounded border border-dashed border-border" /> Đã qua
+              </span>
             </div>
 
             {selectedSlot && (
-              <p className="mt-4 rounded bg-primary/10 px-3 py-2 text-sm text-primary">
+              <p className="mt-4 rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
                 Đã chọn: {format(parseISO(selectedSlot.startAt), 'HH:mm, EEEE dd/MM/yyyy', { locale: vi })}
               </p>
             )}
@@ -537,17 +781,42 @@ export function BookingPage() {
                 <input
                   type="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full rounded border border-border bg-surface px-3 py-2 text-foreground"
+                  readOnly={isOwner}
+                  onChange={(e) => {
+                    setPhone(e.target.value);
+                    setNameLocked(true);
+                  }}
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-foreground read-only:bg-surface-muted"
                 />
+                {lookupState === 'loading' && (
+                  <p className="mt-1 text-xs text-muted">Đang tra cứu trong hệ thống...</p>
+                )}
+                {lookupState === 'found' && !isOwner && (
+                  <p className="mt-1 text-xs text-primary">Đã tìm thấy hồ sơ - thông tin được điền sẵn.</p>
+                )}
+                {lookupState === 'new' && (
+                  <p className="mt-1 text-xs text-muted">Số này chưa có hồ sơ - vui lòng nhập họ tên.</p>
+                )}
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">Họ và tên *</label>
+                <label className="mb-1 flex items-center justify-between text-sm font-medium text-foreground">
+                  <span>Họ và tên *</span>
+                  {nameIsReadOnly && !isOwner && (
+                    <button
+                      type="button"
+                      onClick={() => setNameLocked(false)}
+                      className="text-xs font-normal text-primary underline"
+                    >
+                      Sửa
+                    </button>
+                  )}
+                </label>
                 <input
                   type="text"
                   value={ownerFullName}
+                  readOnly={nameIsReadOnly}
                   onChange={(e) => setOwnerFullName(e.target.value)}
-                  className="w-full rounded border border-border bg-surface px-3 py-2 text-foreground"
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-foreground read-only:bg-surface-muted"
                 />
               </div>
               <div className="sm:col-span-2">
@@ -556,7 +825,7 @@ export function BookingPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded border border-border bg-surface px-3 py-2 text-foreground"
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
                 />
               </div>
             </div>
@@ -564,20 +833,13 @@ export function BookingPage() {
             <div className="mt-6 border-t border-border pt-4">
               <p className="font-medium text-foreground">Thú cưng</p>
 
-              {/*
-                TODO(booking-handoff): when arriving from PetProfilePage's "Đặt lịch khám
-                cho [tên]" button (src/pages/owner/PetProfilePage.tsx), `location.state.petId`
-                carries the preselected pet id. Reading it to auto-select the pet here and
-                skip this step is intentionally not wired up yet - out of scope for this pass.
-              */}
-
               {hasExistingPets && (
                 <div className="mt-2 flex gap-2 text-sm">
                   <button
                     type="button"
                     onClick={() => setPetMode('existing')}
                     className={
-                      'rounded px-3 py-1.5 ' +
+                      'rounded-lg px-3 py-1.5 ' +
                       (petMode === 'existing' ? 'bg-primary text-primary-foreground' : 'bg-surface-muted text-muted')
                     }
                   >
@@ -587,7 +849,7 @@ export function BookingPage() {
                     type="button"
                     onClick={() => setPetMode('new')}
                     className={
-                      'rounded px-3 py-1.5 ' +
+                      'rounded-lg px-3 py-1.5 ' +
                       (petMode === 'new' ? 'bg-primary text-primary-foreground' : 'bg-surface-muted text-muted')
                     }
                   >
@@ -602,7 +864,7 @@ export function BookingPage() {
                     <label
                       key={pet.id}
                       className={
-                        'flex cursor-pointer items-center gap-2 rounded border p-3 text-sm ' +
+                        'flex cursor-pointer items-center gap-2 rounded-lg border p-3 text-sm ' +
                         (petId === pet.id ? 'border-primary bg-primary/5' : 'border-border')
                       }
                     >
@@ -625,7 +887,7 @@ export function BookingPage() {
                       type="text"
                       value={newPet.name}
                       onChange={(e) => updateNewPet({ name: e.target.value })}
-                      className="w-full rounded border border-border bg-surface px-3 py-2 text-foreground"
+                      className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
                     />
                   </div>
                   <div>
@@ -633,7 +895,7 @@ export function BookingPage() {
                     <select
                       value={newPet.gender}
                       onChange={(e) => updateNewPet({ gender: e.target.value as Gender })}
-                      className="w-full rounded border border-border bg-surface px-3 py-2 text-foreground"
+                      className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
                     >
                       {Object.values(Gender).map((g) => (
                         <option key={g} value={g}>
@@ -647,7 +909,7 @@ export function BookingPage() {
                     <select
                       value={newPet.speciesId}
                       onChange={(e) => updateNewPet({ speciesId: e.target.value, breedId: '' })}
-                      className="w-full rounded border border-border bg-surface px-3 py-2 text-foreground"
+                      className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
                     >
                       <option value="">-- Chọn loài --</option>
                       {speciesList?.map((sp) => (
@@ -663,7 +925,7 @@ export function BookingPage() {
                       value={newPet.breedId}
                       onChange={(e) => updateNewPet({ breedId: e.target.value })}
                       disabled={!newPet.speciesId}
-                      className="w-full rounded border border-border bg-surface px-3 py-2 text-foreground disabled:opacity-60"
+                      className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-foreground disabled:opacity-60"
                     >
                       <option value="">-- Chọn giống --</option>
                       {breeds?.map((breed) => (
@@ -681,7 +943,7 @@ export function BookingPage() {
                       step="0.1"
                       value={newPet.weight}
                       onChange={(e) => updateNewPet({ weight: e.target.value })}
-                      className="w-full rounded border border-border bg-surface px-3 py-2 text-foreground"
+                      className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
                     />
                   </div>
                   <div>
@@ -690,7 +952,7 @@ export function BookingPage() {
                       type="date"
                       value={newPet.birthDate}
                       onChange={(e) => updateNewPet({ birthDate: e.target.value })}
-                      className="w-full rounded border border-border bg-surface px-3 py-2 text-foreground"
+                      className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
                     />
                   </div>
                 </div>
@@ -709,7 +971,7 @@ export function BookingPage() {
               {Object.values(CommonSymptom).map((symptom) => (
                 <label
                   key={symptom}
-                  className="flex items-center gap-2 rounded border border-border p-2.5 text-sm text-foreground"
+                  className="flex items-center gap-2 rounded-lg border border-border p-2.5 text-sm text-foreground"
                 >
                   <input
                     type="checkbox"
@@ -731,7 +993,7 @@ export function BookingPage() {
                 value={otherSymptoms}
                 onChange={(e) => setOtherSymptoms(e.target.value)}
                 rows={3}
-                className="w-full rounded border border-border bg-surface px-3 py-2 text-foreground"
+                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
                 placeholder="Mô tả thêm về tình trạng của thú cưng..."
               />
             </div>
@@ -742,7 +1004,7 @@ export function BookingPage() {
               {photoItems.length > 0 && (
                 <ul className="mt-2 space-y-1 text-sm">
                   {photoItems.map((item) => (
-                    <li key={item.id} className="flex items-center justify-between gap-2 rounded bg-surface-muted px-3 py-1.5">
+                    <li key={item.id} className="flex items-center justify-between gap-2 rounded-lg bg-surface-muted px-3 py-1.5">
                       <span className="truncate text-foreground">{item.name}</span>
                       <span className="flex items-center gap-2 whitespace-nowrap">
                         <span
@@ -774,12 +1036,15 @@ export function BookingPage() {
         {step === 7 && (
           <div>
             <h2 className="text-lg font-semibold text-foreground">Xác nhận thông tin đặt lịch</h2>
-            <dl className="mt-4 rounded border border-border bg-surface p-4 text-sm">
+            <dl className="mt-4 rounded-xl border border-border bg-surface p-4 text-sm">
               <SummaryRow label="Chi nhánh" value={selectedBranch?.branchName} />
-              <SummaryRow label="Bác sĩ" value={selectedDoctor?.fullName} />
               <SummaryRow
                 label="Dịch vụ"
                 value={selectedService ? `${selectedService.item.itemName} (${formatCurrency(selectedService.item.unitPrice)})` : undefined}
+              />
+              <SummaryRow
+                label="Bác sĩ"
+                value={doctorId ? selectedDoctor?.fullName : 'Để phòng khám sắp xếp'}
               />
               <SummaryRow
                 label="Thời gian"
@@ -825,7 +1090,7 @@ export function BookingPage() {
           <button
             type="button"
             onClick={() => setStep((s) => (s - 1) as Step)}
-            className="rounded border border-border px-5 py-2 font-medium text-foreground"
+            className="rounded-lg border border-border px-5 py-2 font-medium text-foreground"
           >
             Quay lại
           </button>
@@ -838,7 +1103,7 @@ export function BookingPage() {
             type="button"
             disabled={!canProceed}
             onClick={() => setStep((s) => (s + 1) as Step)}
-            className="rounded bg-primary px-5 py-2 font-medium text-primary-foreground disabled:opacity-50"
+            className="rounded-lg bg-primary px-5 py-2 font-medium text-primary-foreground disabled:opacity-50"
           >
             Tiếp theo
           </button>
@@ -847,7 +1112,7 @@ export function BookingPage() {
             type="button"
             disabled={bookingMutation.isPending}
             onClick={handleSubmit}
-            className="rounded bg-primary px-5 py-2 font-medium text-primary-foreground disabled:opacity-50"
+            className="rounded-lg bg-primary px-5 py-2 font-medium text-primary-foreground disabled:opacity-50"
           >
             {bookingMutation.isPending ? 'Đang đặt lịch...' : 'Xác nhận đặt lịch'}
           </button>

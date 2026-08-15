@@ -1,11 +1,13 @@
 import { Route, Routes } from 'react-router-dom';
 import { RequireAuth } from './RequireAuth';
+import { StaffConsoleOnly } from './StaffConsoleOnly';
 import { Role, STAFF_ROLES } from '@/types/enums';
 import { PublicLayout } from '@/layouts/PublicLayout';
 import { StaffLayout } from '@/layouts/StaffLayout';
 import { HomePage } from '@/pages/public/HomePage';
 import { BranchesPage } from '@/pages/public/BranchesPage';
 import { DoctorsPage } from '@/pages/public/DoctorsPage';
+import { ServicesPage } from '@/pages/public/ServicesPage';
 import { BookingPage } from '@/pages/public/BookingPage';
 import { LoginPage } from '@/pages/public/LoginPage';
 import { RegisterPage } from '@/pages/public/RegisterPage';
@@ -13,6 +15,7 @@ import { ChatPage } from '@/pages/public/ChatPage';
 import { MyPetsPage } from '@/pages/owner/MyPetsPage';
 import { PetProfilePage } from '@/pages/owner/PetProfilePage';
 import { MyAppointmentsPage } from '@/pages/owner/MyAppointmentsPage';
+import { MyAppointmentDetailPage } from '@/pages/owner/MyAppointmentDetailPage';
 import { StaffDashboardPage } from '@/pages/staff/StaffDashboardPage';
 import { StaffCalendarPage } from '@/pages/staff/StaffCalendarPage';
 import { QueuePage } from '@/pages/staff/QueuePage';
@@ -49,19 +52,27 @@ import { NotFoundPage } from '@/pages/NotFoundPage';
 export function AppRoutes() {
   return (
     <Routes>
-      <Route element={<PublicLayout />}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/branches" element={<BranchesPage />} />
-        <Route path="/doctors" element={<DoctorsPage />} />
-        <Route path="/booking" element={<BookingPage />} />
-        <Route path="/chat" element={<ChatPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+      {/*
+        Nhân viên không dùng site công khai: `StaffConsoleOnly` đẩy họ về /staff, kể cả
+        khi họ gõ thẳng "/". Chủ nuôi và khách vãng lai không bị ảnh hưởng.
+      */}
+      <Route element={<StaffConsoleOnly />}>
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/services" element={<ServicesPage />} />
+          <Route path="/branches" element={<BranchesPage />} />
+          <Route path="/doctors" element={<DoctorsPage />} />
+          <Route path="/booking" element={<BookingPage />} />
+          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
-        <Route element={<RequireAuth allow={[Role.PET_OWNER]} />}>
-          <Route path="/my/pets" element={<MyPetsPage />} />
-          <Route path="/my/pets/:id" element={<PetProfilePage />} />
-          <Route path="/my/appointments" element={<MyAppointmentsPage />} />
+          <Route element={<RequireAuth allow={[Role.PET_OWNER]} />}>
+            <Route path="/my/pets" element={<MyPetsPage />} />
+            <Route path="/my/pets/:id" element={<PetProfilePage />} />
+            <Route path="/my/appointments" element={<MyAppointmentsPage />} />
+            <Route path="/my/appointments/:id" element={<MyAppointmentDetailPage />} />
+          </Route>
         </Route>
       </Route>
 

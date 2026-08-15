@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { branchesApi } from '@/api/branches.api';
+import { Pagination, usePagination } from '@/components/basic';
 import { Branch } from '@/types/models';
+
+const PAGE_SIZE = 10;
 
 const WEEKDAYS = [
   { dayOfWeek: 1, label: 'Thứ 2' },
@@ -24,6 +27,10 @@ const EMPTY_FORM: BranchFormState = { branchName: '', phone: '', description: ''
 export function BranchesAdminPage() {
   const queryClient = useQueryClient();
   const listQuery = useQuery({ queryKey: ['branches-admin'], queryFn: () => branchesApi.listAll() });
+
+  // `listAll` trả về toàn bộ chi nhánh trong một lần - cắt trang ở client.
+  const branches = listQuery.data ?? [];
+  const { page, setPage, pageItems, totalPages } = usePagination(branches, PAGE_SIZE);
 
   const [form, setForm] = useState<BranchFormState>(EMPTY_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -86,7 +93,7 @@ export function BranchesAdminPage() {
       </form>
 
       <div className="flex flex-col gap-3">
-        {(listQuery.data ?? []).map((b) => (
+        {pageItems.map((b) => (
           <div key={b.id} className="rounded border border-border bg-surface p-4">
             {editingId === b.id ? (
               <div className="flex flex-wrap items-end gap-3">
@@ -135,6 +142,13 @@ export function BranchesAdminPage() {
             {hoursBranchId === b.id && <OpeningHoursEditor branch={b} />}
           </div>
         ))}
+
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          total={branches.length}
+        />
       </div>
     </div>
   );

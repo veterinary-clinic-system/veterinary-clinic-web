@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { branchesApi } from '@/api/branches.api';
 import { vaccinationsApi } from '@/api/vaccinations.api';
-import { Select, Table } from '@/components/basic';
+import { Select, Table, usePagination } from '@/components/basic';
 import type { Column } from '@/components/basic';
 import { VaccinationDueRow } from '@/types/models';
 import { formatDate } from '@/utils/format';
 import { vaccinationDueClasses } from '@/utils/labels';
 
 const DAY_OPTIONS = [7, 14, 30, 60, 90];
+const PAGE_SIZE = 20;
 
 /**
  * Danh sách gọi nhắc tiêm — SRS FR-12 (P9-T3).
@@ -35,6 +36,11 @@ export function VaccinationDuePage() {
     queryFn: () =>
       vaccinationsApi.due({ days: Number(days), branchId: branchId || undefined }),
   });
+
+  // Backend trả trọn danh sách trong một lần (đã sắp theo `daysUntilDue`) - cắt trang ở
+  // client giữ nguyên thứ tự đó mà không phải thêm một cửa API có phân trang.
+  const rows = dueQuery.data ?? [];
+  const { page, setPage, pageItems } = usePagination(rows, PAGE_SIZE, [days, branchId]);
 
   const columns: Column<VaccinationDueRow>[] = [
     {
@@ -132,10 +138,14 @@ export function VaccinationDuePage() {
 
       <Table
         columns={columns}
-        data={dueQuery.data ?? []}
+        data={pageItems}
         getRowId={(row) => row.vaccinationId}
         loading={dueQuery.isLoading}
         emptyMessage="Không có mũi tiêm nào đến hạn trong khoảng đã chọn."
+        page={page}
+        limit={PAGE_SIZE}
+        total={rows.length}
+        onPageChange={setPage}
       />
     </div>
   );

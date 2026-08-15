@@ -36,6 +36,8 @@ export interface WalkInPayload {
   commonSymptoms?: CommonSymptom[];
   reason?: string;
   note?: string;
+  /** Ảnh triệu chứng — giống biểu mẫu đặt lịch công khai. */
+  photoUrls?: string[];
 }
 
 export const queueApi = {

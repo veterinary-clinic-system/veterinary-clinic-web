@@ -92,6 +92,7 @@ export const SLOT_STATUS_LABEL_VI: Record<SlotStatus, string> = {
   [SlotStatus.BOOKED]: 'Đã đặt',
   [SlotStatus.BREAK]: 'Bác sĩ nghỉ',
   [SlotStatus.OFF_SHIFT]: 'Ngoài giờ làm',
+  [SlotStatus.PAST]: 'Đã qua',
 };
 
 export const GENDER_LABEL_VI: Record<Gender, string> = {
@@ -175,5 +176,26 @@ export function triageColorClasses(color: string | null | undefined): string {
       return 'bg-triage-blue/10 text-triage-blue border border-triage-blue/30';
     default:
       return 'bg-surface-muted text-muted border border-border';
+  }
+}
+
+/**
+ * Nền ĐẶC của thang màu ưu tiên — dùng cho dải màu mảnh bên trái ô lịch, nơi phải
+ * nhìn ra màu từ xa. `triageColorClasses` ở trên là nền nhạt + chữ, dành cho nhãn.
+ */
+export function triagePriorityBar(color: string | null | undefined): string {
+  switch (color) {
+    case 'RED':
+      return 'bg-triage-red';
+    case 'ORANGE':
+      return 'bg-triage-orange';
+    case 'YELLOW':
+      return 'bg-triage-yellow';
+    case 'GREEN':
+      return 'bg-triage-green';
+    case 'BLUE':
+      return 'bg-triage-blue';
+    default:
+      return 'bg-border';
   }
 }

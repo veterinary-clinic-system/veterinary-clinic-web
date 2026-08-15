@@ -23,7 +23,8 @@ export interface CreateBookingPayload {
     birthDate?: string;
   };
   branchId: string;
-  doctorId: string;
+  /** Bỏ trống = "để phòng khám sắp xếp" — backend tự chọn bác sĩ đang trống. */
+  doctorId?: string;
   serviceId: string;
   startAt: string;
   commonSymptoms?: CommonSymptom[];
@@ -37,9 +38,22 @@ export const appointmentsApi = {
     apiClient.post<Appointment>('/appointments', payload).then((r) => r.data),
   createStaffBooking: (payload: CreateBookingPayload) =>
     apiClient.post<Appointment>('/appointments/staff', payload).then((r) => r.data),
-  publicCalendar: (branchId: string, doctorId: string, weekOf?: string) =>
+  /** `doctorId` bỏ trống = lưới gộp của cả chi nhánh ("để phòng khám sắp xếp"). */
+  publicCalendar: (branchId: string, doctorId: string | undefined, weekOf?: string) =>
     apiClient
-      .get<DayAvailability[]>('/appointments/calendar/public', { params: { branchId, doctorId, weekOf } })
+      .get<DayAvailability[]>('/appointments/calendar/public', {
+        params: { branchId, doctorId: doctorId || undefined, weekOf },
+      })
+      .then((r) => r.data),
+  /**
+   * Tra cứu chủ nuôi theo số điện thoại cho bước "Thông tin" của biểu mẫu đặt lịch.
+   * Chỉ trả về họ tên — xem ghi chú trong `PartyResolverService.lookupOwnerForBooking`.
+   */
+  ownerLookup: (phone: string) =>
+    apiClient
+      .get<{ found: boolean; fullName?: string }>('/appointments/owner-lookup', {
+        params: { phone },
+      })
       .then((r) => r.data),
   staffCalendar: (branchId: string, doctorId: string, weekOf?: string) =>
     apiClient
@@ -86,6 +100,32 @@ export const appointmentsApi = {
   /** FR-06-03: đánh dấu khách không đến - thao tác riêng, không đi qua hàng chờ. */
   markNoShow: (id: string, reason?: string) =>
     apiClient.post<Appointment>(`/appointments/${id}/no-show`, { reason }).then((r) => r.data),
+  /**
+   * Bác sĩ nghỉ đột xuất: đóng lịch ngày đó và chuyển các ca chưa tiếp nhận sang bác
+   * sĩ khác đang trống. Ca không tìm được người thay nằm trong `unresolved` — lễ tân
+   * gọi khách để dời lịch, hệ thống không tự hủy.
+   */
+  doctorAbsence: (payload: {
+    doctorId: string;
+    /** 'yyyy-MM-dd'. */
+    date: string;
+    reason?: string;
+    /** `false` = chỉ đánh dấu nghỉ, không đụng vào lịch hẹn (xem trước ảnh hưởng). */
+    reassign?: boolean;
+  }) =>
+    apiClient
+      .post<{
+        doctorBreakId: string;
+        total: number;
+        reassigned: { appointmentId: string; newDoctorId: string; newDoctorName: string }[];
+        unresolved: {
+          appointmentId: string;
+          startAt: string;
+          petName: string;
+          ownerPhone: string;
+        }[];
+      }>('/appointments/doctor-absence', payload)
+      .then((r) => r.data),
   scheduleFollowUp: (
     id: string,
     payload: { doctorId: string; branchId: string; serviceId: string; startAt: string },

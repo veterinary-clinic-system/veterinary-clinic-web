@@ -1,12 +1,14 @@
-import { Link, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { NotificationBell } from '@/components/NotificationBell';
-import { Role } from '@/types/enums';
+import { Role, STAFF_ROLES } from '@/types/enums';
 
 const CLINIC_ROLES = [Role.ADMIN, Role.MANAGER, Role.DOCTOR, Role.RECEPTIONIST];
 const COUNTER_ROLES = [Role.ADMIN, Role.MANAGER, Role.RECEPTIONIST, Role.STAFF];
 /** Ba vai trò duy nhất có INVENTORY_IMPORT/INVENTORY_EXPORT trong ma trận quyền. */
 const WAREHOUSE_ROLES = [Role.ADMIN, Role.MANAGER, Role.PHARMACIST];
+/** Mọi vai trò nhân viên TRỪ bác sĩ - dùng cho các mục kho không liên quan tới họ. */
+const NON_DOCTOR_ROLES = STAFF_ROLES.filter((role) => role !== Role.DOCTOR);
 
 /**
  * `roles` bỏ trống = mọi vai trò nhân viên đều thấy.
@@ -50,10 +52,11 @@ const NAV_ITEMS: { to: string; label: string; roles?: Role[] }[] = [
   // Quầy thuốc (P7) - cùng nhóm vai trò với kho: chỉ ADMIN/MANAGER/PHARMACIST có
   // PRESCRIPTION_DISPENSE hoặc quyền giám sát tương ứng.
   { to: '/staff/pharmacy', label: 'Quầy thuốc', roles: WAREHOUSE_ROLES },
-  // Kho (P6). Tồn kho và cảnh báo bỏ trống `roles`: mọi vai trò nhân viên đều có
-  // INVENTORY_VIEW trong ma trận quyền, kể cả STAFF bán hàng và bác sĩ.
-  { to: '/staff/inventory', label: 'Tồn kho' },
-  { to: '/staff/inventory/alerts', label: 'Cảnh báo kho' },
+  // Kho (P6). Ma trận quyền cho MỌI vai trò nhân viên `INVENTORY_VIEW`, nhưng bác sĩ
+  // không làm việc kho nên hai mục này bị loại khỏi nav của họ theo phản hồi nghiệm
+  // thu. Quyền backend giữ nguyên - đây chỉ là dọn nav.
+  { to: '/staff/inventory', label: 'Tồn kho', roles: NON_DOCTOR_ROLES },
+  { to: '/staff/inventory/alerts', label: 'Cảnh báo kho', roles: NON_DOCTOR_ROLES },
   { to: '/staff/purchase-orders', label: 'Đơn đặt hàng', roles: WAREHOUSE_ROLES },
   { to: '/staff/goods-receipts', label: 'Nhận hàng', roles: WAREHOUSE_ROLES },
   { to: '/staff/stock-takes', label: 'Kiểm kê', roles: WAREHOUSE_ROLES },
@@ -70,24 +73,41 @@ export function StaffLayout() {
   const { user, logout } = useAuth();
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="w-60 shrink-0 border-r border-border bg-surface-muted p-4">
-        <div className="mb-6 text-lg font-semibold">Quản lý phòng khám</div>
-        <nav className="flex flex-col gap-1 text-sm">
+    <div className="flex min-h-screen bg-surface-muted">
+      <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-border bg-surface">
+        <Link to="/staff" className="flex items-center gap-2 border-b border-border px-4 py-4 text-base font-bold">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            🐾
+          </span>
+          Quản lý phòng khám
+        </Link>
+        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-3 text-sm">
           {NAV_ITEMS.filter((item) => !item.roles || (user && item.roles.includes(user.role))).map((item) => (
-            <Link key={item.to} to={item.to} className="rounded px-3 py-2 hover:bg-surface">
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === '/staff'}
+              className={({ isActive }) =>
+                'rounded-lg px-3 py-2 transition-colors ' +
+                (isActive
+                  ? 'bg-primary/10 font-semibold text-primary'
+                  : 'text-foreground hover:bg-surface-muted')
+              }
+            >
               {item.label}
-            </Link>
+            </NavLink>
           ))}
         </nav>
       </aside>
-      <div className="flex-1">
-        <header className="flex items-center justify-end gap-3 border-b border-border px-6 py-3 text-sm">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-20 flex items-center justify-end gap-3 border-b border-border bg-surface px-6 py-3 text-sm">
           <NotificationBell />
           <span className="text-muted">{user?.phone}</span>
-          <button onClick={() => void logout()}>Đăng xuất</button>
+          <button onClick={() => void logout()} className="text-muted hover:text-foreground">
+            Đăng xuất
+          </button>
         </header>
-        <main className="p-6">
+        <main className="flex-1 p-6">
           <Outlet />
         </main>
       </div>

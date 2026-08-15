@@ -6,11 +6,50 @@ import { categoriesApi } from '@/api/products.api';
 import { speciesApi } from '@/api/pets.api';
 import { suppliersApi } from '@/api/suppliers.api';
 import { vaccinationsApi } from '@/api/vaccinations.api';
-import { Button, CheckboxGroup, Input, Modal, Select, Textarea, useToast } from '@/components/basic';
+import {
+  Button,
+  CheckboxGroup,
+  Input,
+  Modal,
+  Pagination,
+  Select,
+  Textarea,
+  useToast,
+} from '@/components/basic';
 import { ItemType, Medication, Service, Vaccine } from '@/types/models';
 import { flattenCategories } from '@/utils/categories';
 import { getErrorMessage } from '@/utils/errors';
 import { formatCurrency } from '@/utils/format';
+
+/**
+ * Số dòng mỗi trang cho mọi bảng của trang này.
+ *
+ * Trước đây cả năm tab gọi API với `limit: 100` rồi vẽ thẳng toàn bộ kết quả: không có
+ * thanh phân trang nào (phản hồi nghiệm thu: "Tất cả danh sách phải được hiển thị dưới
+ * dạng phân trang"), và tệ hơn là dòng thứ 101 trở đi biến mất không một dấu hiệu.
+ * Giờ mỗi tab phân trang phía MÁY CHỦ, nên không còn trần cứng nữa.
+ */
+const PAGE_SIZE = 20;
+
+/** Thanh phân trang dùng chung - đổi `total` của API sang số trang. */
+function TabPagination({
+  page,
+  total,
+  onPageChange,
+}: {
+  page: number;
+  total: number;
+  onPageChange: (page: number) => void;
+}) {
+  return (
+    <Pagination
+      page={page}
+      totalPages={Math.max(1, Math.ceil(total / PAGE_SIZE))}
+      onPageChange={onPageChange}
+      total={total}
+    />
+  );
+}
 
 
 /**
@@ -111,7 +150,13 @@ const EMPTY_SERVICE_FORM: ServiceFormState = {
 
 function ServicesTab() {
   const queryClient = useQueryClient();
-  const listQuery = useQuery({ queryKey: ['catalog-services'], queryFn: () => catalogApi.services({ limit: 100 }) });
+  const [page, setPage] = useState(1);
+  const listQuery = useQuery({
+    queryKey: ['catalog-services', page],
+    queryFn: () => catalogApi.services({ page, limit: PAGE_SIZE }),
+    // Giữ trang cũ trong lúc tải trang mới - bảng không nhấp nháy về rỗng.
+    placeholderData: (prev) => prev,
+  });
   const [form, setForm] = useState<ServiceFormState>(EMPTY_SERVICE_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<ServiceFormState>(EMPTY_SERVICE_FORM);
@@ -256,6 +301,8 @@ function ServicesTab() {
           </tbody>
         </table>
       </div>
+
+      <TabPagination page={page} total={listQuery.data?.total ?? 0} onPageChange={setPage} />
     </div>
   );
 }
@@ -299,9 +346,11 @@ const EMPTY_MEDICATION_FORM: MedicationFormState = {
 function MedicationsTab() {
   const queryClient = useQueryClient();
   const toast = useToast();
+  const [page, setPage] = useState(1);
   const listQuery = useQuery({
-    queryKey: ['catalog-medications'],
-    queryFn: () => catalogApi.medications({ limit: 100 }),
+    queryKey: ['catalog-medications', page],
+    queryFn: () => catalogApi.medications({ page, limit: PAGE_SIZE }),
+    placeholderData: (prev) => prev,
   });
   // `limit` tối đa 100 (PaginationQueryDto phía backend) - gửi 200 sẽ bị trả 400 và ô
   // chọn nhà cung cấp lặng lẽ rỗng.
@@ -428,6 +477,8 @@ function MedicationsTab() {
           </tbody>
         </table>
       </div>
+
+      <TabPagination page={page} total={listQuery.data?.total ?? 0} onPageChange={setPage} />
 
       <Modal
         open={formOpen}
@@ -582,9 +633,11 @@ function VaccinesTab() {
   const queryClient = useQueryClient();
   const toast = useToast();
 
+  const [page, setPage] = useState(1);
   const listQuery = useQuery({
-    queryKey: ['catalog-vaccines'],
-    queryFn: () => vaccinationsApi.catalog({ limit: 100 }),
+    queryKey: ['catalog-vaccines', page],
+    queryFn: () => vaccinationsApi.catalog({ page, limit: PAGE_SIZE }),
+    placeholderData: (prev) => prev,
   });
   const speciesQuery = useQuery({ queryKey: ['species'], queryFn: () => speciesApi.list() });
   const suppliersQuery = useQuery({
@@ -711,6 +764,8 @@ function VaccinesTab() {
           </tbody>
         </table>
       </div>
+
+      <TabPagination page={page} total={listQuery.data?.total ?? 0} onPageChange={setPage} />
 
       <Modal
         open={formOpen}
@@ -857,9 +912,19 @@ interface DiseaseGroupLite {
 }
 
 function DiseasesTab() {
-  const listQuery = useQuery({ queryKey: ['catalog-diseases'], queryFn: () => catalogApi.diseases({ limit: 100 }) });
-  const raw = listQuery.data as { data?: DiseaseGroupLite[] } | DiseaseGroupLite[] | undefined;
+  const [page, setPage] = useState(1);
+  const listQuery = useQuery({
+    queryKey: ['catalog-diseases', page],
+    queryFn: () => catalogApi.diseases({ page, limit: PAGE_SIZE }),
+    placeholderData: (prev) => prev,
+  });
+  const raw = listQuery.data as
+    | { data?: DiseaseGroupLite[]; total?: number }
+    | DiseaseGroupLite[]
+    | undefined;
   const diseases: DiseaseGroupLite[] = Array.isArray(raw) ? raw : (raw?.data ?? []);
+  // Cửa này từng trả về mảng trần ở một số bản; khi đó không có `total` để chia trang.
+  const total = Array.isArray(raw) ? raw.length : (raw?.total ?? diseases.length);
 
   return (
     <div className="flex flex-col gap-4">
@@ -898,6 +963,8 @@ function DiseasesTab() {
           </tbody>
         </table>
       </div>
+
+      <TabPagination page={page} total={total} onPageChange={setPage} />
     </div>
   );
 }
@@ -920,13 +987,20 @@ function InventoryTab() {
   const servicesQuery = useQuery({ queryKey: ['catalog-services', 'for-inventory'], queryFn: () => catalogApi.services({ limit: 100 }) });
   const medicationsQuery = useQuery({ queryKey: ['catalog-medications', 'for-inventory'], queryFn: () => catalogApi.medications({ limit: 100 }) });
 
+  const [page, setPage] = useState(1);
   const inventoryQuery = useQuery({
-    queryKey: ['catalog-inventory', branchId],
-    queryFn: () => catalogApi.inventory({ branchId: branchId || undefined, limit: 100 }),
+    queryKey: ['catalog-inventory', branchId, page],
+    queryFn: () =>
+      catalogApi.inventory({ branchId: branchId || undefined, page, limit: PAGE_SIZE }),
     enabled: !!branchId,
+    placeholderData: (prev) => prev,
   });
-  const raw = inventoryQuery.data as { data?: InventoryRecordLite[] } | InventoryRecordLite[] | undefined;
+  const raw = inventoryQuery.data as
+    | { data?: InventoryRecordLite[]; total?: number }
+    | InventoryRecordLite[]
+    | undefined;
   const records: InventoryRecordLite[] = Array.isArray(raw) ? raw : (raw?.data ?? []);
+  const total = Array.isArray(raw) ? raw.length : (raw?.total ?? records.length);
 
   const itemOptions = [
     ...(servicesQuery.data?.data ?? []).map((s) => ({ id: s.itemId, name: `[Dịch vụ] ${s.item.itemName}` })),
@@ -947,7 +1021,14 @@ function InventoryTab() {
     <div className="flex flex-col gap-6">
       <label className="flex max-w-xs flex-col gap-1 text-sm">
         <span className="text-muted">Chi nhánh</span>
-        <select value={branchId} onChange={(e) => setBranchId(e.target.value)} className="rounded border border-border bg-surface px-3 py-2 text-sm">
+        <select
+          value={branchId}
+          onChange={(e) => {
+            setBranchId(e.target.value);
+            setPage(1);
+          }}
+          className="rounded border border-border bg-surface px-3 py-2 text-sm"
+        >
           <option value="">— Chọn chi nhánh —</option>
           {(branchesQuery.data ?? []).map((b) => (
             <option key={b.id} value={b.id}>
@@ -1019,6 +1100,8 @@ function InventoryTab() {
               </tbody>
             </table>
           </div>
+
+          <TabPagination page={page} total={total} onPageChange={setPage} />
         </>
       )}
     </div>

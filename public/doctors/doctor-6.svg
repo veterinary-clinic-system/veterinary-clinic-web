@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Ảnh minh hoạ bác sĩ thú y">
+  <defs>
+    <clipPath id="c"><circle cx="100" cy="100" r="100"/></clipPath>
+  </defs>
+  <g clip-path="url(#c)">
+    <rect width="200" height="200" fill="#FDEDE2"/>
+    <!-- vai / áo blouse -->
+    <path d="M100 118c-30 0-56 18-62 44-2 10-3 24-3 38h130c0-14-1-28-3-38-6-26-32-44-62-44z" fill="#FFFFFF"/>
+    <path d="M100 118c-9 0-17 1-25 4l25 30 25-30c-8-3-16-4-25-4z" fill="#EA580C"/>
+    <!-- cổ -->
+    <rect x="88" y="98" width="24" height="26" rx="10" fill="#F0C39B"/>
+    <!-- đầu -->
+    <ellipse cx="100" cy="76" rx="34" ry="38" fill="#F0C39B"/>
+    <path d="M66 76c0-24 15-40 34-40s34 16 34 40c0-8-4-16-12-18-8-2-12 2-22 2s-14-4-22-2c-8 2-12 10-12 18z" fill="#3B2413"/><path d="M64 76c-4 18-4 34-2 46 6-4 8-16 8-30zM136 76c4 18 4 34 2 46-6-4-8-16-8-30z" fill="#3B2413"/>
+    <!-- mắt -->
+    <circle cx="88" cy="76" r="3.4" fill="#2A2320"/>
+    <circle cx="112" cy="76" r="3.4" fill="#2A2320"/>
+    <!-- miệng -->
+    <path d="M92 92q8 7 16 0" stroke="#2A2320" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <!-- ống nghe -->
+    <path d="M84 124c0 22 14 34 30 34s24-10 24-24" stroke="#EA580C" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <circle cx="138" cy="132" r="8" fill="#EA580C"/>
+    <circle cx="138" cy="132" r="3.5" fill="#FFFFFF"/>
+  </g>
+</svg>

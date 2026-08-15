@@ -218,8 +218,12 @@ export interface SlotInfo {
   appointmentDetail?: {
     id: string;
     petName: string;
+    /** Loài + giống của thú cưng — để ô lịch đọc được mà không phải mở chi tiết. */
+    petBreedName: string | null;
+    petSpeciesName: string | null;
     ownerName: string;
     ownerPhone: string;
+    serviceName: string | null;
     commonSymptoms: CommonSymptom[];
     otherSymptoms: string | null;
     priorityColor: PriorityColor | null;
@@ -842,6 +846,8 @@ export interface QueueEntry {
   commonSymptoms: CommonSymptom[];
   reason: string | null;
   note: string | null;
+  /** Ảnh triệu chứng lễ tân nhận tại quầy — chép sang lịch hẹn khi gán bác sĩ. */
+  photoUrls: string[];
   checkedInAt: string;
   calledAt: string | null;
   finishedAt: string | null;

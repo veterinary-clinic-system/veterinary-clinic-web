@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { branchesApi } from '@/api/branches.api';
+import { Pagination, usePagination } from '@/components/basic';
 import { OperatingHour } from '@/types/models';
 import { WEEKDAY_LABELS_VI, formatTimeHHmm } from '@/utils/display';
 
@@ -19,11 +20,15 @@ function OpeningHoursList({ hours }: { hours: OperatingHour[] }) {
   );
 }
 
+const PAGE_SIZE = 9;
+
 export function BranchesPage() {
   const { data: branches, isLoading, isError } = useQuery({
     queryKey: ['branches'],
     queryFn: branchesApi.list,
   });
+
+  const { page, setPage, pageItems, totalPages } = usePagination(branches ?? [], PAGE_SIZE);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -34,7 +39,7 @@ export function BranchesPage() {
       {isError && <p className="mt-8 text-destructive">Không thể tải danh sách chi nhánh. Vui lòng thử lại sau.</p>}
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {branches?.map((branch) => (
+        {pageItems.map((branch) => (
           <div key={branch.id} className="rounded border border-border bg-surface p-5">
             <h2 className="text-lg font-semibold text-foreground">{branch.branchName}</h2>
             <p className="mt-1 text-sm text-muted">{branch.address}</p>
@@ -49,6 +54,13 @@ export function BranchesPage() {
           </div>
         ))}
       </div>
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        total={branches?.length ?? 0}
+      />
 
       {branches && branches.length === 0 && (
         <p className="mt-8 text-muted">Hiện chưa có chi nhánh nào được công bố.</p>

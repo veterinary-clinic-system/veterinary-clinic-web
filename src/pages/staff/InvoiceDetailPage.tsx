@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { billingApi } from '@/api/billing.api';
+import { billingApi, sepayApi, SepayQrTicket } from '@/api/billing.api';
 import { Badge } from '@/components/basic';
 import { InvoiceStatus, PaymentMethod, PaymentStatus } from '@/types/enums';
 import { formatCurrency, formatDateTime } from '@/utils/format';
@@ -265,7 +265,112 @@ export function InvoiceDetailPage() {
             )}
           </form>
         )}
+
+        {canPay && <SepayPanel invoiceId={invoice.id} outstanding={outstanding} />}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Thanh toán chuyển khoản qua SePay.
+ *
+ * Không có trang chuyển hướng như VNPay: hiện mã VietQR đã nhúng sẵn số tiền và nội
+ * dung chuyển khoản, rồi hỏi trạng thái mỗi 5 giây cho tới khi webhook của SePay báo
+ * tiền đã về tài khoản phòng khám.
+ */
+function SepayPanel({ invoiceId, outstanding }: { invoiceId: string; outstanding: number }) {
+  const queryClient = useQueryClient();
+  const [ticket, setTicket] = useState<SepayQrTicket | null>(null);
+
+  const createMutation = useMutation({
+    mutationFn: () => sepayApi.createQr(invoiceId),
+    onSuccess: setTicket,
+  });
+
+  const statusQuery = useQuery({
+    queryKey: ['sepay-ticket', ticket?.paymentId],
+    queryFn: () => sepayApi.ticket(ticket!.paymentId),
+    enabled: !!ticket,
+    // Tiền về qua webhook chứ không qua request nào của màn hình này — hỏi định kỳ là
+    // cách duy nhất để biết, và dừng ngay khi đã chốt.
+    refetchInterval: (query) =>
+      query.state.data?.status === PaymentStatus.PENDING ? 5_000 : false,
+  });
+
+  const settled = statusQuery.data?.status === PaymentStatus.SUCCESS;
+
+  useEffect(() => {
+    if (!settled) return;
+    void queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] });
+    void queryClient.invalidateQueries({ queryKey: ['invoice-payments', invoiceId] });
+  }, [settled, invoiceId, queryClient]);
+
+  return (
+    <div className="mt-6 rounded-xl border border-border bg-surface-muted p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="font-medium text-foreground">Chuyển khoản qua SePay</p>
+          <p className="text-sm text-muted">
+            Khách quét mã bằng ứng dụng ngân hàng; hệ thống tự ghi nhận khi tiền về.
+          </p>
+        </div>
+        {!ticket && (
+          <button
+            type="button"
+            onClick={() => createMutation.mutate()}
+            disabled={createMutation.isPending}
+            className="rounded-lg border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-primary/5 disabled:opacity-50"
+          >
+            {createMutation.isPending ? 'Đang tạo mã…' : `Tạo mã QR ${formatCurrency(outstanding)}`}
+          </button>
+        )}
+      </div>
+
+      {createMutation.isError && (
+        <p className="mt-2 text-sm text-destructive">{getErrorMessage(createMutation.error)}</p>
+      )}
+
+      {ticket && (
+        <div className="mt-4 flex flex-wrap items-start gap-5">
+          <img
+            src={ticket.qrImageUrl}
+            alt="Mã QR chuyển khoản SePay"
+            className="h-52 w-52 rounded-lg border border-border bg-white object-contain p-2"
+          />
+          <dl className="flex-1 space-y-1.5 text-sm">
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">Số tài khoản</dt>
+              <dd className="font-mono text-foreground">{ticket.accountNumber}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">Ngân hàng</dt>
+              <dd className="text-foreground">{ticket.bankCode}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">Số tiền</dt>
+              <dd className="font-medium tabular-nums text-foreground">
+                {formatCurrency(ticket.amount)}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">Nội dung</dt>
+              <dd className="font-mono text-foreground">{ticket.transferContent}</dd>
+            </div>
+            <p className="pt-2 text-xs text-muted">
+              Giữ nguyên nội dung chuyển khoản — hệ thống đối chiếu hóa đơn bằng đúng chuỗi này.
+            </p>
+
+            <div className="pt-3">
+              {settled ? (
+                <Badge variant="success">Đã nhận được tiền</Badge>
+              ) : (
+                <span className="text-sm text-muted">Đang chờ chuyển khoản…</span>
+              )}
+            </div>
+          </dl>
+        </div>
+      )}
     </div>
   );
 }

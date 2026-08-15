@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   addDays,
   addMonths,
@@ -20,13 +20,19 @@ import { doctorsApi } from '@/api/doctors.api';
 import { appointmentsApi } from '@/api/appointments.api';
 import { PRIORITY_COLOR_LABEL_VI, SlotStatus } from '@/types/enums';
 import { DayAvailability, MonthDaySummary, SlotInfo } from '@/types/models';
-import { SLOT_STATUS_LABEL_VI, triageColorClasses } from '@/utils/labels';
+import { SLOT_STATUS_LABEL_VI, triageColorClasses, triagePriorityBar } from '@/utils/labels';
+import { Button, Input, Modal, useToast } from '@/components/basic';
+import { getErrorMessage } from '@/utils/errors';
+import { formatTime } from '@/utils/format';
 
 const CELL_CLASSES: Record<SlotStatus, string> = {
   [SlotStatus.FREE]: 'border border-dashed border-border bg-surface text-muted',
   [SlotStatus.BOOKED]: 'border border-primary/40 bg-primary/5 text-left',
   [SlotStatus.BREAK]: 'border border-border bg-surface-muted text-muted',
   [SlotStatus.OFF_SHIFT]: 'border border-transparent bg-surface-muted/50 text-muted/60',
+  // Lịch nhân viên không nhận `PAST` từ backend (chỉ lịch công khai mới bị hạ trạng
+  // thái), nhưng `Record` đòi đủ khoá — và nếu có thì trông như ngoài giờ làm.
+  [SlotStatus.PAST]: 'border border-transparent bg-surface-muted/50 text-muted/60',
 };
 
 /** FR-05-03 đòi bốn cách xem: ngày / tuần / tháng / theo bác sĩ. */
@@ -55,6 +61,7 @@ export function StaffCalendarPage() {
   const [doctorId, setDoctorId] = useState<string>('');
   const [view, setView] = useState<ViewMode>('week');
   const [anchor, setAnchor] = useState<Date>(new Date());
+  const [absenceOpen, setAbsenceOpen] = useState(false);
 
   const branchesQuery = useQuery({ queryKey: ['branches'], queryFn: () => branchesApi.list() });
 
@@ -221,11 +228,24 @@ export function StaffCalendarPage() {
             className="rounded border border-border bg-surface px-3 py-2 text-sm"
           />
         </label>
+
+        {/* Bác sĩ nghỉ đột xuất — đóng lịch ngày đang xem và dồn ca sang người khác. */}
+        <button
+          type="button"
+          disabled={!doctorId}
+          onClick={() => setAbsenceOpen(true)}
+          className="ml-auto rounded border border-destructive px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/5 disabled:opacity-40"
+        >
+          Báo bác sĩ nghỉ
+        </button>
       </div>
 
       {view !== 'month' && (
         <div className="flex flex-wrap gap-3 text-xs">
-          {Object.values(SlotStatus).map((status) => (
+          {/* `PAST` chỉ tồn tại ở lịch công khai — không đưa vào chú giải của nhân viên. */}
+          {Object.values(SlotStatus)
+            .filter((status) => status !== SlotStatus.PAST)
+            .map((status) => (
             <span key={status} className={`rounded px-2 py-1 ${CELL_CLASSES[status]}`}>
               {SLOT_STATUS_LABEL_VI[status]}
             </span>
@@ -252,7 +272,133 @@ export function StaffCalendarPage() {
           onOpenAppointment={(id) => navigate(`/staff/appointments/${id}`)}
         />
       )}
+
+      <DoctorAbsenceModal
+        open={absenceOpen}
+        doctorId={doctorId}
+        doctorName={doctorsQuery.data?.find((d) => d.id === doctorId)?.fullName ?? ''}
+        date={anchorStr}
+        onClose={() => setAbsenceOpen(false)}
+      />
     </div>
+  );
+}
+
+/**
+ * Báo bác sĩ nghỉ đột xuất trong một ngày.
+ *
+ * Backend đóng lịch của họ ngày đó rồi chuyển từng ca CHƯA tiếp nhận sang một bác sĩ
+ * khác đang trống cùng khung giờ. Ca không tìm được người thay KHÔNG bị hủy — chúng
+ * hiện ra ở đây kèm số điện thoại để lễ tân gọi dời lịch.
+ */
+function DoctorAbsenceModal({
+  open,
+  doctorId,
+  doctorName,
+  date,
+  onClose,
+}: {
+  open: boolean;
+  doctorId: string;
+  doctorName: string;
+  date: string;
+  onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const [reason, setReason] = useState('');
+  const [result, setResult] = useState<Awaited<
+    ReturnType<typeof appointmentsApi.doctorAbsence>
+  > | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setReason('');
+      setResult(null);
+    }
+  }, [open]);
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      appointmentsApi.doctorAbsence({ doctorId, date, reason: reason.trim() || undefined }),
+    onSuccess: (data) => {
+      setResult(data);
+      void queryClient.invalidateQueries({ queryKey: ['staff-calendar-week'] });
+      void queryClient.invalidateQueries({ queryKey: ['staff-calendar-day'] });
+      void queryClient.invalidateQueries({ queryKey: ['staff-calendar-month'] });
+      toast.show(
+        `Đã đóng lịch ngày ${date}. Chuyển được ${data.reassigned.length}/${data.total} ca.`,
+        data.unresolved.length > 0 ? 'info' : 'success',
+      );
+    },
+    onError: (error) => toast.show(getErrorMessage(error), 'error'),
+  });
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={`Báo nghỉ — ${doctorName}`}
+      className="max-w-2xl"
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            Đóng
+          </Button>
+          {!result && (
+            <Button loading={mutation.isPending} onClick={() => mutation.mutate()}>
+              Xác nhận nghỉ ngày {date}
+            </Button>
+          )}
+        </>
+      }
+    >
+      {result ? (
+        <div className="flex flex-col gap-4 text-sm">
+          <p>
+            Tổng cộng <strong>{result.total}</strong> ca trong ngày. Đã chuyển{' '}
+            <strong>{result.reassigned.length}</strong> ca sang bác sĩ khác.
+          </p>
+
+          {result.reassigned.length > 0 && (
+            <ul className="list-disc space-y-1 pl-5 text-muted">
+              {result.reassigned.map((item) => (
+                <li key={item.appointmentId}>Đã chuyển sang {item.newDoctorName}</li>
+              ))}
+            </ul>
+          )}
+
+          {result.unresolved.length > 0 && (
+            <div className="rounded border border-destructive/40 bg-destructive/5 p-3">
+              <p className="font-medium text-destructive">
+                {result.unresolved.length} ca chưa tìm được bác sĩ thay — cần gọi khách để dời lịch:
+              </p>
+              <ul className="mt-2 space-y-1">
+                {result.unresolved.map((item) => (
+                  <li key={item.appointmentId}>
+                    {formatTime(item.startAt)} · {item.petName} · {item.ownerPhone}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-muted">
+            Lịch của {doctorName} trong ngày {date} sẽ được đóng lại. Các ca chưa tiếp nhận được
+            chuyển sang bác sĩ khác đang trống cùng khung giờ; ca không có người thay vẫn giữ
+            nguyên và được liệt kê để bạn liên hệ khách.
+          </p>
+          <Input
+            label="Lý do nghỉ"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Bác sĩ bị ốm đột xuất"
+          />
+        </div>
+      )}
+    </Modal>
   );
 }
 
@@ -320,20 +466,45 @@ function SlotGrid({
                   const detail = slot.appointmentDetail;
                   return (
                     <td key={day.date} className="border-b border-border px-1 py-1 align-top">
+                      {/*
+                        Ô lịch phải đọc được mà không cần mở chi tiết: chủ nuôi, thú
+                        cưng + (loài, giống), dịch vụ và nhãn màu ưu tiên. Dải màu bên
+                        trái cho phép quét nhanh cả tuần bằng mắt.
+                      */}
                       <button
                         type="button"
                         onClick={() => onOpenAppointment(detail.id)}
-                        className={`w-full rounded p-2 text-xs hover:bg-primary/10 ${cellClass}`}
+                        title={`${detail.petName} · ${detail.ownerName}${detail.serviceName ? ` · ${detail.serviceName}` : ''}`}
+                        className={`flex w-full gap-1.5 rounded p-2 text-left text-xs hover:bg-primary/10 ${cellClass}`}
                       >
-                        <p className="font-medium">{detail.petName}</p>
-                        <p className="text-muted">{detail.ownerName}</p>
-                        {detail.priorityColor && (
-                          <span
-                            className={`mt-1 inline-block rounded-full px-1.5 py-0.5 ${triageColorClasses(detail.priorityColor)}`}
-                          >
-                            {PRIORITY_COLOR_LABEL_VI[detail.priorityColor]}
+                        <span
+                          aria-hidden
+                          className={`w-1 shrink-0 rounded-full ${detail.priorityColor ? triagePriorityBar(detail.priorityColor) : 'bg-primary/40'}`}
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-semibold text-foreground">
+                            {detail.ownerName}
                           </span>
-                        )}
+                          <span className="block truncate text-foreground">
+                            {detail.petName}
+                            {(detail.petSpeciesName || detail.petBreedName) && (
+                              <span className="text-muted">
+                                {' '}
+                                ({[detail.petSpeciesName, detail.petBreedName].filter(Boolean).join(', ')})
+                              </span>
+                            )}
+                          </span>
+                          {detail.serviceName && (
+                            <span className="block truncate text-muted">{detail.serviceName}</span>
+                          )}
+                          {detail.priorityColor && (
+                            <span
+                              className={`mt-1 inline-block rounded-full px-1.5 py-0.5 ${triageColorClasses(detail.priorityColor)}`}
+                            >
+                              {PRIORITY_COLOR_LABEL_VI[detail.priorityColor]}
+                            </span>
+                          )}
+                        </span>
                       </button>
                     </td>
                   );

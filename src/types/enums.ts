@@ -252,6 +252,11 @@ export enum SlotStatus {
   BOOKED = 'BOOKED',
   BREAK = 'BREAK',
   OFF_SHIFT = 'OFF_SHIFT',
+  /**
+   * Khung giờ nằm trước thời điểm sớm nhất còn đặt được (từ ngày mai trở đi). Chỉ
+   * xuất hiện ở lịch công khai — lịch của nhân viên vẫn thấy quá khứ để tra cứu.
+   */
+  PAST = 'PAST',
 }
 
 /** Loại giao dịch kho — SRS FR-18-02 (P6). */

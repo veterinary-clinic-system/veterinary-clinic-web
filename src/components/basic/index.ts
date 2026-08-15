@@ -11,3 +11,4 @@ export * from './TriageBadge';
 export * from './Modal';
 export * from './Toast';
 export * from './Table';
+export * from './Pagination';

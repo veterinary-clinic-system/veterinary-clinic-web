@@ -27,10 +27,9 @@ export function PetProfilePage() {
     enabled: !!id,
   });
 
+  // BookingPage đọc `location.state.petId` và chọn sẵn thú cưng này ở bước "Thông tin"
+  // (xem `BookingHandoffState`).
   const goToBooking = () => {
-    // TODO(booking-handoff): BookingPage should read `location.state?.petId` to
-    // preselect this pet and skip Step 5's pet-selection UI when present. Wiring that
-    // read is out of scope for this page - BookingPage does not consume it yet.
     navigate('/booking', { state: { petId: id } });
   };
 
@@ -124,11 +123,14 @@ export function PetProfilePage() {
 
         <div className="mt-3 space-y-3">
           {timeline?.map((entry) => (
-            <div key={entry.id} className="rounded border border-border bg-surface p-4">
+            <div key={entry.id} className="rounded-xl border border-border bg-surface p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-medium text-foreground">
+                <Link
+                  to={`/my/appointments/${entry.id}`}
+                  className="font-medium text-primary hover:underline"
+                >
                   {format(parseISO(entry.startAt), 'HH:mm dd/MM/yyyy', { locale: vi })}
-                </p>
+                </Link>
                 <div className="flex items-center gap-2">
                   {entry.priorityColor && (
                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${triageColorClasses(entry.priorityColor)}`}>

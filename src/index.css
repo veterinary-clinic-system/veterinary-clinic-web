@@ -3,22 +3,43 @@
 @tailwind utilities;
 
 /*
- * PLACEHOLDER values - replace with the real tokens from DESIGN.md (repo root) once it
- * exists. Values are R G B triples (no commas) so Tailwind's `<alpha-value>` opacity
- * modifiers work, e.g. `bg-primary/50`.
+ * Bảng token của giao diện. Mọi màu/bo góc/đổ bóng trong ứng dụng đều đi qua đây, nên
+ * đổi các giá trị dưới là re-skin toàn bộ - không phải sửa component nào.
+ *
+ * Giá trị là bộ ba R G B (không dấu phẩy) để `bg-primary/50` của Tailwind hoạt động.
+ *
+ * Chọn màu: xanh ngọc (teal) làm màu chính thay vì xanh dương mặc định - đây là phòng
+ * khám thú y, tông xanh ngọc đọc ra "y tế" mà vẫn ấm hơn xanh dương công nghệ. Nền hơi
+ * ngả ấm (không phải xám thuần) để các thẻ trắng nổi lên mà không cần viền đậm.
  */
 :root {
-  --color-primary: 37 99 235; /* blue-600 */
+  --color-primary: 13 148 136; /* teal-600 */
   --color-primary-foreground: 255 255 255;
   --color-surface: 255 255 255;
-  --color-surface-muted: 244 246 248;
-  --color-border: 226 232 240;
-  --color-foreground: 15 23 42;
-  --color-muted-foreground: 100 116 139;
+  --color-surface-muted: 245 247 246;
+  --color-border: 226 232 231;
+  --color-foreground: 17 27 33;
+  --color-muted-foreground: 100 116 116;
   --color-destructive: 220 38 38;
-  --radius: 0.5rem;
+  --radius: 0.625rem;
 }
 
 body {
   @apply bg-surface text-foreground antialiased;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+/*
+ * Vùng focus nhìn thấy được trên MỌI thứ bấm được. Trước đây chỉ một vài component tự
+ * đặt `focus:ring`, nên đi bằng bàn phím qua phần lớn biểu mẫu là mất dấu con trỏ.
+ */
+@layer base {
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    @apply outline-none ring-2 ring-primary/40 ring-offset-2 ring-offset-surface;
+  }
+
+  /* Bảng số liệu đọc dễ hơn nhiều khi chữ số đều bề ngang. */
+  :where(td, th) {
+    font-variant-numeric: tabular-nums;
+  }
 }

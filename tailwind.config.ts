@@ -1,14 +1,12 @@
 import type { Config } from 'tailwindcss';
 
 /**
- * PLACEHOLDER token set. DESIGN.md (repo root) is the source of truth for colors,
- * typography, spacing and border radii per prompt.md Section 7.3, but it wasn't in the
- * repo yet when this project was scaffolded. Everything below is wired through CSS
- * custom properties (see src/index.css) specifically so that once DESIGN.md exists,
- * updating those variables (and the `triage` palette below, if the doc specifies
- * different values) is enough to re-skin the whole app - no component changes needed.
- * Do not build new components against DESIGN.md until this file has been updated to
- * match it.
+ * Bảng token của Tailwind. Nguồn giá trị thật nằm ở các CSS custom property trong
+ * `src/index.css` - file này chỉ nối chúng vào tên lớp của Tailwind, nên đổi giao diện
+ * là đổi ở đó chứ không phải ở đây.
+ *
+ * Thang màu phân loại ưu tiên (`triage`) thì KHÔNG đi qua biến: năm màu này mang nghĩa
+ * nghiệp vụ cố định (prompt.md mục 6), không phải một lựa chọn thẩm mỹ được đổi.
  */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
@@ -38,9 +36,17 @@ export default {
       },
       borderRadius: {
         DEFAULT: 'var(--radius)',
+        lg: 'var(--radius)',
+        xl: 'calc(var(--radius) + 0.25rem)',
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
+      // Đổ bóng rất nhẹ: thẻ nổi lên khỏi nền mà không trông như hộp thoại nổi.
+      boxShadow: {
+        sm: '0 1px 2px 0 rgb(17 27 33 / 0.04)',
+        DEFAULT: '0 1px 3px 0 rgb(17 27 33 / 0.06), 0 1px 2px -1px rgb(17 27 33 / 0.04)',
+        md: '0 4px 12px -2px rgb(17 27 33 / 0.08)',
       },
     },
   },

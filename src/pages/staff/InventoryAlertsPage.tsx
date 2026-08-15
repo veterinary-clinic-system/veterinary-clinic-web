@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { branchesApi } from '@/api/branches.api';
 import { inventoryApi } from '@/api/inventory.api';
-import { Badge, Button, Select, Table } from '@/components/basic';
+import { Badge, Button, ClientPagedTable, Select } from '@/components/basic';
 import type { Column } from '@/components/basic';
 import { InventoryAlertRow } from '@/types/models';
 import { formatDate } from '@/utils/format';
@@ -159,12 +159,15 @@ export function InventoryAlertsPage() {
             </Badge>
           </div>
           <p className="text-sm text-muted">{group.hint}</p>
-          <Table
+          {/* Mỗi nhóm cảnh báo có thể dài hàng trăm dòng khi kho lớn - phân trang
+              riêng từng nhóm, đổi chi nhánh thì cả ba nhóm về trang 1. */}
+          <ClientPagedTable
             columns={columnsFor(group)}
             data={group.rows}
             getRowId={(row) => `${group.key}:${row.batchId ?? row.inventoryItemId}`}
             loading={alertsQuery.isLoading}
             emptyMessage="Không có cảnh báo nào ở nhóm này."
+            resetKeys={[branchId]}
           />
         </section>
       ))}

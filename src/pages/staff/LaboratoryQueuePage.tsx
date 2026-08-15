@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { branchesApi } from '@/api/branches.api';
 import { laboratoriesApi } from '@/api/laboratories.api';
-import { Badge, Select, Table } from '@/components/basic';
+import { Badge, Select, Table, usePagination } from '@/components/basic';
 import type { Column } from '@/components/basic';
 import { LabQueueRow, LabTestStatus } from '@/types/models';
 import { formatDateTime } from '@/utils/format';
 import { LAB_TEST_STATUS_LABEL_VI } from '@/utils/labels';
+
+const PAGE_SIZE = 20;
 
 /**
  * Hàng chờ xét nghiệm — acceptance P9-T7: "chỉ định xét nghiệm từ màn hình khám →
@@ -42,6 +44,9 @@ export function LaboratoryQueuePage() {
       }),
     enabled: Boolean(branchId),
   });
+
+  const rows = queueQuery.data ?? [];
+  const { page, setPage, pageItems } = usePagination(rows, PAGE_SIZE, [branchId, status]);
 
   const columns: Column<LabQueueRow>[] = [
     { key: 'orderedAt', header: 'Chỉ định lúc', render: (row) => formatDateTime(row.orderedAt) },
@@ -119,12 +124,20 @@ export function LaboratoryQueuePage() {
         />
       </div>
 
+      {/*
+        Hàng chờ xét nghiệm trả về trọn vẹn trong một lần gọi, nên cắt trang ở client
+        là đủ - `<Table>` chỉ vẽ đúng `data` được truyền vào.
+      */}
       <Table
         columns={columns}
-        data={queueQuery.data ?? []}
+        data={pageItems}
         getRowId={(row) => row.labTestOrderId}
         loading={queueQuery.isLoading}
         emptyMessage="Không có yêu cầu xét nghiệm nào đang chờ."
+        page={page}
+        limit={PAGE_SIZE}
+        total={rows.length}
+        onPageChange={setPage}
       />
     </div>
   );
