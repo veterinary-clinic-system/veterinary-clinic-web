@@ -15,15 +15,38 @@ import path from 'path';
  * `react-vendor` tách riêng vì nó gần như không bao giờ đổi: trình duyệt giữ lại được
  * qua các lần triển khai, trong khi mã của ứng dụng thì đổi liên tục.
  */
+/**
+ * Mã dùng chung giữa các zone - phải nằm ngoài mọi gói zone (xem `chunkFor`).
+ *
+ * `routes` ở đây chỉ còn các chốt chặn lá (RequireAuth / StaffConsoleOnly /
+ * RouteFallback) mà zone nào cũng cần. Gốc router thì nằm ở `src/app/AppRoutes.tsx`:
+ * nó IMPORT các zone, nên xếp nó vào gói dùng chung sẽ tạo ra vòng
+ * `shared -> zone -> shared`.
+ */
+const SHARED_DIRS = ['components', 'api', 'context', 'hooks', 'layouts', 'utils', 'types', 'routes'];
+
 function chunkFor(id: string): string | undefined {
-  if (id.includes('/node_modules/')) {
-    if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) {
+  const path = id.replace(/\\/g, '/');
+
+  if (path.includes('/node_modules/')) {
+    if (/\/node_modules\/(react|react-dom|react-router|react-router-dom|scheduler)\//.test(path)) {
       return 'react-vendor';
     }
     return undefined;
   }
 
-  const zone = id.replace(/\\/g, '/').match(/\/src\/zones\/([^/]+)\//);
+  /*
+    Neo mã dùng chung vào MỘT gói cố định trước khi xét zone.
+    Nếu không, Rollup được tự quyết chỗ đặt một module mà hai zone cùng dùng, và nó có
+    thể nhét vào gói của zone này rồi để zone kia trỏ ngược sang - Rollup báo đúng lỗi
+    đó: "Circular chunk: zone-owner -> zone-public -> zone-owner".
+  */
+  const shared = path.match(/\/src\/([^/]+)\//);
+  if (shared && SHARED_DIRS.includes(shared[1])) {
+    return 'shared';
+  }
+
+  const zone = path.match(/\/src\/zones\/([^/]+)\//);
   return zone ? `zone-${zone[1]}` : undefined;
 }
 

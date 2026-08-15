@@ -1,16 +1,13 @@
 import { Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
-import { RequireAuth } from './RequireAuth';
-import { RouteFallback } from './RouteFallback';
-import { StaffConsoleOnly } from './StaffConsoleOnly';
+import { RequireAuth } from '@/routes/RequireAuth';
+import { RouteFallback } from '@/routes/RouteFallback';
+import { StaffConsoleOnly } from '@/routes/StaffConsoleOnly';
 import { Role, STAFF_ROLES } from '@/types/enums';
 import { PublicLayout } from '@/layouts/PublicLayout';
 import { StaffLayout } from '@/layouts/StaffLayout';
 import { publicRoutes } from '@/zones/public/routes';
-import { MyPetsPage } from '@/pages/owner/MyPetsPage';
-import { PetProfilePage } from '@/pages/owner/PetProfilePage';
-import { MyAppointmentsPage } from '@/pages/owner/MyAppointmentsPage';
-import { MyAppointmentDetailPage } from '@/pages/owner/MyAppointmentDetailPage';
+import { ownerRoutes } from '@/zones/owner/routes';
 import { StaffDashboardPage } from '@/pages/staff/StaffDashboardPage';
 import { StaffCalendarPage } from '@/pages/staff/StaffCalendarPage';
 import { QueuePage } from '@/pages/staff/QueuePage';
@@ -60,13 +57,7 @@ export function AppRoutes() {
         <Route element={<StaffConsoleOnly />}>
           <Route element={<PublicLayout />}>
             {publicRoutes()}
-
-            <Route element={<RequireAuth allow={[Role.PET_OWNER]} />}>
-              <Route path="/my/pets" element={<MyPetsPage />} />
-              <Route path="/my/pets/:id" element={<PetProfilePage />} />
-              <Route path="/my/appointments" element={<MyAppointmentsPage />} />
-              <Route path="/my/appointments/:id" element={<MyAppointmentDetailPage />} />
-            </Route>
+            {ownerRoutes()}
           </Route>
         </Route>
 
