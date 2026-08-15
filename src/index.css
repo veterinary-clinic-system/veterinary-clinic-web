@@ -42,4 +42,20 @@ body {
   :where(td, th) {
     font-variant-numeric: tabular-nums;
   }
+
+  /*
+   * Tôn trọng "giảm chuyển động" của hệ điều hành. Skeleton nhấp nháy và mọi
+   * transition đều tắt - với người nhạy cảm tiền đình, chuyển động lặp vô hạn trên
+   * cả một trang danh sách là thứ gây khó chịu thật sự, không phải chuyện thẩm mỹ.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
