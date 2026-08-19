@@ -63,7 +63,12 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    /*
+      Cổng mặc định 5173, nhưng nhường cho biến môi trường `PORT` khi có: nhiều phiên
+      làm việc song song trên cùng một máy sẽ đụng cổng, và một cổng cứng bắt phải tắt
+      phiên kia trước khi xem được thay đổi của phiên này.
+    */
+    port: Number(process.env.PORT) || 5173,
     proxy: {
       // Lets the dev server call the NestJS API without CORS friction.
       '/api': {
