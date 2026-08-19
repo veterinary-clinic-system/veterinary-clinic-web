@@ -1,4 +1,6 @@
 import { ReactNode } from 'react';
+import { Icon } from './Icon';
+import { Skeleton } from './Skeleton';
 import { cn } from './utils';
 
 export interface Column<T> {
@@ -72,10 +74,14 @@ export function Table<T>({
 
   return (
     <div className={cn('flex flex-col gap-3', className)}>
-      <div className="overflow-x-auto rounded border border-border">
-        <table className="w-full border-collapse text-sm">
+      {/*
+        Cuộn ngang nằm TRONG khung của bảng, không ở trang: một bảng kho 12 cột ở màn
+        hình 1024px vẫn phải đọc được mà không kéo cả trang sang phải.
+      */}
+      <div className="overflow-x-auto rounded-xl border border-border bg-surface">
+        <table className="w-full border-collapse text-data">
           <thead>
-            <tr className="border-b border-border bg-surface-muted text-left">
+            <tr className="border-b border-border-strong bg-surface-muted text-left">
               {columns.map((column) => {
                 const isSortable = sortingEnabled && column.sortable;
                 const isActive = isSortable && sortBy === column.key;
@@ -84,18 +90,26 @@ export function Table<T>({
                     key={column.key}
                     scope="col"
                     aria-sort={isSortable ? (isActive ? (sortOrder === 'ASC' ? 'ascending' : 'descending') : 'none') : undefined}
-                    className="px-3 py-2 font-medium text-foreground"
+                    className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted"
                   >
                     {isSortable ? (
                       <button
                         type="button"
                         onClick={() => handleHeaderClick(column)}
-                        className="inline-flex items-center gap-1 rounded hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+                        className={cn(
+                          'inline-flex items-center gap-1 rounded hover:text-foreground',
+                          isActive && 'text-foreground',
+                        )}
                       >
                         {column.header}
-                        <span className="text-muted" aria-hidden="true">
-                          {isActive ? (sortOrder === 'ASC' ? '▲' : '▼') : '↕'}
-                        </span>
+                        <Icon
+                          name={isActive && sortOrder === 'DESC' ? 'chevron-down' : 'chevron-right'}
+                          className={cn(
+                            'h-3.5 w-3.5',
+                            isActive && sortOrder === 'ASC' && '-rotate-90',
+                            !isActive && 'opacity-40',
+                          )}
+                        />
                       </button>
                     ) : (
                       column.header
@@ -107,11 +121,17 @@ export function Table<T>({
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={columns.length} className="px-3 py-6 text-center text-muted">
-                  Đang tải...
-                </td>
-              </tr>
+              /* Skeleton theo hình dạng hàng thật, không phải dòng chữ "Đang tải":
+                 bảng giữ nguyên chiều cao nên trang không nhảy khi dữ liệu về. */
+              Array.from({ length: 5 }).map((_, index) => (
+                <tr key={`skeleton-${index}`} className="border-b border-border last:border-b-0">
+                  <td colSpan={columns.length} className="px-3">
+                    <div className="flex h-row items-center">
+                      <Skeleton className="h-3.5 w-full max-w-sm" />
+                    </div>
+                  </td>
+                </tr>
+              ))
             ) : data.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-3 py-6 text-center text-muted">
@@ -120,9 +140,9 @@ export function Table<T>({
               </tr>
             ) : (
               data.map((row) => (
-                <tr key={getRowId(row)} className="border-b border-border last:border-b-0 hover:bg-surface-muted/50">
+                <tr key={getRowId(row)} className="border-b border-border last:border-b-0 hover:bg-surface-muted/60">
                   {columns.map((column) => (
-                    <td key={column.key} className="px-3 py-2 text-foreground">
+                    <td key={column.key} className="h-row px-3 py-2 align-middle text-foreground">
                       {column.render ? column.render(row) : String((row as Record<string, unknown>)[column.key] ?? '')}
                     </td>
                   ))}
@@ -139,8 +159,9 @@ export function Table<T>({
             type="button"
             onClick={() => onPageChange?.(Math.max(1, currentPage - 1))}
             disabled={currentPage <= 1}
-            className="rounded border border-border px-3 py-1.5 hover:bg-surface-muted focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-touch items-center gap-1 rounded-lg border border-border px-3 hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
           >
+            <Icon name="chevron-left" className="h-4 w-4" />
             Trước
           </button>
           <span>
@@ -150,9 +171,10 @@ export function Table<T>({
             type="button"
             onClick={() => onPageChange?.(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage >= totalPages}
-            className="rounded border border-border px-3 py-1.5 hover:bg-surface-muted focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-touch items-center gap-1 rounded-lg border border-border px-3 hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
           >
             Sau
+            <Icon name="chevron-right" className="h-4 w-4" />
           </button>
         </div>
       )}

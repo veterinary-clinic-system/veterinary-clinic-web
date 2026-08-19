@@ -36,14 +36,21 @@ export function CardHeader({ children, className }: { children: ReactNode; class
 export function CardTitle({
   children,
   className,
+  id,
   as: Tag = 'h3',
 }: {
   children: ReactNode;
   className?: string;
+  /** Để `aria-labelledby` của biểu đồ/bảng bên trong trỏ ngược lên tiêu đề thẻ. */
+  id?: string;
   /** Cấp tiêu đề phải khớp với cấu trúc trang - đừng nhảy cóc h1 -> h3. */
   as?: 'h2' | 'h3' | 'h4';
 }) {
-  return <Tag className={cn('text-base font-semibold text-foreground', className)}>{children}</Tag>;
+  return (
+    <Tag id={id} className={cn('text-base font-semibold text-foreground', className)}>
+      {children}
+    </Tag>
+  );
 }
 
 export function CardBody({ children, className }: { children: ReactNode; className?: string }) {

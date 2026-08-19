@@ -1,5 +1,7 @@
 import { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from './Button';
+import { Icon } from './Icon';
 import { cn } from './utils';
 
 /**
@@ -84,6 +86,54 @@ export function ErrorState({
           {retryLabel}
         </Button>
       )}
+    </div>
+  );
+}
+
+export interface ForbiddenStateProps {
+  title?: string;
+  description?: string;
+  backTo?: string;
+  backLabel?: string;
+  className?: string;
+}
+
+/**
+ * Màn hình "không có quyền".
+ *
+ * Lý do phải có, thay vì cứ điều hướng về trang chủ: một cú chuyển hướng im lặng khiến
+ * người dùng tưởng liên kết hỏng và bấm lại liên tục. Nói thẳng ra là tài khoản này
+ * không được vào, kèm một lối ra rõ ràng.
+ *
+ * Đây vẫn chỉ là lớp trải nghiệm - backend mới là nơi chặn thật. Xem
+ * `docs/01-thong-tin-kien-truc.md` mục 3.1.
+ */
+export function ForbiddenState({
+  title = 'Bạn không có quyền truy cập trang này',
+  description = 'Tài khoản của bạn không được cấp quyền cho khu vực này. Nếu bạn cho rằng đây là nhầm lẫn, liên hệ quản trị viên của phòng khám.',
+  backTo = '/staff',
+  backLabel = 'Về Tổng quan',
+  className,
+}: ForbiddenStateProps) {
+  return (
+    <div
+      role="alert"
+      className={cn(
+        'flex flex-col items-center rounded-xl border border-border bg-surface px-6 py-14 text-center',
+        className,
+      )}
+    >
+      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-warning-soft text-warning">
+        <Icon name="shield" className="h-6 w-6" />
+      </span>
+      <h2 className="mt-4 text-lg font-semibold text-foreground">{title}</h2>
+      <p className="mt-2 max-w-md text-sm text-muted">{description}</p>
+      <Link
+        to={backTo}
+        className="mt-6 inline-flex min-h-touch items-center rounded-lg bg-primary px-4 font-semibold text-primary-foreground hover:bg-primary/90"
+      >
+        {backLabel}
+      </Link>
     </div>
   );
 }
