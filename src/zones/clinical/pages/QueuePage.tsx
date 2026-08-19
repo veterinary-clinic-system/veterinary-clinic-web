@@ -1,13 +1,25 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { format } from 'date-fns';
+import { format, formatDistanceToNowStrict } from 'date-fns';
+import { vi } from 'date-fns/locale';
 import { branchesApi } from '@/api/branches.api';
 import { queueApi } from '@/api/queue.api';
-import { Badge, Button, Input, Select, Table, usePagination, useToast } from '@/components/basic';
+import {
+  Badge,
+  Button,
+  Icon,
+  Input,
+  PageHeader,
+  Select,
+  StatTile,
+  Table,
+  TriageBadge,
+  usePagination,
+  useToast,
+} from '@/components/basic';
 import type { Column } from '@/components/basic';
 import {
-  PRIORITY_COLOR_LABEL_VI,
   QueueEntry,
   QueueSource,
   QueueStatus,
@@ -16,8 +28,8 @@ import {
 } from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';
 import { formatTime } from '@/utils/format';
-import { triageColorClasses } from '@/utils/labels';
 import { AssignDoctorModal } from '../queue/AssignDoctorModal';
+import { CancelQueueEntryDialog } from '../queue/CancelQueueEntryDialog';
 import { CheckInModal } from '../queue/CheckInModal';
 import { WalkInModal } from '../queue/WalkInModal';
 
@@ -44,6 +56,7 @@ export function QueuePage() {
   const [walkInOpen, setWalkInOpen] = useState(false);
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [assignTarget, setAssignTarget] = useState<QueueEntry | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<QueueEntry | null>(null);
 
   const branchesQuery = useQuery({ queryKey: ['branches'], queryFn: () => branchesApi.list() });
 
@@ -83,20 +96,6 @@ export function QueuePage() {
     onError: (error) => toast.show(getErrorMessage(error), 'error'),
   });
 
-  /**
-   * Hủy lượt chờ kéo theo lịch hẹn sang "đã hủy" và ghi lý do (FR-05-04). Hỏi lý do
-   * bằng prompt để không phải dựng thêm một modal nữa cho một ô nhập duy nhất; bỏ
-   * trống vẫn hủy được, backend điền "Khách bỏ về trước khi được khám".
-   */
-  function cancelQueueEntry(entry: QueueEntry) {
-    const reason = window.prompt(
-      `Hủy lượt chờ số ${entry.ticketNumber} (${entry.pet?.name ?? 'thú cưng'}). Lý do:`,
-      'Khách bỏ về trước khi được khám',
-    );
-    if (reason === null) return; // bấm Cancel
-    updateMutation.mutate({ id: entry.id, status: QueueStatus.CANCELLED, reason: reason.trim() });
-  }
-
   const columns: Column<QueueEntry>[] = [
     {
       key: 'ticketNumber',
@@ -133,13 +132,7 @@ export function QueuePage() {
       key: 'priorityColor',
       header: 'Ưu tiên',
       render: (row) =>
-        row.priorityColor ? (
-          <span className={`rounded px-2 py-0.5 text-xs ${triageColorClasses(row.priorityColor)}`}>
-            {PRIORITY_COLOR_LABEL_VI[row.priorityColor]}
-          </span>
-        ) : (
-          '—'
-        ),
+        row.priorityColor ? <TriageBadge color={row.priorityColor} /> : <span className="text-muted">—</span>,
     },
     { key: 'service', header: 'Dịch vụ', render: (row) => row.service?.item?.itemName ?? '—' },
     {
@@ -153,9 +146,21 @@ export function QueuePage() {
         ),
     },
     {
+      /*
+        Hiện THỜI GIAN ĐÃ CHỜ, không chỉ giờ check-in. "Đã chờ 40 phút" là con số dẫn
+        tới hành động (gọi ai tiếp theo); "vào lúc 09:15" bắt lễ tân tự trừ trong đầu,
+        và giữa giờ cao điểm thì họ sẽ không trừ.
+      */
       key: 'checkedInAt',
-      header: 'Vào lúc',
-      render: (row) => formatTime(row.checkedInAt),
+      header: 'Đã chờ',
+      render: (row) =>
+        isFinished(row.status) ? (
+          <span className="tabular-nums text-muted">{formatTime(row.checkedInAt)}</span>
+        ) : (
+          <span className="tabular-nums">
+            {formatDistanceToNowStrict(new Date(row.checkedInAt), { locale: vi })}
+          </span>
+        ),
     },
     {
       key: 'status',
@@ -199,8 +204,8 @@ export function QueuePage() {
             </>
           )}
           {!isFinished(row.status) && (
-            <Button size="sm" variant="ghost" onClick={() => cancelQueueEntry(row)}>
-              Hủy lượt
+            <Button size="sm" variant="ghost" onClick={() => setCancelTarget(row)}>
+              Huỷ lượt
             </Button>
           )}
         </div>
@@ -209,7 +214,14 @@ export function QueuePage() {
   ];
 
   const entries = queueQuery.data ?? [];
-  const waiting = entries.filter((e) => e.status === QueueStatus.WAITING).length;
+  /*
+    "Đang chờ" gồm cả WAITING lẫn ASSIGNED: với người ngồi ngoài phòng chờ, đã gán bác
+    sĩ hay chưa không đổi việc gì - họ vẫn đang đợi được gọi. Đếm riêng WAITING làm ô
+    này hiện 0 trong khi vẫn còn người chờ, đúng thứ nó phải cảnh báo.
+  */
+  const waiting = entries.filter(
+    (e) => e.status === QueueStatus.WAITING || e.status === QueueStatus.ASSIGNED,
+  ).length;
   const inRoom = entries.filter((e) => e.status === QueueStatus.IN_ROOM).length;
 
   // Hàng chờ một ngày của một chi nhánh trả về trong một lần gọi - cắt trang ở client
@@ -221,18 +233,23 @@ export function QueuePage() {
   ]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Hàng chờ</h1>
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => setCheckInOpen(true)} disabled={!branchId}>
-            Xác nhận khách đã đến
-          </Button>
-          <Button onClick={() => setWalkInOpen(true)} disabled={!branchId}>
-            Khách vãng lai
-          </Button>
-        </div>
-      </div>
+    <div className="flex flex-col gap-stack">
+      <PageHeader
+        title="Hàng chờ"
+        description="Danh sách tiếp nhận trong ngày, tự làm mới mỗi 30 giây."
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => setCheckInOpen(true)} disabled={!branchId}>
+              <Icon name="check" className="h-4 w-4" />
+              Khách đã đến
+            </Button>
+            <Button onClick={() => setWalkInOpen(true)} disabled={!branchId}>
+              <Icon name="plus" className="h-4 w-4" />
+              Khách vãng lai
+            </Button>
+          </>
+        }
+      />
 
       <div className="flex flex-wrap items-end gap-4 rounded border border-border bg-surface p-4">
         <Select
@@ -251,14 +268,21 @@ export function QueuePage() {
           />
           Hiện cả lượt đã kết thúc
         </label>
-        <div className="ml-auto flex gap-4 text-sm text-muted">
-          <span>
-            Đang chờ: <strong className="text-foreground">{waiting}</strong>
-          </span>
-          <span>
-            Trong phòng: <strong className="text-foreground">{inRoom}</strong>
-          </span>
-        </div>
+      </div>
+
+      {/*
+        Hai con số này là thứ lễ tân liếc mắt nhiều nhất trong ngày, nên tách khỏi thanh
+        bộ lọc thành ô riêng: nhét chúng vào cuối một hàng bộ lọc thì chúng bị đọc như
+        một nhãn phụ của ô lọc bên cạnh.
+      */}
+      <div className="grid grid-cols-2 gap-4 sm:max-w-md">
+        <StatTile
+          label="Đang chờ"
+          value={waiting}
+          icon="queue"
+          tone={waiting > 4 ? 'warning' : 'default'}
+        />
+        <StatTile label="Trong phòng khám" value={inRoom} icon="stethoscope" />
       </div>
 
       <Table
@@ -292,6 +316,20 @@ export function QueuePage() {
         entry={assignTarget}
         onClose={() => setAssignTarget(null)}
         onDone={invalidateQueue}
+      />
+
+      {/* Huỷ lượt chờ kéo theo lịch hẹn sang "đã huỷ" và ghi lý do (FR-05-04). */}
+      <CancelQueueEntryDialog
+        entry={cancelTarget}
+        loading={updateMutation.isPending}
+        onClose={() => setCancelTarget(null)}
+        onConfirm={(reason) => {
+          if (!cancelTarget) return;
+          updateMutation.mutate(
+            { id: cancelTarget.id, status: QueueStatus.CANCELLED, reason },
+            { onSuccess: () => setCancelTarget(null) },
+          );
+        }}
       />
     </div>
   );

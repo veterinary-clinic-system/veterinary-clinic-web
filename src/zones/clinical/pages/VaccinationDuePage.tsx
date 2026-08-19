@@ -105,7 +105,7 @@ export function VaccinationDuePage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Nhắc lịch tiêm</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Nhắc lịch tiêm</h1>
         <p className="text-muted">
           Các mũi đã quá hạn và sắp đến hạn, mũi cần gọi gấp nhất nằm trên cùng. Khách đã ngưng
           hoạt động không xuất hiện ở đây.

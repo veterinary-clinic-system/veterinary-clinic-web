@@ -112,7 +112,7 @@ export function AppointmentDetailPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Lịch hẹn — {appt.pet?.name ?? 'Thú cưng'}
           </h1>
           <p className="text-muted">{formatDateTime(appt.startAt)}</p>

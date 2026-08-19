@@ -243,7 +243,7 @@ export function CustomersPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Khách hàng</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Khách hàng</h1>
         <Button onClick={openCreate}>Thêm khách hàng</Button>
       </div>
 

@@ -62,7 +62,7 @@ export function CustomerDetailPage() {
           ← Danh sách khách hàng
         </Link>
         <div className="mt-2 flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold">{customer.fullName}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{customer.fullName}</h1>
           {customer.customerCode && (
             <span className="rounded bg-surface-muted px-2 py-0.5 font-mono text-sm text-muted">
               {customer.customerCode}

@@ -1,28 +1,59 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/context/AuthContext';
+import { Link, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { appointmentsApi } from '@/api/appointments.api';
 import { branchesApi } from '@/api/branches.api';
 import { doctorsApi } from '@/api/doctors.api';
-import { appointmentsApi } from '@/api/appointments.api';
-import { useToast } from '@/components/basic';
-import { AppointmentStatus, PRIORITY_COLOR_LABEL_VI } from '@/types/enums';
+import {
+  Badge,
+  Button,
+  DataColumn,
+  DataTable,
+  Icon,
+  PageHeader,
+  Select,
+  TriageBadge,
+} from '@/components/basic';
+import { useAuth } from '@/context/AuthContext';
+import { AppointmentStatus } from '@/types/enums';
 import { Appointment } from '@/types/models';
-import { getErrorMessage } from '@/utils/errors';
-import { formatDateTime } from '@/utils/format';
-import { APPOINTMENT_STATUS_LABEL_VI, triageColorClasses } from '@/utils/labels';
+import { APPOINTMENT_STATUS_TONE } from '@/utils/appointment-status';
+import { formatDate, formatTime } from '@/utils/format';
+import { APPOINTMENT_STATUS_LABEL_VI } from '@/utils/labels';
+import { MarkNoShowDialog } from '../appointments/MarkNoShowDialog';
 
 const LIMIT = 20;
 
-/** Paginated, filterable appointment list for Receptionist/Doctor/Admin. */
+/** Chỉ lịch CHƯA tiếp nhận mới đánh vắng được - backend chặn các trạng thái còn lại. */
+function canMarkNoShow(appointment: Appointment): boolean {
+  return (
+    appointment.status === AppointmentStatus.PENDING ||
+    appointment.status === AppointmentStatus.CONFIRMED
+  );
+}
+
+/**
+ * Danh sách lịch hẹn của lễ tân và bác sĩ.
+ *
+ * Dùng `DataTable` thay cho bảng viết tay: bảng cũ không có sắp xếp, không có trạng
+ * thái tải/rỗng đúng chuẩn, và pager của nó là bản chép tay thứ tư trong dự án.
+ *
+ * **Bấm vào hàng là mở chi tiết**, không phải chỉ bấm vào tên thú cưng. Ở nhịp làm việc
+ * của quầy lễ tân, buộc trúng một liên kết rộng 60px là chỗ mất thời gian thật - trong
+ * khi cả hàng cao 36px và rộng cả màn hình.
+ *
+ * Cột "SĐT chủ nuôi" giữ lại dù dài: đó là thứ lễ tân gọi khi khách trễ giờ, và bắt họ
+ * mở chi tiết để lấy số là thêm hai lần điều hướng cho một việc làm hàng chục lần mỗi
+ * ngày.
+ */
 export function AppointmentsListPage() {
   const { user } = useAuth();
-  const toast = useToast();
-  const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [branchId, setBranchId] = useState(user?.branchId ?? '');
   const [doctorId, setDoctorId] = useState('');
   const [status, setStatus] = useState<AppointmentStatus | ''>('');
   const [page, setPage] = useState(1);
+  const [noShowTarget, setNoShowTarget] = useState<Appointment | null>(null);
 
   const branchesQuery = useQuery({ queryKey: ['branches'], queryFn: () => branchesApi.list() });
   const doctorsQuery = useQuery({
@@ -40,198 +71,166 @@ export function AppointmentsListPage() {
         doctorId: doctorId || undefined,
         status: status || undefined,
       }),
+    // Giữ trang cũ trong lúc tải trang mới - bảng không nháy trắng giữa hai lần lật.
     placeholderData: (prev) => prev,
   });
 
-  const data = listQuery.data;
-  const totalPages = data ? Math.max(1, Math.ceil(data.total / data.limit)) : 1;
-
-  /**
-   * FR-06-03: đánh dấu khách không đến ngay từ danh sách - đây là trường hợp phổ biến
-   * nhất (lễ tân rà lại lịch cuối ngày) và không cần tạo lượt chờ trước.
-   */
-  const noShowMutation = useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
-      appointmentsApi.markNoShow(id, reason),
-    onSuccess: (appt) => {
-      toast.show(`Đã đánh dấu ${appt.pet?.name ?? 'lịch hẹn'} không đến.`, 'success');
-      void queryClient.invalidateQueries({ queryKey: ['appointments-list'] });
+  const columns: DataColumn<Appointment>[] = [
+    {
+      key: 'startAt',
+      header: 'Thời gian',
+      width: '9rem',
+      render: (appointment) => (
+        <span className="tabular-nums">
+          <span className="font-medium text-foreground">{formatTime(appointment.startAt)}</span>{' '}
+          <span className="text-muted">{formatDate(appointment.startAt)}</span>
+        </span>
+      ),
     },
-    onError: (error) => toast.show(getErrorMessage(error), 'error'),
-  });
-
-  function markNoShow(appt: Appointment) {
-    const reason = window.prompt(
-      `Đánh dấu ${appt.pet?.name ?? 'thú cưng'} không đến. Ghi chú (tùy chọn):`,
-      'Khách không đến',
-    );
-    if (reason === null) return;
-    noShowMutation.mutate({ id: appt.id, reason: reason.trim() || undefined });
-  }
-
-  /** Chỉ lịch CHƯA tiếp nhận mới đánh vắng được - backend chặn các trạng thái còn lại. */
-  const canMarkNoShow = (appt: Appointment) =>
-    appt.status === AppointmentStatus.PENDING || appt.status === AppointmentStatus.CONFIRMED;
+    {
+      key: 'pet',
+      header: 'Thú cưng',
+      render: (appointment) => (
+        <span>
+          <span className="block font-medium text-foreground">
+            {appointment.pet?.name ?? 'Chưa có hồ sơ'}
+          </span>
+          <span className="block text-xs text-muted">{appointment.pet?.breed?.breedName}</span>
+        </span>
+      ),
+    },
+    {
+      key: 'phone',
+      header: 'SĐT chủ nuôi',
+      hideBelow: 'md',
+      render: (appointment) =>
+        appointment.pet?.owner?.phone ? (
+          <a
+            href={`tel:${appointment.pet.owner.phone.replace(/\s/g, '')}`}
+            onClick={(event) => event.stopPropagation()}
+            className="text-primary hover:underline"
+          >
+            {appointment.pet.owner.phone}
+          </a>
+        ) : (
+          <span className="text-muted">—</span>
+        ),
+    },
+    {
+      key: 'doctor',
+      header: 'Bác sĩ',
+      hideBelow: 'lg',
+      render: (appointment) => appointment.doctor?.fullName ?? <span className="text-muted">Chưa gán</span>,
+    },
+    {
+      key: 'service',
+      header: 'Dịch vụ',
+      hideBelow: 'lg',
+      render: (appointment) => appointment.service?.item.itemName ?? '—',
+    },
+    {
+      key: 'status',
+      header: 'Trạng thái',
+      render: (appointment) => (
+        <span className="flex flex-wrap items-center gap-1.5">
+          <Badge variant={APPOINTMENT_STATUS_TONE[appointment.status] ?? 'neutral'}>
+            {APPOINTMENT_STATUS_LABEL_VI[appointment.status]}
+          </Badge>
+          {appointment.priorityColor && <TriageBadge color={appointment.priorityColor} />}
+        </span>
+      ),
+    },
+  ];
 
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Lịch hẹn</h1>
+    <div className="flex flex-col gap-stack">
+      <PageHeader
+        title="Lịch hẹn"
+        description="Toàn bộ lịch hẹn của phòng khám, lọc theo chi nhánh, bác sĩ và trạng thái."
+        actions={
+          <Link to="/staff/calendar">
+            <Button variant="secondary">
+              <Icon name="calendar" className="h-4 w-4" />
+              Xem dạng lịch
+            </Button>
+          </Link>
+        }
+      />
 
-      <div className="flex flex-wrap items-end gap-4 rounded border border-border bg-surface p-4">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">Chi nhánh</span>
-          <select
-            value={branchId}
-            onChange={(e) => {
-              setBranchId(e.target.value);
-              setDoctorId('');
-              setPage(1);
-            }}
-            className="rounded border border-border bg-surface px-3 py-2 text-sm"
-          >
-            <option value="">Tất cả chi nhánh</option>
-            {(branchesQuery.data ?? []).map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.branchName}
-              </option>
-            ))}
-          </select>
-        </label>
+      <DataTable
+        columns={columns}
+        data={listQuery.data?.data ?? []}
+        getRowId={(appointment) => appointment.id}
+        loading={listQuery.isLoading}
+        error={listQuery.isError}
+        onRetry={() => void listQuery.refetch()}
+        page={listQuery.data?.page}
+        limit={listQuery.data?.limit}
+        total={listQuery.data?.total}
+        onPageChange={setPage}
+        onRowClick={(appointment) => navigate(`/staff/appointments/${appointment.id}`)}
+        emptyTitle="Không có lịch hẹn nào khớp bộ lọc"
+        emptyDescription="Thử bỏ bớt điều kiện lọc, hoặc chuyển sang chế độ lịch để xem cả tuần."
+        toolbar={
+          <>
+            <Select
+              label="Chi nhánh"
+              value={branchId}
+              onChange={(value) => {
+                setBranchId(value);
+                setDoctorId('');
+                setPage(1);
+              }}
+              options={[
+                { value: '', label: 'Tất cả chi nhánh' },
+                ...(branchesQuery.data ?? []).map((branch) => ({
+                  value: branch.id,
+                  label: branch.branchName,
+                })),
+              ]}
+            />
+            <Select
+              label="Bác sĩ"
+              value={doctorId}
+              onChange={(value) => {
+                setDoctorId(value);
+                setPage(1);
+              }}
+              options={[
+                { value: '', label: 'Tất cả bác sĩ' },
+                ...(doctorsQuery.data ?? []).map((doctor) => ({
+                  value: doctor.id,
+                  label: doctor.fullName,
+                })),
+              ]}
+            />
+            <Select
+              label="Trạng thái"
+              value={status}
+              onChange={(value) => {
+                setStatus(value as AppointmentStatus | '');
+                setPage(1);
+              }}
+              options={[
+                { value: '', label: 'Tất cả trạng thái' },
+                ...Object.values(AppointmentStatus).map((value) => ({
+                  value,
+                  label: APPOINTMENT_STATUS_LABEL_VI[value],
+                })),
+              ]}
+            />
+          </>
+        }
+        rowActions={(appointment) =>
+          canMarkNoShow(appointment) ? (
+            <Button variant="ghost" size="sm" onClick={() => setNoShowTarget(appointment)}>
+              Không đến
+            </Button>
+          ) : null
+        }
+      />
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">Bác sĩ</span>
-          <select
-            value={doctorId}
-            onChange={(e) => {
-              setDoctorId(e.target.value);
-              setPage(1);
-            }}
-            className="rounded border border-border bg-surface px-3 py-2 text-sm"
-          >
-            <option value="">Tất cả bác sĩ</option>
-            {(doctorsQuery.data ?? []).map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.fullName}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">Trạng thái</span>
-          <select
-            value={status}
-            onChange={(e) => {
-              setStatus(e.target.value as AppointmentStatus | '');
-              setPage(1);
-            }}
-            className="rounded border border-border bg-surface px-3 py-2 text-sm"
-          >
-            <option value="">Tất cả trạng thái</option>
-            {Object.values(AppointmentStatus).map((s) => (
-              <option key={s} value={s}>
-                {APPOINTMENT_STATUS_LABEL_VI[s]}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      <div className="overflow-x-auto rounded border border-border">
-        <table className="w-full min-w-[1000px] border-collapse text-sm">
-          <thead>
-            <tr className="bg-surface-muted text-left">
-              <th className="px-3 py-2">Thú cưng</th>
-              <th className="px-3 py-2">SĐT chủ nuôi</th>
-              <th className="px-3 py-2">Bác sĩ</th>
-              <th className="px-3 py-2">Chi nhánh</th>
-              <th className="px-3 py-2">Dịch vụ</th>
-              <th className="px-3 py-2">Bắt đầu</th>
-              <th className="px-3 py-2">Trạng thái</th>
-              <th className="px-3 py-2">Mức độ</th>
-              <th className="px-3 py-2"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {listQuery.isLoading && (
-              <tr>
-                <td colSpan={9} className="px-3 py-6 text-center text-muted">
-                  Đang tải…
-                </td>
-              </tr>
-            )}
-            {!listQuery.isLoading && (data?.data.length ?? 0) === 0 && (
-              <tr>
-                <td colSpan={9} className="px-3 py-6 text-center text-muted">
-                  Không có lịch hẹn nào.
-                </td>
-              </tr>
-            )}
-            {data?.data.map((appt) => (
-              <tr key={appt.id} className="border-t border-border hover:bg-surface-muted">
-                <td className="px-3 py-2">
-                  <Link to={`/staff/appointments/${appt.id}`} className="font-medium text-primary hover:underline">
-                    {appt.pet?.name ?? '—'}
-                  </Link>
-                </td>
-                <td className="px-3 py-2">{appt.pet?.owner?.phone ?? '—'}</td>
-                <td className="px-3 py-2">{appt.doctor?.fullName ?? '—'}</td>
-                <td className="px-3 py-2">{appt.branch?.branchName ?? '—'}</td>
-                <td className="px-3 py-2">{appt.service?.item.itemName ?? '—'}</td>
-                <td className="px-3 py-2">{formatDateTime(appt.startAt)}</td>
-                <td className="px-3 py-2">{APPOINTMENT_STATUS_LABEL_VI[appt.status]}</td>
-                <td className="px-3 py-2">
-                  {appt.priorityColor && (
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${triageColorClasses(appt.priorityColor)}`}
-                    >
-                      {PRIORITY_COLOR_LABEL_VI[appt.priorityColor]}
-                    </span>
-                  )}
-                </td>
-                <td className="px-3 py-2 text-right">
-                  {canMarkNoShow(appt) && (
-                    <button
-                      type="button"
-                      disabled={noShowMutation.isPending}
-                      onClick={() => markNoShow(appt)}
-                      className="rounded border border-border px-2 py-1 text-xs hover:bg-surface-muted disabled:opacity-50"
-                    >
-                      Không đến
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {data && data.total > 0 && (
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted">
-            Trang {data.page} / {totalPages} — tổng {data.total} lịch hẹn
-          </span>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="rounded border border-border px-3 py-1 hover:bg-surface-muted disabled:opacity-50"
-            >
-              Trước
-            </button>
-            <button
-              type="button"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="rounded border border-border px-3 py-1 hover:bg-surface-muted disabled:opacity-50"
-            >
-              Sau
-            </button>
-          </div>
-        </div>
-      )}
+      <MarkNoShowDialog appointment={noShowTarget} onClose={() => setNoShowTarget(null)} />
     </div>
   );
 }

@@ -1,13 +1,28 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { petsApi } from '@/api/pets.api';
+import { Avatar, Badge, DataColumn, DataTable, PageHeader, SearchInput } from '@/components/basic';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { Pet } from '@/types/models';
+import { petAgeLabel } from '@/zones/owner/components/pet-display';
 
 const LIMIT = 20;
 
-/** Staff-facing patient (pet) search by name / owner phone / record id. */
+/**
+ * Tìm hồ sơ bệnh nhân - cửa vào chính của bác sĩ và lễ tân khi khách gọi điện hoặc
+ * bước tới quầy.
+ *
+ * Ô tìm kiếm là thứ được focus đầu tiên: 100% lượt mở trang này bắt đầu bằng việc gõ
+ * một từ khoá, nên bắt người dùng bấm chuột vào ô trước là một thao tác thừa lặp lại
+ * hàng chục lần mỗi ngày.
+ *
+ * Trạng thái rỗng phân biệt hai trường hợp - **chưa gõ gì** và **gõ rồi mà không thấy**:
+ * cùng một màn hình trắng cho cả hai làm người dùng tưởng hệ thống hỏng khi thực ra họ
+ * chưa nhập gì.
+ */
 export function PatientsSearchPage() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebouncedValue(search, 300);
@@ -15,102 +30,122 @@ export function PatientsSearchPage() {
   const query = useQuery({
     queryKey: ['pets-search', debouncedSearch, page],
     queryFn: () => petsApi.search({ search: debouncedSearch || undefined, page, limit: LIMIT }),
+    // Giữ kết quả cũ trong lúc gõ tiếp - danh sách không nháy trắng sau mỗi ký tự.
     placeholderData: (prev) => prev,
   });
 
-  const data = query.data;
-  const totalPages = data ? Math.max(1, Math.ceil(data.total / data.limit)) : 1;
+  const columns: DataColumn<Pet>[] = [
+    {
+      key: 'name',
+      header: 'Thú cưng',
+      render: (pet) => (
+        <span className="flex items-center gap-2.5">
+          <Avatar name={pet.name} src={pet.avatarUrl} size="xs" />
+          <span className="min-w-0">
+            <span className="block truncate font-medium text-foreground">{pet.name}</span>
+            <span className="block font-mono text-xs text-muted">{pet.petCode}</span>
+          </span>
+        </span>
+      ),
+    },
+    {
+      key: 'breed',
+      header: 'Giống loài',
+      render: (pet) => (
+        <span>
+          <span className="block">{pet.breed?.breedName ?? '—'}</span>
+          <span className="block text-xs text-muted">
+            {[pet.breed?.species?.speciesName, petAgeLabel(pet.birthDate)].filter(Boolean).join(' · ')}
+          </span>
+        </span>
+      ),
+    },
+    {
+      key: 'alerts',
+      header: 'Lưu ý',
+      hideBelow: 'md',
+      render: (pet) =>
+        pet.allergies.length > 0 || pet.chronicConditions.length > 0 ? (
+          <span className="flex flex-wrap gap-1">
+            {pet.allergies.length > 0 && <Badge variant="destructive">Dị ứng</Badge>}
+            {pet.chronicConditions.length > 0 && <Badge variant="warning">Mãn tính</Badge>}
+          </span>
+        ) : (
+          <span className="text-muted">—</span>
+        ),
+    },
+    {
+      key: 'microchip',
+      header: 'Microchip',
+      hideBelow: 'lg',
+      render: (pet) =>
+        pet.microchipId ? (
+          <span className="font-mono text-xs">{pet.microchipId}</span>
+        ) : (
+          <span className="text-muted">—</span>
+        ),
+    },
+    {
+      key: 'owner',
+      header: 'Chủ nuôi',
+      render: (pet) => (
+        <span>
+          <span className="block">{pet.owner?.fullName ?? '—'}</span>
+          {pet.owner?.phone && (
+            <a
+              href={`tel:${pet.owner.phone.replace(/\s/g, '')}`}
+              onClick={(event) => event.stopPropagation()}
+              className="block text-xs text-primary hover:underline"
+            >
+              {pet.owner.phone}
+            </a>
+          )}
+        </span>
+      ),
+    },
+  ];
+
+  const searching = debouncedSearch.trim().length > 0;
 
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Hồ sơ thú cưng</h1>
-
-      <input
-        type="search"
-        value={search}
-        onChange={(e) => {
-          setSearch(e.target.value);
-          setPage(1);
-        }}
-        placeholder="Tìm theo mã thú cưng, số microchip, tên thú cưng hoặc SĐT chủ nuôi…"
-        className="w-full max-w-lg rounded border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+    <div className="flex flex-col gap-stack">
+      <PageHeader
+        title="Hồ sơ thú cưng"
+        description="Tìm theo mã hồ sơ, số microchip, tên thú cưng hoặc số điện thoại chủ nuôi."
       />
 
-      <div className="overflow-x-auto rounded border border-border">
-        <table className="w-full min-w-[720px] border-collapse text-sm">
-          <thead>
-            <tr className="bg-surface-muted text-left">
-              <th className="px-3 py-2">Mã thú cưng</th>
-              <th className="px-3 py-2">Tên thú cưng</th>
-              <th className="px-3 py-2">Giống loài</th>
-              <th className="px-3 py-2">Microchip</th>
-              <th className="px-3 py-2">Chủ nuôi</th>
-              <th className="px-3 py-2">SĐT chủ nuôi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {query.isLoading && (
-              <tr>
-                <td colSpan={6} className="px-3 py-6 text-center text-muted">
-                  Đang tải…
-                </td>
-              </tr>
-            )}
-            {!query.isLoading && (data?.data.length ?? 0) === 0 && (
-              <tr>
-                <td colSpan={6} className="px-3 py-6 text-center text-muted">
-                  Không tìm thấy hồ sơ nào.
-                </td>
-              </tr>
-            )}
-            {data?.data.map((pet) => (
-              <tr key={pet.id} className="border-t border-border hover:bg-surface-muted">
-                <td className="px-3 py-2 font-mono text-xs text-muted">{pet.petCode}</td>
-                <td className="px-3 py-2">
-                  <Link to={`/staff/patients/${pet.id}`} className="font-medium text-primary hover:underline">
-                    {pet.name}
-                  </Link>
-                </td>
-                <td className="px-3 py-2">
-                  {pet.breed?.breedName ?? '—'}
-                  {pet.breed?.species ? ` (${pet.breed.species.speciesName})` : ''}
-                </td>
-                <td className="px-3 py-2 font-mono text-xs text-muted">
-                  {pet.microchipId ?? '—'}
-                </td>
-                <td className="px-3 py-2">{pet.owner?.fullName ?? '—'}</td>
-                <td className="px-3 py-2">{pet.owner?.phone ?? '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {data && data.total > 0 && (
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted">
-            Trang {data.page} / {totalPages} — tổng {data.total} hồ sơ
-          </span>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="rounded border border-border px-3 py-1 hover:bg-surface-muted disabled:opacity-50"
-            >
-              Trước
-            </button>
-            <button
-              type="button"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="rounded border border-border px-3 py-1 hover:bg-surface-muted disabled:opacity-50"
-            >
-              Sau
-            </button>
-          </div>
-        </div>
-      )}
+      <DataTable
+        columns={columns}
+        data={query.data?.data ?? []}
+        getRowId={(pet) => pet.id}
+        loading={query.isLoading}
+        error={query.isError}
+        onRetry={() => void query.refetch()}
+        page={query.data?.page}
+        limit={query.data?.limit}
+        total={query.data?.total}
+        onPageChange={setPage}
+        onRowClick={(pet) => navigate(`/staff/patients/${pet.id}`)}
+        emptyTitle={searching ? 'Không tìm thấy hồ sơ nào' : 'Nhập từ khoá để tìm hồ sơ'}
+        emptyDescription={
+          searching
+            ? 'Thử tìm bằng số điện thoại chủ nuôi - đây là cách tra cứu chắc chắn nhất khi khách gọi tới.'
+            : 'Mã hồ sơ, số microchip, tên thú cưng hoặc số điện thoại chủ nuôi đều tìm được.'
+        }
+        toolbar={
+          <SearchInput
+            value={search}
+            onValueChange={(value) => {
+              setSearch(value);
+              setPage(1);
+            }}
+            autoFocus
+            label="Tìm hồ sơ thú cưng"
+            placeholder="Mã hồ sơ, microchip, tên bé hoặc SĐT chủ nuôi..."
+            className="w-full sm:w-96"
+          />
+        }
+      />
     </div>
   );
 }

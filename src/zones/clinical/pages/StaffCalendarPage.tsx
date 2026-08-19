@@ -118,7 +118,7 @@ export function StaffCalendarPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Lịch làm việc</h1>
+      <h1 className="text-2xl font-semibold tracking-tight text-foreground">Lịch làm việc</h1>
 
       <div className="flex flex-wrap items-end gap-4 rounded border border-border bg-surface p-4">
         <label className="flex flex-col gap-1 text-sm">

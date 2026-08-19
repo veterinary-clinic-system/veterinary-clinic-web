@@ -93,7 +93,7 @@ export function LaboratoryQueuePage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Hàng chờ xét nghiệm</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Hàng chờ xét nghiệm</h1>
         <p className="text-muted">
           Yêu cầu chờ lâu nhất nằm trên cùng. Kỹ thuật viên nhập kết quả trong phiếu khám của
           hồ sơ tương ứng.
