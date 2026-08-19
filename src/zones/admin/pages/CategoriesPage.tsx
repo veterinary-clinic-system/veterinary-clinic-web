@@ -125,7 +125,7 @@ export function CategoriesPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Danh mục hàng hoá</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Danh mục hàng hoá</h1>
         <Button onClick={() => openCreate()}>Thêm danh mục gốc</Button>
       </div>
 

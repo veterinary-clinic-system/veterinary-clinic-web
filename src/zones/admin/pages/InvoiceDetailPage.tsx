@@ -78,7 +78,7 @@ export function InvoiceDetailPage() {
     <div className="flex flex-col gap-6">
       <div>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold">Hóa đơn {invoice.invoiceCode}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Hóa đơn {invoice.invoiceCode}</h1>
           <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-medium text-muted">
             {INVOICE_SOURCE_LABEL_VI[invoice.source]}
           </span>

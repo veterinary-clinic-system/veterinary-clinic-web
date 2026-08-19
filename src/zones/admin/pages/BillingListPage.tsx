@@ -41,7 +41,7 @@ export function BillingListPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Hóa đơn</h1>
+      <h1 className="text-2xl font-semibold tracking-tight text-foreground">Hóa đơn</h1>
 
       <div className="flex flex-wrap items-end gap-4 rounded border border-border bg-surface p-4">
         <label className="flex flex-col gap-1 text-sm">

@@ -42,3 +42,30 @@ export function expiryLabel(expiryDate: string | null | undefined): string {
   if (days === 0) return 'Hết hạn hôm nay';
   return `Còn ${days} ngày`;
 }
+
+export type StockLevel = 'out' | 'in';
+
+/**
+ * Trạng thái tồn kho của một mặt hàng.
+ *
+ * `InventoryItem` không mang theo ngưỡng tồn tối thiểu (backend giữ ngưỡng đó và chỉ
+ * phơi nó ra qua bộ lọc `lowStock`), nên ở đây chỉ phân biệt hai mức mà dữ liệu thật sự
+ * chứng minh được. Bịa thêm mức "sắp hết" từ một con số nghĩ đoán còn tệ hơn là không
+ * có nó - người dùng sẽ tin vào một nhãn sai. Danh sách sắp hết nằm ở trang Cảnh báo kho.
+ *
+ * Trạng thái luôn đi kèm CHỮ, không chỉ màu: mục 30 của đặc tả giao diện - màu đỏ trong
+ * hệ thống này dành cho "cần hành động ngay", và không được là kênh thông tin duy nhất.
+ */
+export function stockLevelOf(quantity: number): StockLevel {
+  return quantity <= 0 ? 'out' : 'in';
+}
+
+export const STOCK_LEVEL_LABEL_VI: Record<StockLevel, string> = {
+  out: 'Hết hàng',
+  in: 'Còn hàng',
+};
+
+export const STOCK_LEVEL_BADGE_VARIANT: Record<StockLevel, BadgeVariant> = {
+  out: 'destructive',
+  in: 'success',
+};

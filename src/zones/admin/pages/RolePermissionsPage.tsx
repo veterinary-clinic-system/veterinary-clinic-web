@@ -92,7 +92,7 @@ export function RolePermissionsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Phân quyền</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Phân quyền</h1>
         <p className="mt-1 text-sm text-muted">
           Backend kiểm tra quyền trên từng thao tác. Thay đổi có hiệu lực trong vòng một phút.
         </p>

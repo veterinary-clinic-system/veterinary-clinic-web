@@ -31,7 +31,7 @@ export function UsersAdminPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Nhân sự</h1>
+      <h1 className="text-2xl font-semibold tracking-tight text-foreground">Nhân sự</h1>
 
       <div className="flex gap-2 border-b border-border">
         <button

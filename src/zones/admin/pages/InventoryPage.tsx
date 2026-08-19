@@ -18,7 +18,14 @@ import {
 } from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/format';
-import { EXPIRY_BADGE_VARIANT, expiryLabel, expiryLevel } from '@/utils/inventory';
+import {
+  EXPIRY_BADGE_VARIANT,
+  STOCK_LEVEL_BADGE_VARIANT,
+  STOCK_LEVEL_LABEL_VI,
+  expiryLabel,
+  expiryLevel,
+  stockLevelOf,
+} from '@/utils/inventory';
 
 const LIMIT = 20;
 
@@ -175,11 +182,22 @@ export function InventoryPage() {
       key: 'inventoryQuantity',
       header: 'Tồn',
       sortable: true,
-      render: (row) => (
-        <span className={row.inventoryQuantity === 0 ? 'font-semibold text-red-600' : 'font-semibold'}>
-          {row.inventoryQuantity}
-        </span>
-      ),
+      /*
+        Số lượng đi kèm NHÃN CHỮ, không chỉ tô đỏ khi bằng 0: người không phân biệt được
+        màu vẫn phải đọc ra "hết hàng" (mục 30 của đặc tả giao diện). Màu đỏ trần trên
+        một chữ số cũng dễ bị đọc nhầm thành "số âm".
+      */
+      render: (row) => {
+        const level = stockLevelOf(row.inventoryQuantity);
+        return (
+          <span className="flex items-center gap-2">
+            <span className="font-semibold tabular-nums">{row.inventoryQuantity}</span>
+            {level === 'out' && (
+              <Badge variant={STOCK_LEVEL_BADGE_VARIANT[level]}>{STOCK_LEVEL_LABEL_VI[level]}</Badge>
+            )}
+          </span>
+        );
+      },
     },
     {
       key: 'active',
@@ -246,8 +264,9 @@ export function InventoryPage() {
     {
       key: 'quantityChange',
       header: 'Thay đổi',
+      // Dấu +/- mới là thứ mang nghĩa; màu chỉ giúp quét cột nhanh hơn.
       render: (row) => (
-        <span className={row.quantityChange < 0 ? 'text-red-600' : 'text-green-700'}>
+        <span className={row.quantityChange < 0 ? 'text-danger' : 'text-success'}>
           {row.quantityChange > 0 ? `+${row.quantityChange}` : row.quantityChange}
         </span>
       ),
@@ -266,7 +285,7 @@ export function InventoryPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Tồn kho</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Tồn kho</h1>
       </div>
 
       <div className="flex flex-wrap items-end gap-4 rounded border border-border bg-surface p-4">

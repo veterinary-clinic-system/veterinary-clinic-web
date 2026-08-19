@@ -247,7 +247,7 @@ export function PurchaseOrdersPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Đơn đặt hàng</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Đơn đặt hàng</h1>
         <Button onClick={() => setFormOpen(true)} disabled={!branchId}>
           Tạo đơn đặt hàng
         </Button>
@@ -472,7 +472,7 @@ export function PurchaseOrdersPage() {
                   render: (row) => (
                     <span
                       className={
-                        row.receivedQuantity >= row.quantity ? 'text-green-700' : 'text-amber-700'
+                        row.receivedQuantity >= row.quantity ? 'text-success' : 'text-warning'
                       }
                     >
                       {row.receivedQuantity}

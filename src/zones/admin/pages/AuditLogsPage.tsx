@@ -130,7 +130,7 @@ export function AuditLogsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Nhật ký kiểm toán</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Nhật ký kiểm toán</h1>
         <p className="text-muted">
           Ghi lại mọi thao tác trọng yếu trên hệ thống. Bản ghi là bất biến — không sửa, không xóa
           được.

@@ -177,7 +177,7 @@ export function PosPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Bán hàng tại quầy</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Bán hàng tại quầy</h1>
         <div className="w-56">
           <Select
             value={branchId}

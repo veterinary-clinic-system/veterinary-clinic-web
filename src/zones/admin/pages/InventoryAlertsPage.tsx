@@ -130,7 +130,7 @@ export function InventoryAlertsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Cảnh báo tồn kho</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Cảnh báo tồn kho</h1>
         <Button variant="secondary" onClick={() => navigate('/staff/inventory')}>
           Về trang tồn kho
         </Button>

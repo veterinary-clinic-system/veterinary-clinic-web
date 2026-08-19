@@ -157,7 +157,7 @@ export function PharmacyPage() {
         const stock = stockByItemId.get(row.id);
         if (!stock) return '—';
         return (
-          <span className={stock.insufficientStock ? 'font-semibold text-red-600' : ''}>
+          <span className={stock.insufficientStock ? 'font-semibold text-danger' : ''}>
             {stock.availableQuantity}
             {stock.insufficientStock && ' — thiếu'}
           </span>
@@ -186,7 +186,7 @@ export function PharmacyPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Quầy thuốc</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Quầy thuốc</h1>
       </div>
 
       <div className="flex flex-wrap items-end gap-4 rounded border border-border bg-surface p-4">
@@ -279,7 +279,7 @@ export function PharmacyPage() {
               />
 
               {view?.hasInsufficientStock && isOpen && (
-                <p className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-700">
+                <p className="rounded-lg border border-danger/30 bg-danger-soft p-3 text-sm text-danger">
                   Không cấp phát được: một hoặc nhiều dòng thiếu tồn ở chi nhánh này (các dòng tô
                   đỏ ở trên). Nhập thêm hàng ở màn hình <strong>Nhận hàng</strong>, hoặc báo bác sĩ
                   đổi thuốc — đơn vẫn giữ nguyên cho tới lúc đó.

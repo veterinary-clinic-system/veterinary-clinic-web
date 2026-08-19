@@ -193,7 +193,7 @@ export function SuppliersPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Nhà cung cấp</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Nhà cung cấp</h1>
         <Button onClick={openCreate}>Thêm nhà cung cấp</Button>
       </div>
 

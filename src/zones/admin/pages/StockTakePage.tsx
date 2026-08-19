@@ -172,7 +172,7 @@ export function StockTakePage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Kiểm kê</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Kiểm kê</h1>
         <Button
           onClick={() => createMutation.mutate()}
           loading={createMutation.isPending}
@@ -323,7 +323,7 @@ export function StockTakePage() {
                     if (diff === null) return <span className="text-muted">chưa đếm</span>;
                     if (diff === 0) return <span className="text-muted">khớp</span>;
                     return (
-                      <span className={diff > 0 ? 'text-green-700' : 'text-red-600'}>
+                      <span className={diff > 0 ? 'text-success' : 'text-danger'}>
                         {diff > 0 ? `+${diff}` : diff}
                       </span>
                     );

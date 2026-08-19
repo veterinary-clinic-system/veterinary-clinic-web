@@ -250,7 +250,7 @@ export function GoodsReceiptPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Nhận hàng</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Nhận hàng</h1>
         <Button onClick={openForm} disabled={!branchId}>
           Lập phiếu nhập
         </Button>
