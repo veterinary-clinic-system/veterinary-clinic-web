@@ -42,7 +42,12 @@ export function BookingPage() {
       <PageHeader title="Đặt lịch khám" />
 
       <div className="mt-6">
-        <BookingStepper current={step} />
+        {/*
+          Quay lại bước đã hoàn thành không làm mất dữ liệu: `useBookingForm` giữ toàn
+          bộ trạng thái ở một chỗ và chỉ xoá những lựa chọn phía sau khi chúng thật sự
+          không còn hợp lệ (đổi chi nhánh thì bác sĩ và khung giờ mới bị xoá).
+        */}
+        <BookingStepper current={step} onGoToStep={setStep} />
       </div>
 
       <div className="mt-8 rounded-xl border border-border bg-surface p-6">

@@ -1,139 +1,170 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { branchesApi } from '@/api/branches.api';
-import { doctorsApi, DoctorPublic } from '@/api/doctors.api';
-import { Pagination, usePagination } from '@/components/basic';
-import { getInitial, specializationLabel } from '@/utils/display';
+import { doctorsApi } from '@/api/doctors.api';
+import {
+  EmptyState,
+  ErrorState,
+  Pagination,
+  SearchInput,
+  Select,
+  SkeletonCards,
+  usePagination,
+} from '@/components/basic';
+import { specializationLabel } from '@/utils/display';
+import { DoctorCard } from '../components/DoctorCard';
 
 const PAGE_SIZE = 8;
 
-function DoctorAvatar({ doctor }: { doctor: DoctorPublic }) {
-  const [failed, setFailed] = useState(false);
-
-  if (doctor.avatarUrl && !failed) {
-    return (
-      <img
-        src={doctor.avatarUrl}
-        alt={doctor.fullName}
-        onError={() => setFailed(true)}
-        className="h-16 w-16 rounded-full object-cover"
-      />
-    );
-  }
-
-  return (
-    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-xl font-semibold text-primary">
-      {getInitial(doctor.fullName)}
-    </div>
-  );
-}
-
 /**
- * `Đặt lịch hẹn ngay` chuyển sang biểu mẫu đặt lịch với bác sĩ VÀ chi nhánh của họ
- * chọn sẵn (`BookingHandoffState` trong BookingPage) - khách không phải chọn lại hai
- * bước đầu chỉ để gặp đúng người vừa xem.
+ * Trang đội ngũ bác sĩ.
+ *
+ * Ba bộ lọc theo đúng ba cách người ta chọn bác sĩ: **tên** (đã được ai đó giới thiệu),
+ * **chuyên khoa** (biết bé bị gì), **chi nhánh** (chọn theo chỗ gần nhà).
+ *
+ * Danh sách chuyên khoa dựng từ chính dữ liệu trả về, không phải từ một danh sách cứng:
+ * phòng khám thêm chuyên khoa mới thì bộ lọc tự có, và không bao giờ hiện một lựa chọn
+ * lọc ra danh sách rỗng.
  */
-function DoctorCard({ doctor }: { doctor: DoctorPublic }) {
-  const navigate = useNavigate();
-
-  return (
-    <div className="flex gap-4 rounded-xl border border-border bg-surface p-5">
-      <DoctorAvatar doctor={doctor} />
-      <div className="min-w-0 flex-1">
-        <h2 className="text-lg font-semibold text-foreground">{doctor.fullName}</h2>
-        <p className="text-sm text-muted">{doctor.branch.branchName}</p>
-        {doctor.yearOfStart && (
-          <p className="mt-1 text-sm text-muted">Hành nghề từ năm {doctor.yearOfStart}</p>
-        )}
-        {doctor.specialization.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {doctor.specialization.map((spec) => (
-              <span
-                key={spec}
-                className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
-              >
-                {specializationLabel(spec)}
-              </span>
-            ))}
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={() =>
-            navigate('/booking', {
-              state: { doctorId: doctor.id, branchId: doctor.branch.id },
-            })
-          }
-          className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-        >
-          Đặt lịch hẹn ngay
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export function DoctorsPage() {
-  const [branchId, setBranchId] = useState<string>('');
+  const [search, setSearch] = useState('');
+  const [branchId, setBranchId] = useState('');
+  const [specialization, setSpecialization] = useState('');
 
   const { data: branches } = useQuery({ queryKey: ['branches'], queryFn: branchesApi.list });
   const {
     data: doctors,
     isLoading,
     isError,
+    refetch,
   } = useQuery({
     queryKey: ['doctors', 'public', branchId],
     queryFn: () => doctorsApi.listPublic(branchId || undefined),
   });
 
-  const { page, setPage, pageItems, totalPages } = usePagination(doctors ?? [], PAGE_SIZE, [
+  const specializationOptions = useMemo(() => {
+    const values = new Set((doctors ?? []).flatMap((doctor) => doctor.specialization));
+    return [
+      { value: '', label: 'Mọi chuyên khoa' },
+      ...[...values].sort().map((value) => ({ value, label: specializationLabel(value) })),
+    ];
+  }, [doctors]);
+
+  const filtered = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    return (doctors ?? []).filter((doctor) => {
+      if (specialization && !doctor.specialization.includes(specialization)) return false;
+      if (!keyword) return true;
+      return doctor.fullName.toLowerCase().includes(keyword);
+    });
+  }, [doctors, search, specialization]);
+
+  const { page, setPage, pageItems, totalPages } = usePagination(filtered, PAGE_SIZE, [
+    search,
     branchId,
+    specialization,
   ]);
 
+  const filtering = Boolean(search.trim() || branchId || specialization);
+
+  function clearFilters() {
+    setSearch('');
+    setBranchId('');
+    setSpecialization('');
+  }
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Đội ngũ bác sĩ</h1>
-          <p className="mt-1 text-muted">Các bác sĩ thú y đang công tác tại hệ thống phòng khám.</p>
+    <>
+      <section className="border-b border-border bg-surface">
+        <div className="mx-auto max-w-6xl px-4 py-10">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            Đội ngũ bác sĩ
+          </h1>
+          <p className="mt-2 max-w-2xl text-muted">
+            Các bác sĩ thú y đang công tác tại hệ thống. Bạn có thể chọn đúng bác sĩ khi đặt lịch,
+            hoặc để phòng khám sắp xếp người phù hợp với tình trạng của bé.
+          </p>
+
+          <div className="mt-6 flex flex-wrap items-end gap-3">
+            <SearchInput
+              value={search}
+              onValueChange={setSearch}
+              label="Tìm bác sĩ theo tên"
+              placeholder="Tìm theo tên bác sĩ..."
+              className="w-full sm:max-w-xs"
+            />
+            <Select
+              label="Chuyên khoa"
+              value={specialization}
+              onChange={setSpecialization}
+              options={specializationOptions}
+              className="min-w-[12rem]"
+            />
+            <Select
+              label="Chi nhánh"
+              value={branchId}
+              onChange={setBranchId}
+              options={[
+                { value: '', label: 'Mọi chi nhánh' },
+                ...(branches ?? []).map((branch) => ({
+                  value: branch.id,
+                  label: branch.branchName,
+                })),
+              ]}
+              className="min-w-[14rem]"
+            />
+          </div>
         </div>
-        <label className="text-sm">
-          <span className="mb-1 block text-muted">Lọc theo chi nhánh</span>
-          <select
-            value={branchId}
-            onChange={(e) => setBranchId(e.target.value)}
-            className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground"
-          >
-            <option value="">Tất cả chi nhánh</option>
-            {branches?.map((branch) => (
-              <option key={branch.id} value={branch.id}>
-                {branch.branchName}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+      </section>
 
-      {isLoading && <p className="mt-8 text-muted">Đang tải danh sách bác sĩ...</p>}
-      {isError && <p className="mt-8 text-destructive">Không thể tải danh sách bác sĩ. Vui lòng thử lại sau.</p>}
-
-      <div className="mt-8 grid gap-6 sm:grid-cols-2">
-        {pageItems.map((doctor) => (
-          <DoctorCard key={doctor.id} doctor={doctor} />
-        ))}
-      </div>
-
-      <Pagination
-        page={page}
-        totalPages={totalPages}
-        onPageChange={setPage}
-        total={doctors?.length ?? 0}
-      />
-
-      {doctors && doctors.length === 0 && (
-        <p className="mt-8 text-muted">Không tìm thấy bác sĩ nào phù hợp.</p>
-      )}
-    </div>
+      <section className="mx-auto max-w-6xl px-4 py-10">
+        {isError ? (
+          <ErrorState
+            title="Không tải được danh sách bác sĩ"
+            description="Máy chủ chưa phản hồi. Bạn vẫn có thể đặt lịch và để phòng khám sắp xếp bác sĩ."
+            onRetry={() => void refetch()}
+          />
+        ) : isLoading ? (
+          <SkeletonCards count={4} label="Đang tải danh sách bác sĩ" className="lg:grid-cols-2" />
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            title={filtering ? 'Không có bác sĩ nào khớp bộ lọc' : 'Chưa có thông tin bác sĩ'}
+            description={
+              filtering
+                ? 'Thử bỏ bớt điều kiện lọc - ví dụ chọn "Mọi chi nhánh" để xem toàn hệ thống.'
+                : 'Thông tin đội ngũ đang được cập nhật.'
+            }
+            action={
+              filtering ? (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="inline-flex min-h-touch items-center rounded-lg border border-border px-4 text-sm font-medium text-foreground hover:bg-surface-muted"
+                >
+                  Xoá bộ lọc
+                </button>
+              ) : undefined
+            }
+          />
+        ) : (
+          <>
+            <p className="mb-5 text-sm text-muted">
+              {filtered.length} bác sĩ{filtering ? ' khớp bộ lọc' : ''}
+            </p>
+            <div className="grid gap-5 lg:grid-cols-2">
+              {pageItems.map((doctor) => (
+                <DoctorCard key={doctor.id} doctor={doctor} />
+              ))}
+            </div>
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              total={filtered.length}
+            />
+          </>
+        )}
+      </section>
+    </>
   );
 }

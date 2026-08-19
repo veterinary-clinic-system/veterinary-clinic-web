@@ -1,52 +1,50 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { catalogApi } from '@/api/catalog.api';
-import { Pagination, usePagination } from '@/components/basic';
-import { Service } from '@/types/models';
-import { formatCurrency } from '@/utils/format';
+import {
+  EmptyState,
+  ErrorState,
+  Pagination,
+  SearchInput,
+  Select,
+  SkeletonCards,
+  usePagination,
+} from '@/components/basic';
+import { ServiceCard } from '../components/ServiceCard';
 
 const PAGE_SIZE = 9;
 
-/**
- * Bảng giá dịch vụ công khai (phản hồi nghiệm thu: "Đề xuất thêm trang 'dịch vụ'.
- * Trang này thể hiện danh sách các dịch vụ của phòng khám có bao gồm giá tiền và có
- * luôn nút 'Đặt lịch hẹn ngay'").
- *
- * Nút đặt lịch chuyển sang /booking kèm `serviceId` trong `location.state` - biểu mẫu
- * đặt lịch đọc nó ra và chọn sẵn dịch vụ (xem `BookingHandoffState`).
- */
-function ServiceCard({ service, onBook }: { service: Service; onBook: () => void }) {
-  return (
-    <div className="flex flex-col rounded-xl border border-border bg-surface p-5">
-      <div className="flex items-start justify-between gap-4">
-        <h3 className="text-lg font-semibold text-foreground">{service.item.itemName}</h3>
-        <span className="whitespace-nowrap rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
-          {formatCurrency(service.item.unitPrice)}
-        </span>
-      </div>
+/** Ba khoảng giá đủ để trả lời "có gì trong tầm tiền của tôi không". */
+const PRICE_BANDS = [
+  { value: '', label: 'Mọi mức giá' },
+  { value: 'lt300', label: 'Dưới 300.000 đ' },
+  { value: '300to800', label: '300.000 - 800.000 đ' },
+  { value: 'gt800', label: 'Trên 800.000 đ' },
+];
 
-      {service.item.describe && <p className="mt-2 flex-1 text-sm text-muted">{service.item.describe}</p>}
-
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <span className="text-xs text-muted">Thời lượng khoảng {service.durationMinutes} phút</span>
-        <button
-          type="button"
-          onClick={onBook}
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-        >
-          Đặt lịch hẹn ngay
-        </button>
-      </div>
-    </div>
-  );
+function inPriceBand(price: number, band: string): boolean {
+  if (band === 'lt300') return price < 300_000;
+  if (band === '300to800') return price >= 300_000 && price <= 800_000;
+  if (band === 'gt800') return price > 800_000;
+  return true;
 }
 
+/**
+ * Bảng giá dịch vụ công khai.
+ *
+ * Hai bộ lọc, không nhiều hơn: **từ khoá** cho người biết mình cần gì ("tiêm phòng"),
+ * và **khoảng giá** cho người đang cân nhắc chi phí. Lọc theo chuyên khoa hay theo chi
+ * nhánh nghe hợp lý nhưng thực tế không ai dùng - dịch vụ giống nhau ở mọi chi nhánh.
+ *
+ * Danh sách vẫn là lưới thẻ chứ không phải bảng: mỗi mục có mô tả dài ngắn khác nhau
+ * và kết thúc bằng một nút hành động, hai thứ mà bảng xử lý rất tệ.
+ */
 export function ServicesPage() {
-  const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [priceBand, setPriceBand] = useState('');
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['catalog', 'services', 'public'],
     queryFn: () => catalogApi.services({ limit: 100 }),
   });
@@ -54,82 +52,130 @@ export function ServicesPage() {
   const services = useMemo(() => {
     const active = (data?.data ?? []).filter((s) => s.active && s.item.active);
     const keyword = search.trim().toLowerCase();
-    if (!keyword) return active;
-    return active.filter(
-      (s) =>
-        s.item.itemName.toLowerCase().includes(keyword) ||
-        (s.item.describe ?? '').toLowerCase().includes(keyword),
-    );
-  }, [data, search]);
 
-  const { page, setPage, pageItems, totalPages } = usePagination(services, PAGE_SIZE, [search]);
+    return active.filter((service) => {
+      if (!inPriceBand(service.item.unitPrice, priceBand)) return false;
+      if (!keyword) return true;
+      return (
+        service.item.itemName.toLowerCase().includes(keyword) ||
+        (service.item.describe ?? '').toLowerCase().includes(keyword)
+      );
+    });
+  }, [data, search, priceBand]);
+
+  const { page, setPage, pageItems, totalPages } = usePagination(services, PAGE_SIZE, [
+    search,
+    priceBand,
+  ]);
+
+  const filtering = Boolean(search.trim() || priceBand);
 
   return (
-    <div>
+    <>
       <section className="border-b border-border bg-surface">
-        <div className="mx-auto max-w-6xl px-4 py-12">
-          <h1 className="text-3xl font-bold text-foreground">Dịch vụ &amp; bảng giá</h1>
+        <div className="mx-auto max-w-6xl px-4 py-10">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            Dịch vụ &amp; bảng giá
+          </h1>
           <p className="mt-2 max-w-2xl text-muted">
-            Toàn bộ dịch vụ khám chữa bệnh, tiêm phòng và chăm sóc thú cưng tại hệ thống phòng khám,
-            kèm mức giá tham khảo. Giá cuối cùng có thể thay đổi theo tình trạng thực tế của thú cưng
-            sau khi bác sĩ thăm khám.
+            Toàn bộ dịch vụ khám chữa bệnh, tiêm phòng và chăm sóc thú cưng của hệ thống, kèm mức giá
+            tham khảo và thời lượng dự kiến. Giá cuối cùng có thể thay đổi theo tình trạng thực tế
+            của bé sau khi bác sĩ thăm khám.
           </p>
-          <div className="mt-6 max-w-md">
-            <input
-              type="search"
+
+          <div className="mt-6 flex flex-wrap items-end gap-3">
+            <SearchInput
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onValueChange={setSearch}
+              label="Tìm dịch vụ"
               placeholder="Tìm dịch vụ (ví dụ: tiêm phòng, siêu âm...)"
-              className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-foreground"
+              className="w-full sm:max-w-sm"
+            />
+            <Select
+              label="Khoảng giá"
+              value={priceBand}
+              onChange={setPriceBand}
+              options={PRICE_BANDS}
+              className="min-w-[12rem]"
             />
           </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-10">
-        {isLoading && <p className="text-muted">Đang tải bảng giá dịch vụ...</p>}
-        {isError && <p className="text-destructive">Không thể tải danh sách dịch vụ. Vui lòng thử lại sau.</p>}
-
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {pageItems.map((service) => (
-            <ServiceCard
-              key={service.id}
-              service={service}
-              onBook={() => navigate('/booking', { state: { serviceId: service.id } })}
+        {isError ? (
+          <ErrorState
+            title="Không tải được bảng giá"
+            description="Máy chủ chưa phản hồi. Bạn có thể thử lại, hoặc gọi trực tiếp cho chi nhánh gần nhất."
+            onRetry={() => void refetch()}
+          />
+        ) : isLoading ? (
+          <SkeletonCards count={6} label="Đang tải bảng giá dịch vụ" />
+        ) : services.length === 0 ? (
+          <EmptyState
+            title={filtering ? 'Không có dịch vụ nào khớp bộ lọc' : 'Bảng giá đang được cập nhật'}
+            description={
+              filtering
+                ? 'Thử bỏ bớt điều kiện lọc, hoặc mô tả triệu chứng với trợ lý AI để được gợi ý dịch vụ phù hợp.'
+                : 'Hệ thống chưa công bố dịch vụ nào. Vui lòng liên hệ chi nhánh gần nhất.'
+            }
+            action={
+              filtering ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch('');
+                    setPriceBand('');
+                  }}
+                  className="inline-flex min-h-touch items-center rounded-lg border border-border px-4 text-sm font-medium text-foreground hover:bg-surface-muted"
+                >
+                  Xoá bộ lọc
+                </button>
+              ) : undefined
+            }
+          />
+        ) : (
+          <>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {pageItems.map((service) => (
+                <ServiceCard key={service.id} service={service} />
+              ))}
+            </div>
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              total={services.length}
             />
-          ))}
-        </div>
-
-        <Pagination
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          total={services.length}
-        />
-
-        {!isLoading && services.length === 0 && (
-          <p className="text-muted">Không tìm thấy dịch vụ nào phù hợp.</p>
+          </>
         )}
       </section>
 
       <section className="border-t border-border bg-surface">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-10">
-          <div>
-            <h2 className="text-xl font-semibold text-foreground">Chưa rõ nên chọn dịch vụ nào?</h2>
+          <div className="max-w-xl">
+            <h2 className="text-lg font-semibold text-foreground">Chưa rõ nên chọn dịch vụ nào?</h2>
             <p className="mt-1 text-muted">
-              Mô tả triệu chứng với trợ lý AI để được gợi ý, hoặc để phòng khám sắp xếp bác sĩ phù hợp.
+              Mô tả triệu chứng với trợ lý AI để được gợi ý, hoặc đặt lịch và để phòng khám sắp xếp
+              bác sĩ phù hợp.
             </p>
           </div>
-          <div className="flex gap-3">
-            <Link to="/chat" className="rounded-lg border border-border px-5 py-2.5 font-medium text-foreground">
+          <div className="flex flex-wrap gap-3">
+            <Link
+              to="/chat"
+              className="inline-flex min-h-touch items-center rounded-lg border border-border px-5 font-medium text-foreground hover:bg-surface-muted"
+            >
               Tư vấn cùng AI
             </Link>
-            <Link to="/booking" className="rounded-lg bg-primary px-5 py-2.5 font-medium text-primary-foreground">
+            <Link
+              to="/booking"
+              className="inline-flex min-h-touch items-center rounded-lg bg-primary px-5 font-semibold text-primary-foreground hover:bg-primary/90"
+            >
               Đặt lịch khám
             </Link>
           </div>
         </div>
       </section>
-    </div>
+    </>
   );
 }
