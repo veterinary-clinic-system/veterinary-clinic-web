@@ -112,6 +112,8 @@ export function CheckInModal({
           data={pending}
           getRowId={(row) => row.id}
           loading={appointmentsQuery.isLoading}
+          error={appointmentsQuery.isError}
+          onRetry={() => void appointmentsQuery.refetch()}
           emptyMessage="Không còn lịch hẹn nào chờ check-in trong ngày."
         />
       </div>

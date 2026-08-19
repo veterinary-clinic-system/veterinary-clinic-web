@@ -1,7 +1,12 @@
 import { InputHTMLAttributes, forwardRef, useId } from 'react';
 import { FieldWrapper, cn, describedBy } from './utils';
 
-export type InputType = 'text' | 'number' | 'date' | 'email' | 'tel' | 'password';
+/*
+  `time` có mặt vì phần mềm phòng khám nhập giờ ở nhiều chỗ: ca làm việc, giờ nghỉ, khung
+  giờ hẹn. Trước đây những chỗ đó dùng ô chữ với gợi ý "HH:mm", tức là không có bộ chọn,
+  không có kiểm tra, và trên điện thoại thì bàn phím hiện ra là bàn phím chữ.
+*/
+export type InputType = 'text' | 'number' | 'date' | 'time' | 'email' | 'tel' | 'password';
 
 export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
   label?: string;

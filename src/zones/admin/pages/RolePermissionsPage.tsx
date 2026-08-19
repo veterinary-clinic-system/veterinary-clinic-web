@@ -1,7 +1,13 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { PermissionCode, permissionsApi } from '@/api/permissions.api';
-import { Badge, Button, useToast } from '@/components/basic';
+import {
+  Badge,
+  Button,
+  Skeleton,
+  useToast,
+} from '@/components/basic';
+import { QueryErrorState } from '@/components/QueryErrorState';
 import { Role } from '@/types/enums';
 import { getErrorMessage } from '@/utils/errors';
 import { ROLE_LABEL_VI } from '@/utils/labels';
@@ -86,7 +92,25 @@ export function RolePermissionsPage() {
   }
 
   if (catalogQuery.isLoading || matrixQuery.isLoading) {
-    return <p className="text-muted">Đang tải…</p>;
+    return (
+      <div className="flex flex-col gap-stack">
+        <Skeleton className="h-10 w-56" />
+        <Skeleton className="h-96 w-full rounded-xl" />
+      </div>
+    );
+  }
+
+  if (catalogQuery.isError || matrixQuery.isError) {
+    return (
+      <QueryErrorState
+        error={catalogQuery.error ?? matrixQuery.error}
+        title="Không tải được ma trận phân quyền"
+        onRetry={() => {
+          void catalogQuery.refetch();
+          void matrixQuery.refetch();
+        }}
+      />
+    );
   }
 
   return (

@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { branchesApi } from '@/api/branches.api';
 import { doctorsApi } from '@/api/doctors.api';
 import { appointmentsApi } from '@/api/appointments.api';
+import { EmptyState, Skeleton } from '@/components/basic';
 import { SlotStatus } from '@/types/enums';
 import { SLOT_STATUS_LABEL_VI } from '@/utils/labels';
 import { DoctorAbsenceModal } from '../calendar/DoctorAbsenceModal';
@@ -233,11 +234,18 @@ export function StaffCalendarPage() {
       )}
 
       {isLoading ? (
-        <p className="text-muted">Đang tải lịch…</p>
+        /* Khối lưới cao bằng lịch thật - trang không nhảy một đoạn khi dữ liệu về. */
+        <Skeleton className="h-[28rem] w-full rounded-xl" />
       ) : !branchId ? (
-        <p className="text-muted">Chọn chi nhánh để xem lịch.</p>
+        <EmptyState
+          title="Chọn chi nhánh để xem lịch"
+          description="Lịch làm việc khác nhau giữa các chi nhánh, nên phải chọn một chi nhánh trước."
+        />
       ) : needsDoctor && !doctorId ? (
-        <p className="text-muted">Chọn bác sĩ để xem lịch theo {VIEW_LABELS[view].toLowerCase()}.</p>
+        <EmptyState
+          title={`Chọn bác sĩ để xem lịch theo ${VIEW_LABELS[view].toLowerCase()}`}
+          description="Chế độ xem này hiển thị khung giờ của một bác sĩ."
+        />
       ) : view === 'month' ? (
         <MonthGrid
           days={monthQuery.data?.days ?? []}

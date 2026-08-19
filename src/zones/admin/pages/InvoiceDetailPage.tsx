@@ -2,7 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { billingApi, sepayApi, SepayQrTicket } from '@/api/billing.api';
-import { Badge } from '@/components/basic';
+import {
+  Badge,
+  Skeleton,
+  SkeletonText,
+} from '@/components/basic';
+import { QueryErrorState } from '@/components/QueryErrorState';
 import { InvoiceStatus, PaymentMethod, PaymentStatus } from '@/types/enums';
 import { formatCurrency, formatDateTime } from '@/utils/format';
 import { getErrorMessage } from '@/utils/errors';
@@ -56,11 +61,26 @@ export function InvoiceDetailPage() {
   });
 
   if (invoiceQuery.isLoading) {
-    return <p className="text-muted">Đang tải hóa đơn…</p>;
+    /* Skeleton theo đúng hình dạng sắp hiện: đầu trang, khối tổng tiền, bảng dòng hàng. */
+    return (
+      <div className="flex flex-col gap-stack">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-24 w-full rounded-xl" />
+        <SkeletonText lines={6} />
+      </div>
+    );
   }
+
   const invoice = invoiceQuery.data;
   if (!invoice) {
-    return <p className="text-destructive">Không tìm thấy hóa đơn.</p>;
+    return (
+      <QueryErrorState
+        error={invoiceQuery.error}
+        title="Không tìm thấy hoá đơn"
+        description="Hoá đơn có thể đã bị huỷ, hoặc mã trong đường dẫn không đúng."
+        onRetry={() => void invoiceQuery.refetch()}
+      />
+    );
   }
 
   // Số đã thu cộng từ lịch sử thanh toán (dòng hoàn tiền mang số âm nên tự trừ ra) —

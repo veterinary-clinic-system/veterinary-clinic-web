@@ -1,7 +1,17 @@
 import { FormEvent, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { categoriesApi } from '@/api/products.api';
-import { Badge, Button, Input, Modal, Select, useToast } from '@/components/basic';
+import {
+  Badge,
+  Button,
+  EmptyState,
+  Input,
+  Modal,
+  Select,
+  SkeletonText,
+  useToast,
+} from '@/components/basic';
+import { QueryErrorState } from '@/components/QueryErrorState';
 import { Category, ItemType } from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';
 
@@ -140,9 +150,19 @@ export function CategoriesPage() {
       </div>
 
       <div className="rounded border border-border bg-surface p-4">
-        {treeQuery.isLoading && <p className="text-sm text-muted">Đang tải…</p>}
-        {!treeQuery.isLoading && tree.length === 0 && (
-          <p className="text-sm text-muted">Chưa có danh mục nào cho loại này.</p>
+        {treeQuery.isLoading && <SkeletonText lines={5} />}
+        {treeQuery.isError && (
+          <QueryErrorState
+            error={treeQuery.error}
+            title="Không tải được cây danh mục"
+            onRetry={() => void treeQuery.refetch()}
+          />
+        )}
+        {!treeQuery.isLoading && !treeQuery.isError && tree.length === 0 && (
+          <EmptyState
+            title="Chưa có danh mục nào cho loại này"
+            description="Thêm danh mục gốc ở biểu mẫu bên trên để bắt đầu phân nhóm hàng hoá."
+          />
         )}
         <ul className="flex flex-col gap-1">
           {tree.map((node) => (

@@ -207,7 +207,7 @@ function OpeningHoursEditor({ branch }: { branch: Branch }) {
       >
         {saveMutation.isPending ? 'Đang lưu…' : 'Lưu giờ mở cửa'}
       </button>
-      {saveMutation.isSuccess && <span className="text-sm text-triage-green">Đã lưu.</span>}
+      {saveMutation.isSuccess && <span className="text-sm text-success">Đã lưu.</span>}
     </form>
   );
 }

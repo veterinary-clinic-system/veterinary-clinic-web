@@ -290,6 +290,8 @@ export function QueuePage() {
         data={pageItems}
         getRowId={(row) => row.id}
         loading={queueQuery.isLoading}
+        error={queueQuery.isError}
+        onRetry={() => void queueQuery.refetch()}
         emptyMessage={branchId ? 'Hàng chờ đang trống.' : 'Chọn một chi nhánh để xem hàng chờ.'}
         page={page}
         limit={PAGE_SIZE}

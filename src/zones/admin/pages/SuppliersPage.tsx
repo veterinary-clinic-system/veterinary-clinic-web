@@ -238,6 +238,8 @@ export function SuppliersPage() {
         data={data?.data ?? []}
         getRowId={(row) => row.id}
         loading={listQuery.isLoading}
+        error={listQuery.isError}
+        onRetry={() => void listQuery.refetch()}
         emptyMessage="Không tìm thấy nhà cung cấp nào."
         sortBy={sortBy}
         sortOrder={sortOrder}
@@ -376,6 +378,8 @@ export function SuppliersPage() {
                 data={ordersQuery.data?.data ?? []}
                 getRowId={(row) => row.id}
                 loading={ordersQuery.isLoading}
+                error={ordersQuery.isError}
+                onRetry={() => void ordersQuery.refetch()}
                 emptyMessage="Chưa có đơn đặt hàng nào cho nhà cung cấp này."
               />
             </section>

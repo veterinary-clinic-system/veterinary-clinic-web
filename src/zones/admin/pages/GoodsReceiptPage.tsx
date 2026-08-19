@@ -277,6 +277,8 @@ export function GoodsReceiptPage() {
         data={data?.data ?? []}
         getRowId={(row) => row.id}
         loading={listQuery.isLoading}
+        error={listQuery.isError}
+        onRetry={() => void listQuery.refetch()}
         emptyMessage="Chưa có phiếu nhập nào."
         sortBy={sortBy}
         sortOrder={sortOrder}

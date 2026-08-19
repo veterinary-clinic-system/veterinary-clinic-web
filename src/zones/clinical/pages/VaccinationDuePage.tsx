@@ -141,6 +141,8 @@ export function VaccinationDuePage() {
         data={pageItems}
         getRowId={(row) => row.vaccinationId}
         loading={dueQuery.isLoading}
+        error={dueQuery.isError}
+        onRetry={() => void dueQuery.refetch()}
         emptyMessage="Không có mũi tiêm nào đến hạn trong khoảng đã chọn."
         page={page}
         limit={PAGE_SIZE}

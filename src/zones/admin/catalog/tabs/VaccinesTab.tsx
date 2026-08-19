@@ -7,7 +7,7 @@ import { Button, CheckboxGroup, Input, Modal, Select, Textarea, useToast } from 
 import { ItemType, Vaccine } from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';
 import { formatCurrency } from '@/utils/format';
-import { CategorySelect, PAGE_SIZE, TabPagination } from '../shared';
+import { CategorySelect, PAGE_SIZE, TabPagination, TabTableStates } from '../shared';
 
 interface VaccineFormState {
   itemName: string;
@@ -160,6 +160,14 @@ export function VaccinesTab() {
             </tr>
           </thead>
           <tbody>
+            <TabTableStates
+              loading={listQuery.isLoading}
+              error={listQuery.isError}
+              onRetry={() => void listQuery.refetch()}
+              isEmpty={(listQuery.data?.data ?? []).length === 0}
+              colSpan={7}
+              emptyMessage="Chưa có vaccine nào trong danh mục."
+            />
             {(listQuery.data?.data ?? []).map((v) => (
               <tr key={v.id} className="border-t border-border hover:bg-surface-muted">
                 <td className="px-3 py-2 font-mono text-xs text-muted">{v.item.code}</td>

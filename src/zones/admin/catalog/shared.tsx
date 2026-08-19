@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { categoriesApi } from '@/api/products.api';
-import { Pagination, Select } from '@/components/basic';
+import { ErrorState, Pagination, Select, Skeleton } from '@/components/basic';
 import { ItemType } from '@/types/models';
 import { flattenCategories } from '@/utils/categories';
 
@@ -68,4 +68,68 @@ export function CategorySelect({
       ]}
     />
   );
+}
+
+/**
+ * Ba trạng thái của một bảng trong tab Danh mục, vẽ dưới dạng HÀNG của `<tbody>`.
+ *
+ * Ba tab Dịch vụ, Thuốc và Vaccine dựng bảng bằng tay (mỗi hàng có chế độ sửa tại chỗ)
+ * nên chưa dùng được `Table`. Cái giá phải trả trước đây là chúng không có trạng thái
+ * nào cả: đang tải thì bảng trống, API hỏng thì cũng bảng trống, mà danh mục rỗng thật
+ * thì vẫn bảng trống. Ba tình huống khác hẳn nhau, cùng một màn hình.
+ *
+ * Trả về `null` khi có dữ liệu - nơi gọi cứ vẽ tiếp các hàng thật ngay sau nó.
+ */
+export function TabTableStates({
+  loading,
+  error,
+  onRetry,
+  isEmpty,
+  colSpan,
+  emptyMessage = 'Chưa có dữ liệu trong danh mục này.',
+}: {
+  loading: boolean;
+  error: boolean;
+  onRetry: () => void;
+  isEmpty: boolean;
+  colSpan: number;
+  emptyMessage?: string;
+}) {
+  if (loading) {
+    return (
+      <>
+        {Array.from({ length: 5 }).map((_, index) => (
+          <tr key={`skeleton-${index}`} className="border-t border-border">
+            <td colSpan={colSpan} className="px-3">
+              <div className="flex h-row items-center">
+                <Skeleton className="h-3.5 w-full max-w-sm" />
+              </div>
+            </td>
+          </tr>
+        ))}
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <tr>
+        <td colSpan={colSpan} className="px-3 py-6">
+          <ErrorState onRetry={onRetry} />
+        </td>
+      </tr>
+    );
+  }
+
+  if (isEmpty) {
+    return (
+      <tr>
+        <td colSpan={colSpan} className="px-3 py-6 text-center text-muted">
+          {emptyMessage}
+        </td>
+      </tr>
+    );
+  }
+
+  return null;
 }

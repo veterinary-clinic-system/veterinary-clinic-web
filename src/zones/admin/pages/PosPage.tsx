@@ -3,7 +3,15 @@ import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { branchesApi } from '@/api/branches.api';
 import { posApi } from '@/api/pos.api';
-import { Badge, Button, Modal, Select, useToast } from '@/components/basic';
+import {
+  Badge,
+  Button,
+  EmptyState,
+  Modal,
+  Select,
+  SkeletonCards,
+  useToast,
+} from '@/components/basic';
 import { useAuth } from '@/context/AuthContext';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { CartStatus, PaymentMethod, PosProduct } from '@/types/models';
@@ -383,13 +391,14 @@ function ProductGrid({
   onPick: (product: PosProduct) => void;
 }) {
   if (loading) {
-    return <p className="text-sm text-muted">Đang tải danh sách sản phẩm…</p>;
+    return <SkeletonCards count={6} label="Đang tải danh sách sản phẩm" />;
   }
   if (products.length === 0) {
     return (
-      <p className="rounded border border-dashed border-border p-8 text-center text-sm text-muted">
-        Không tìm thấy mặt hàng nào.
-      </p>
+      <EmptyState
+        title="Không tìm thấy mặt hàng nào"
+        description="Thử từ khoá khác, hoặc kiểm tra xem mặt hàng đã có tồn tại chi nhánh này chưa."
+      />
     );
   }
 

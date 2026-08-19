@@ -85,7 +85,7 @@ export function FollowUpSection({
         </Button>
       </form>
       {followUpMutation.isSuccess && followUpMutation.data && (
-        <p className="mt-2 text-sm text-triage-green">
+        <p className="mt-2 text-sm text-success">
           Đã đặt lịch tái khám —{' '}
           <Link to={`/staff/appointments/${followUpMutation.data.id}`} className="underline">
             xem lịch hẹn mới

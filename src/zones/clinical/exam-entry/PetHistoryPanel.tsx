@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { medicalRecordsApi } from '@/api/medical-records.api';
-import { Badge } from '@/components/basic';
+import { Badge, ErrorState, SkeletonText } from '@/components/basic';
 import { MedicalRecord } from '@/types/models';
 import { MedicalRecordStatus } from '@/types/enums';
 import { formatDate } from '@/utils/format';
@@ -27,7 +27,14 @@ export function PetHistoryPanel({
        sticky, nên neo cao hơn sẽ làm tiêu đề cột chui xuống dưới nó. */
     <aside className="flex flex-col gap-3 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto">
       <h2 className="font-medium">Bệnh sử ({previous.length})</h2>
-      {historyQuery.isLoading && <p className="text-sm text-muted">Đang tải bệnh sử…</p>}
+      {historyQuery.isLoading && <SkeletonText lines={4} />}
+      {historyQuery.isError && (
+        <ErrorState
+          title="Không tải được bệnh sử"
+          description="Phần còn lại của phiếu khám vẫn dùng được bình thường."
+          onRetry={() => void historyQuery.refetch()}
+        />
+      )}
       {!historyQuery.isLoading && previous.length === 0 && (
         <p className="rounded border border-border bg-surface p-4 text-sm text-muted">
           Đây là lần khám đầu tiên được ghi nhận cho thú cưng này.

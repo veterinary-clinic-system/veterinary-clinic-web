@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
@@ -52,6 +53,14 @@ function chunkFor(id: string): string | undefined {
 
 export default defineConfig({
   plugins: [react()],
+  /*
+    `jsdom` chứ không phải môi trường `node` mặc định: có component test rồi thì cần một
+    DOM để dựng cây React vào. Không có nó, mọi file `*.test.tsx` hỏng ngay ở dòng render.
+  */
+  test: {
+    environment: 'jsdom',
+    globals: false,
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

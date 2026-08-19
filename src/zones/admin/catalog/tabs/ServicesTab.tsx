@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { catalogApi } from '@/api/catalog.api';
 import { ItemType, Service } from '@/types/models';
 import { formatCurrency } from '@/utils/format';
-import { CategorySelect, PAGE_SIZE, TabPagination } from '../shared';
+import { CategorySelect, PAGE_SIZE, TabPagination, TabTableStates } from '../shared';
 
 interface ServiceFormState {
   itemName: string;
@@ -120,6 +120,14 @@ export function ServicesTab() {
             </tr>
           </thead>
           <tbody>
+            <TabTableStates
+              loading={listQuery.isLoading}
+              error={listQuery.isError}
+              onRetry={() => void listQuery.refetch()}
+              isEmpty={(listQuery.data?.data ?? []).length === 0}
+              colSpan={8}
+              emptyMessage="Chưa có dịch vụ nào trong danh mục."
+            />
             {(listQuery.data?.data ?? []).map((s) =>
               editingId === s.id ? (
                 <tr key={s.id} className="border-t border-border bg-surface-muted">

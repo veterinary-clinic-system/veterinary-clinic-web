@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { ErrorState, SkeletonText } from '@/components/basic';
 import { petsApi } from '@/api/pets.api';
 import type { PetPrescription } from '@/types/models';
 import { formatDateTime } from '@/utils/format';
@@ -12,7 +13,11 @@ export function PrescriptionsTab({ petId }: { petId: string }) {
   });
 
   if (query.isLoading) {
-    return <p className="text-muted">Đang tải đơn thuốc…</p>;
+    return <SkeletonText lines={4} />;
+  }
+
+  if (query.isError) {
+    return <ErrorState title="Không tải được đơn thuốc" onRetry={() => void query.refetch()} />;
   }
 
   const prescriptions: PetPrescription[] = query.data ?? [];

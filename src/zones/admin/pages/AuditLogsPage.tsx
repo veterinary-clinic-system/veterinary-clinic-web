@@ -189,6 +189,8 @@ export function AuditLogsPage() {
         total={logsQuery.data?.total ?? 0}
         onPageChange={setPage}
         loading={logsQuery.isLoading}
+        error={logsQuery.isError}
+        onRetry={() => void logsQuery.refetch()}
         emptyMessage="Không có bản ghi nào khớp bộ lọc."
       />
 

@@ -2,7 +2,13 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { customersApi } from '@/api/customers.api';
-import { Badge, ClientPagedTable } from '@/components/basic';
+import {
+  Badge,
+  ClientPagedTable,
+  Skeleton,
+  SkeletonText,
+} from '@/components/basic';
+import { QueryErrorState } from '@/components/QueryErrorState';
 import type { Column } from '@/components/basic';
 import {
   CustomerAppointment,
@@ -49,10 +55,23 @@ export function CustomerDetailPage() {
   const customer = customerQuery.data;
 
   if (customerQuery.isLoading) {
-    return <p className="text-muted">Đang tải…</p>;
+    return (
+      <div className="flex flex-col gap-stack">
+        <Skeleton className="h-16 w-full rounded-xl" />
+        <SkeletonText lines={5} />
+      </div>
+    );
   }
+
   if (!customer) {
-    return <p className="text-muted">Không tìm thấy khách hàng.</p>;
+    return (
+      <QueryErrorState
+        error={customerQuery.error}
+        title="Không tìm thấy khách hàng"
+        description="Hồ sơ có thể đã bị xoá, hoặc mã trong đường dẫn không đúng."
+        onRetry={() => void customerQuery.refetch()}
+      />
+    );
   }
 
   return (

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { laboratoriesApi } from '@/api/laboratories.api';
-import { Badge, Select } from '@/components/basic';
+import { Badge, ErrorState, Select, Skeleton, SkeletonText } from '@/components/basic';
 import { LabTrendChart } from '@/components/LabTrendChart';
 import { LAB_RESULT_FLAG_LABEL_VI } from '@/types/enums';
 import { formatDate, formatDateTime } from '@/utils/format';
@@ -47,7 +47,16 @@ export function LaboratoryTab({ petId }: { petId: string }) {
   });
 
   if (ordersQuery.isLoading) {
-    return <p className="text-muted">Đang tải kết quả xét nghiệm…</p>;
+    return <SkeletonText lines={5} />;
+  }
+
+  if (ordersQuery.isError) {
+    return (
+      <ErrorState
+        title="Không tải được kết quả xét nghiệm"
+        onRetry={() => void ordersQuery.refetch()}
+      />
+    );
   }
 
   // Acceptance P9-T6: thú cưng chưa xét nghiệm lần nào thì hiện empty state, không phải
@@ -143,7 +152,7 @@ export function LaboratoryTab({ petId }: { petId: string }) {
             />
           </div>
           {trendQuery.isLoading ? (
-            <p className="text-sm text-muted">Đang tải xu hướng…</p>
+            <Skeleton className="h-48 w-full rounded-xl" />
           ) : (
             <LabTrendChart
               points={trendQuery.data?.points ?? []}

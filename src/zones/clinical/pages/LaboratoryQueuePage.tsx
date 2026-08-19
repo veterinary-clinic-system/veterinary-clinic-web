@@ -133,6 +133,8 @@ export function LaboratoryQueuePage() {
         data={pageItems}
         getRowId={(row) => row.labTestOrderId}
         loading={queueQuery.isLoading}
+        error={queueQuery.isError}
+        onRetry={() => void queueQuery.refetch()}
         emptyMessage="Không có yêu cầu xét nghiệm nào đang chờ."
         page={page}
         limit={PAGE_SIZE}

@@ -269,6 +269,8 @@ export function ProductsPage() {
         data={data?.data ?? []}
         getRowId={(row) => row.id}
         loading={listQuery.isLoading}
+        error={listQuery.isError}
+        onRetry={() => void listQuery.refetch()}
         emptyMessage="Không tìm thấy sản phẩm nào."
         sortBy={sortBy}
         sortOrder={sortOrder}

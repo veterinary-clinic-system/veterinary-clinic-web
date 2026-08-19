@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { catalogApi } from '@/api/catalog.api';
+import { Table } from '@/components/basic';
+import type { Column } from '@/components/basic';
 import { PAGE_SIZE, TabPagination } from '../shared';
 
 interface DiseaseGroupLite {
@@ -8,6 +10,15 @@ interface DiseaseGroupLite {
   diseaseName: string;
   describe?: string | null;
 }
+
+const COLUMNS: Column<DiseaseGroupLite>[] = [
+  { key: 'diseaseName', header: 'Tên nhóm bệnh' },
+  {
+    key: 'describe',
+    header: 'Mô tả',
+    render: (disease) => <span className="text-muted">{disease.describe ?? '—'}</span>,
+  },
+];
 
 export function DiseasesTab() {
   const [page, setPage] = useState(1);
@@ -27,40 +38,24 @@ export function DiseasesTab() {
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-muted">
-        Danh sách nhóm bệnh dùng cho chẩn đoán và phân tích AI (chỉ xem — quản lý đầy đủ nằm ngoài phạm vi đợt này).
+        Danh sách nhóm bệnh dùng cho chẩn đoán và phân tích AI (chỉ xem — quản lý đầy đủ nằm ngoài
+        phạm vi đợt này).
       </p>
-      <div className="overflow-x-auto rounded border border-border">
-        <table className="w-full min-w-[500px] border-collapse text-sm">
-          <thead>
-            <tr className="bg-surface-muted text-left">
-              <th className="px-3 py-2">Tên nhóm bệnh</th>
-              <th className="px-3 py-2">Mô tả</th>
-            </tr>
-          </thead>
-          <tbody>
-            {listQuery.isLoading && (
-              <tr>
-                <td colSpan={2} className="px-3 py-6 text-center text-muted">
-                  Đang tải…
-                </td>
-              </tr>
-            )}
-            {!listQuery.isLoading && diseases.length === 0 && (
-              <tr>
-                <td colSpan={2} className="px-3 py-6 text-center text-muted">
-                  Không có dữ liệu.
-                </td>
-              </tr>
-            )}
-            {diseases.map((d) => (
-              <tr key={d.id} className="border-t border-border">
-                <td className="px-3 py-2">{d.diseaseName}</td>
-                <td className="px-3 py-2 text-muted">{d.describe ?? '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+
+      {/*
+        `Table` thay cho bảng tự dựng: nó mang theo skeleton, dòng rỗng và trạng thái lỗi.
+        Bản trước hiện chữ "Đang tải…" giữa bảng, và khi API hỏng thì hiện "Không có dữ
+        liệu." - tức là nói với người dùng rằng phòng khám không có nhóm bệnh nào.
+      */}
+      <Table
+        columns={COLUMNS}
+        data={diseases}
+        getRowId={(disease) => disease.id}
+        loading={listQuery.isLoading}
+        error={listQuery.isError}
+        onRetry={() => void listQuery.refetch()}
+        emptyMessage="Chưa có nhóm bệnh nào trong danh mục."
+      />
 
       <TabPagination page={page} total={total} onPageChange={setPage} />
     </div>

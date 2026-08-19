@@ -5,6 +5,8 @@ import { AxiosError } from 'axios';
 import { useAuth } from '@/context/AuthContext';
 import { appointmentsApi } from '@/api/appointments.api';
 import { prescreeningApi } from '@/api/prescreening.api';
+import { Skeleton, SkeletonText } from '@/components/basic';
+import { QueryErrorState } from '@/components/QueryErrorState';
 import { billingApi } from '@/api/billing.api';
 import {
   AppointmentStatus,
@@ -92,10 +94,23 @@ export function AppointmentDetailPage() {
   });
 
   if (apptQuery.isLoading) {
-    return <p className="text-muted">Đang tải lịch hẹn…</p>;
+    return (
+      <div className="flex flex-col gap-stack">
+        <Skeleton className="h-12 w-2/3" />
+        <SkeletonText lines={6} />
+      </div>
+    );
   }
+
   if (!appt) {
-    return <p className="text-destructive">Không tìm thấy lịch hẹn.</p>;
+    return (
+      <QueryErrorState
+        error={apptQuery.error}
+        title="Không tìm thấy lịch hẹn"
+        description="Lịch hẹn có thể đã bị huỷ, hoặc mã trong đường dẫn không đúng."
+        onRetry={() => void apptQuery.refetch()}
+      />
+    );
   }
 
   const canOverride = user?.role === Role.RECEPTIONIST || user?.role === Role.DOCTOR || user?.role === Role.ADMIN;
@@ -278,7 +293,7 @@ export function AppointmentDetailPage() {
       <section className="rounded border border-border bg-surface p-4">
         <h2 className="mb-3 font-medium">Kết quả tiền sàng lọc AI</h2>
         {prescreeningQuery.isLoading ? (
-          <p className="text-muted">Đang tải…</p>
+          <SkeletonText lines={3} />
         ) : prescreeningNotFound ? (
           <div className="flex items-center justify-between">
             <p className="text-muted">Chưa có kết quả AI cho lịch hẹn này.</p>
@@ -404,7 +419,7 @@ export function AppointmentDetailPage() {
             >
               {updateMutation.isPending ? 'Đang lưu…' : 'Lưu thay đổi'}
             </button>
-            {updateMutation.isSuccess && <span className="text-sm text-triage-green">Đã lưu.</span>}
+            {updateMutation.isSuccess && <span className="text-sm text-success">Đã lưu.</span>}
           </form>
         </section>
       )}
@@ -412,7 +427,7 @@ export function AppointmentDetailPage() {
       <section className="rounded border border-border bg-surface p-4">
         <h2 className="mb-3 font-medium">Hóa đơn</h2>
         {invoiceQuery.isLoading ? (
-          <p className="text-muted">Đang tải…</p>
+          <SkeletonText lines={1} />
         ) : invoiceQuery.data ? (
           <Link to={`/staff/billing/${invoiceQuery.data.id}`} className="text-primary hover:underline">
             Xem hóa đơn ({invoiceQuery.data.paid ? 'đã thanh toán' : 'chưa thanh toán'})

@@ -6,7 +6,7 @@ import { Button, Input, Modal, Select, Textarea, useToast } from '@/components/b
 import { ItemType, Medication } from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';
 import { formatCurrency } from '@/utils/format';
-import { CategorySelect, PAGE_SIZE, TabPagination } from '../shared';
+import { CategorySelect, PAGE_SIZE, TabPagination, TabTableStates } from '../shared';
 
 interface MedicationFormState {
   itemName: string;
@@ -155,6 +155,14 @@ export function MedicationsTab() {
             </tr>
           </thead>
           <tbody>
+            <TabTableStates
+              loading={listQuery.isLoading}
+              error={listQuery.isError}
+              onRetry={() => void listQuery.refetch()}
+              isEmpty={(listQuery.data?.data ?? []).length === 0}
+              colSpan={10}
+              emptyMessage="Chưa có thuốc nào trong danh mục."
+            />
             {(listQuery.data?.data ?? []).map((m) => (
               <tr key={m.id} className="border-t border-border hover:bg-surface-muted">
                 <td className="px-3 py-2 font-mono text-xs text-muted">{m.item.code}</td>

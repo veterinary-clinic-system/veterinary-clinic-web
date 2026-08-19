@@ -228,6 +228,8 @@ export function PharmacyPage() {
             data={queue?.data ?? []}
             getRowId={(row) => row.id}
             loading={queueQuery.isLoading}
+            error={queueQuery.isError}
+            onRetry={() => void queueQuery.refetch()}
             emptyMessage={
               branchId ? 'Không có đơn nào ở trạng thái này.' : 'Chọn một chi nhánh.'
             }
@@ -275,6 +277,8 @@ export function PharmacyPage() {
                 data={prescription.items ?? []}
                 getRowId={(row) => row.id}
                 loading={detailQuery.isLoading}
+                error={detailQuery.isError}
+                onRetry={() => void detailQuery.refetch()}
                 emptyMessage="Đơn không có dòng thuốc nào."
               />
 

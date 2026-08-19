@@ -4,7 +4,13 @@ import { format, startOfMonth, startOfQuarter, startOfWeek, startOfYear, subDays
 import { branchesApi } from '@/api/branches.api';
 import { employeesApi } from '@/api/employees.api';
 import { reportsApi, SalesReportRow } from '@/api/reports.api';
-import { Button, DatePicker, Select, Table } from '@/components/basic';
+import {
+  Button,
+  DatePicker,
+  Select,
+  Skeleton,
+  Table,
+} from '@/components/basic';
 import type { Column } from '@/components/basic';
 import { useToast } from '@/components/basic/Toast';
 import { PaymentMethod, PRIORITY_COLOR_LABEL_VI, PriorityColor } from '@/types/enums';
@@ -246,7 +252,7 @@ export function ReportsPage() {
             <Stat label="Hóa đơn chưa thu đủ" value={summaryQuery.data.unpaidInvoiceCount} />
           </div>
         )}
-        {summaryQuery.isLoading && <p className="text-muted">Đang tải…</p>}
+        {summaryQuery.isLoading && <Skeleton className="h-24 w-full rounded-xl" />}
       </Section>
 
       <Section title="Doanh thu theo thời gian" hint="Giá trị hàng đã bán trên hoá đơn.">
@@ -282,7 +288,7 @@ export function ReportsPage() {
             <Stat label="Đã hết hạn" value={inventoryQuery.data.expired} tone="bad" />
           </div>
         )}
-        {inventoryQuery.isLoading && <p className="text-muted">Đang tải…</p>}
+        {inventoryQuery.isLoading && <Skeleton className="h-24 w-full rounded-xl" />}
       </Section>
 
       {/* ------------------------------------------------ Báo cáo bán hàng */}
@@ -305,6 +311,8 @@ export function ReportsPage() {
           data={salesQuery.data ?? []}
           getRowId={(row) => row.itemCode}
           loading={salesQuery.isLoading}
+          error={salesQuery.isError}
+          onRetry={() => void salesQuery.refetch()}
           emptyMessage="Không có giao dịch bán hàng nào trong kỳ."
         />
       </Section>
@@ -336,7 +344,7 @@ export function ReportsPage() {
             />
           </div>
         )}
-        {examsQuery.isLoading && <p className="text-muted">Đang tải…</p>}
+        {examsQuery.isLoading && <Skeleton className="h-24 w-full rounded-xl" />}
       </Section>
 
       <Section title="Doanh thu theo dịch vụ">
@@ -396,7 +404,7 @@ export function ReportsPage() {
             />
           </div>
         )}
-        {aiAccuracyQuery.isLoading && <p className="text-muted">Đang tải…</p>}
+        {aiAccuracyQuery.isLoading && <Skeleton className="h-24 w-full rounded-xl" />}
       </Section>
     </div>
   );
@@ -438,7 +446,7 @@ function Stat({
   tone?: 'warn' | 'bad';
 }) {
   const toneClass =
-    tone === 'bad' ? 'text-triage-red' : tone === 'warn' ? 'text-triage-yellow' : '';
+    tone === 'bad' ? 'text-danger' : tone === 'warn' ? 'text-warning' : '';
   return (
     <div className="rounded border border-border p-3">
       <p className="text-xs text-muted">{label}</p>
@@ -480,13 +488,18 @@ function SimpleTable<T>({
           </tr>
         </thead>
         <tbody>
-          {loading && (
-            <tr>
-              <td colSpan={columns.length} className="px-3 py-6 text-center text-muted">
-                Đang tải…
-              </td>
-            </tr>
-          )}
+          {loading &&
+            /* Skeleton theo hình hàng thật: bảng giữ chiều cao, khối báo cáo bên dưới
+               không nhảy lên rồi tụt xuống mỗi lần đổi khoảng thời gian. */
+            Array.from({ length: 4 }).map((_, index) => (
+              <tr key={`skeleton-${index}`} className="border-t border-border">
+                <td colSpan={columns.length} className="px-3">
+                  <div className="flex h-row items-center">
+                    <Skeleton className="h-3.5 w-full max-w-sm" />
+                  </div>
+                </td>
+              </tr>
+            ))}
           {!loading && rows.length === 0 && (
             <tr>
               <td colSpan={columns.length} className="px-3 py-6 text-center text-muted">

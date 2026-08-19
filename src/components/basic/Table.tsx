@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { Icon } from './Icon';
 import { Skeleton } from './Skeleton';
+import { ErrorState } from './States';
 import { cn } from './utils';
 
 export interface Column<T> {
@@ -24,6 +25,16 @@ export interface TableProps<T> {
   total?: number;
   onPageChange?: (page: number) => void;
   loading?: boolean;
+  /**
+   * Lời gọi API đứng sau bảng đã hỏng.
+   *
+   * Không có cờ này thì một lần tải hỏng và một danh sách thật sự rỗng hiện ra GIỐNG
+   * HỆT nhau: cùng dòng "Không có dữ liệu" giữa bảng. Trên màn hình tồn kho, đó là
+   * khác biệt giữa "máy chủ không trả lời" và "kho hết sạch hàng" - hai kết luận dẫn
+   * tới hai hành động hoàn toàn khác nhau.
+   */
+  error?: boolean;
+  onRetry?: () => void;
   emptyMessage?: string;
   className?: string;
 }
@@ -55,6 +66,8 @@ export function Table<T>({
   total,
   onPageChange,
   loading = false,
+  error = false,
+  onRetry,
   emptyMessage = 'Không có dữ liệu',
   className,
 }: TableProps<T>) {
@@ -71,6 +84,15 @@ export function Table<T>({
   const effectiveTotal = total ?? data.length;
   const totalPages = Math.max(1, Math.ceil(effectiveTotal / effectiveLimit));
   const currentPage = page ?? 1;
+
+  if (error) {
+    /*
+      Thay CẢ bảng chứ không chỉ phần thân: giữ lại hàng tiêu đề của một bảng không có
+      dữ liệu chỉ tạo ra một bộ khung rỗng trông như đang chờ, trong khi thứ người dùng
+      cần lúc này là một câu giải thích và một nút bấm. Cùng cách `DataTable` làm.
+    */
+    return <ErrorState onRetry={onRetry} className={className} />;
+  }
 
   return (
     <div className={cn('flex flex-col gap-3', className)}>

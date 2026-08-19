@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { branchesApi } from '@/api/branches.api';
 import { catalogApi } from '@/api/catalog.api';
-import { PAGE_SIZE, TabPagination } from '../shared';
+import { PAGE_SIZE, TabPagination, TabTableStates } from '../shared';
 
 interface InventoryRecordLite {
   id?: string;
@@ -112,20 +112,14 @@ export function InventoryTab() {
                 </tr>
               </thead>
               <tbody>
-                {inventoryQuery.isLoading && (
-                  <tr>
-                    <td colSpan={2} className="px-3 py-6 text-center text-muted">
-                      Đang tải…
-                    </td>
-                  </tr>
-                )}
-                {!inventoryQuery.isLoading && records.length === 0 && (
-                  <tr>
-                    <td colSpan={2} className="px-3 py-6 text-center text-muted">
-                      Chưa có dữ liệu tồn kho cho chi nhánh này.
-                    </td>
-                  </tr>
-                )}
+                <TabTableStates
+                  loading={inventoryQuery.isLoading}
+                  error={inventoryQuery.isError}
+                  onRetry={() => void inventoryQuery.refetch()}
+                  isEmpty={records.length === 0}
+                  colSpan={2}
+                  emptyMessage="Mặt hàng này chưa có tồn ở chi nhánh nào."
+                />
                 {records.map((r) => (
                   <tr key={r.id ?? `${r.itemId}-${r.branchId}`} className="border-t border-border">
                     <td className="px-3 py-2">{r.item?.itemName ?? r.itemId}</td>

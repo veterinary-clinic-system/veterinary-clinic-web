@@ -343,6 +343,8 @@ export function InventoryPage() {
         data={data?.data ?? []}
         getRowId={(row) => row.id}
         loading={listQuery.isLoading}
+        error={listQuery.isError}
+        onRetry={() => void listQuery.refetch()}
         emptyMessage={branchId ? 'Chi nhánh chưa có mặt hàng nào.' : 'Chọn một chi nhánh.'}
         sortBy={sortBy}
         sortOrder={sortOrder}
@@ -378,6 +380,8 @@ export function InventoryPage() {
             data={batches}
             getRowId={(row) => row.id}
             loading={batchesQuery.isLoading}
+            error={batchesQuery.isError}
+            onRetry={() => void batchesQuery.refetch()}
             emptyMessage="Mặt hàng này chưa có lô nào."
           />
         </div>
@@ -403,6 +407,8 @@ export function InventoryPage() {
             data={ledgerQuery.data?.data ?? []}
             getRowId={(row) => row.id}
             loading={ledgerQuery.isLoading}
+            error={ledgerQuery.isError}
+            onRetry={() => void ledgerQuery.refetch()}
             emptyMessage="Chưa có giao dịch nào."
           />
         </div>

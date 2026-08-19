@@ -295,6 +295,8 @@ export function PurchaseOrdersPage() {
         data={data?.data ?? []}
         getRowId={(row) => row.id}
         loading={listQuery.isLoading}
+        error={listQuery.isError}
+        onRetry={() => void listQuery.refetch()}
         emptyMessage="Chưa có đơn đặt hàng nào."
         sortBy={sortBy}
         sortOrder={sortOrder}
