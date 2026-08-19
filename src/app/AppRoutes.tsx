@@ -15,6 +15,14 @@ const NotFoundPage = lazy(() =>
   import('./NotFoundPage').then((m) => ({ default: m.NotFoundPage })),
 );
 
+/*
+  `/staff` khai báo ở ĐÂY chứ không trong `adminRoutes()`: nội dung của nó đổi theo vai
+  trò và cần biết tới cả hai zone. Xem `StaffHomePage`.
+*/
+const StaffHomePage = lazy(() =>
+  import('./StaffHomePage').then((m) => ({ default: m.StaffHomePage })),
+);
+
 /**
  * Bản đồ ZONE của ứng dụng - file này chỉ trả lời "khung nào bọc zone nào", còn từng
  * đường dẫn cụ thể thì thuộc về `routes.tsx` của chính zone đó.
@@ -53,6 +61,7 @@ export function AppRoutes() {
 
         <Route element={<RequireAuth allow={STAFF_ROLES} />}>
           <Route element={<StaffLayout />}>
+            <Route path="/staff" element={<StaffHomePage />} />
             {clinicalRoutes()}
             {adminRoutes()}
           </Route>

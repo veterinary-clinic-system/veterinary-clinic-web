@@ -15,9 +15,6 @@ import { Role } from '@/types/enums';
  * bám theo ma trận `role_permissions` phía backend, và backend vẫn là hàng rào thật -
  * chặn ở đây chỉ để không đưa người dùng tới một trang họ chắc chắn nhận 403.
  */
-const StaffDashboardPage = lazy(() =>
-  import('./pages/StaffDashboardPage').then((m) => ({ default: m.StaffDashboardPage })),
-);
 const PosPage = lazy(() => import('./pages/PosPage').then((m) => ({ default: m.PosPage })));
 const BillingListPage = lazy(() =>
   import('./pages/BillingListPage').then((m) => ({ default: m.BillingListPage })),
@@ -76,8 +73,6 @@ const AuditLogsPage = lazy(() =>
 
 export function adminRoutes() {
   return [
-    <Route key="dashboard" path="/staff" element={<StaffDashboardPage />} />,
-
     /*
       Bán hàng tại quầy (P8). Quyền POS_SELL trong ma trận thuộc về STAFF,
       RECEPTIONIST, MANAGER, ADMIN - đúng bốn vai trò của COUNTER_ROLES ở nav.
