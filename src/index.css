@@ -15,12 +15,42 @@
 :root {
   --color-primary: 13 148 136; /* teal-600 */
   --color-primary-foreground: 255 255 255;
+  --color-primary-soft: 240 253 250; /* teal-50 - nền cho vùng nhấn, không phải cho nút */
+
   --color-surface: 255 255 255;
   --color-surface-muted: 245 247 246;
+  /*
+    Nền của thứ NỔI LÊN TRÊN mặt phẳng trang: menu thả xuống, tooltip, popover. Tách
+    khỏi `surface` để sau này chuyển sang chủ đề tối thì lớp nổi sáng hơn nền, chứ
+    không phải cùng một màu rồi phải bù bằng đổ bóng.
+  */
+  --color-surface-raised: 255 255 255;
+
   --color-border: 226 232 231;
+  /* Viền của thứ cần tách bạch hẳn - đầu bảng, đường chia vùng lớn. */
+  --color-border-strong: 203 213 211;
+
   --color-foreground: 17 27 33;
   --color-muted-foreground: 100 116 116;
-  --color-destructive: 220 38 38;
+
+  /*
+    Bốn màu trạng thái. Trước đây chỉ có `destructive`, nên Badge phải mượn tạm màu của
+    thang phân loại ưu tiên (`triage-green` cho "thành công") - hai thứ khác nghĩa hẳn
+    nhau bị buộc chung một giá trị, và đổi một cái là hỏng cái kia.
+    Mỗi màu có bản `-soft` dùng làm nền: cùng sắc, đủ nhạt để chữ đậm đọc được trên đó.
+  */
+  --color-success: 21 128 61; /* green-700 - đạt 4.5:1 trên nền trắng */
+  --color-success-soft: 240 253 244;
+  --color-warning: 180 83 9; /* amber-700 - vàng thuần không đủ tương phản cho chữ */
+  --color-warning-soft: 255 251 235;
+  --color-danger: 185 28 28; /* red-700 */
+  --color-danger-soft: 254 242 242;
+  --color-info: 29 78 216; /* blue-700 */
+  --color-info-soft: 239 246 255;
+
+  /* Giữ tên cũ: hàng chục chỗ đang dùng `text-destructive`. Cùng giá trị với `danger`. */
+  --color-destructive: 185 28 28;
+
   --radius: 0.625rem;
 }
 
@@ -58,4 +88,27 @@ body {
       scroll-behavior: auto !important;
     }
   }
+}
+
+/*
+ * MẬT ĐỘ. Zone lâm sàng được mở cả ngày và đọc theo kiểu quét: hàng bảng thấp hơn,
+ * đệm thẻ mỏng hơn, chữ dữ liệu nhỏ hơn một bậc. Zone quản trị và trang công khai thì
+ * ngược lại - đọc kỹ, ít lần, nên thoáng.
+ *
+ * Làm bằng biến thay vì bằng prop `density` truyền xuống từng component: chỉ cần đặt
+ * `data-density="compact"` ở gốc `StaffLayout` khi người dùng đang ở màn hình lâm sàng,
+ * mọi thứ bên trong tự co lại mà không component nào phải biết mình đang ở đâu.
+ */
+:root {
+  --row-height: 3rem; /* 48px */
+  --card-padding: 1.25rem; /* 20px */
+  --data-font-size: 0.875rem; /* 14px */
+  --stack-gap: 1.5rem; /* 24px */
+}
+
+[data-density='compact'] {
+  --row-height: 2.25rem; /* 36px */
+  --card-padding: 1rem; /* 16px */
+  --data-font-size: 0.8125rem; /* 13px */
+  --stack-gap: 1rem; /* 16px */
 }
