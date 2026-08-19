@@ -4,11 +4,11 @@ import { appointmentsApi } from '@/api/appointments.api';
 import { petsApi } from '@/api/pets.api';
 import {
   EmptyState,
-  ErrorState,
   Pagination,
   SkeletonCards,
   usePagination,
 } from '@/components/basic';
+import { QueryErrorState } from '@/components/QueryErrorState';
 import { AppointmentStatus } from '@/types/enums';
 import { Appointment } from '@/types/models';
 import { PetCard } from '../components/PetCard';
@@ -60,6 +60,7 @@ export function MyPetsPage() {
     data: pets,
     isLoading,
     isError,
+    error,
     refetch,
   } = useQuery({ queryKey: ['pets', 'mine'], queryFn: petsApi.mine });
 
@@ -93,7 +94,8 @@ export function MyPetsPage() {
 
       <div className="mt-8">
         {isError ? (
-          <ErrorState
+          <QueryErrorState
+            error={error}
             title="Không tải được danh sách thú cưng"
             description="Máy chủ chưa phản hồi. Vui lòng thử lại sau ít phút."
             onRetry={() => void refetch()}

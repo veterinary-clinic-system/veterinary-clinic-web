@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { petsApi } from '@/api/pets.api';
-import { ErrorState, Skeleton, SkeletonText, TabItem, Tabs } from '@/components/basic';
+import { Skeleton, SkeletonText, TabItem, Tabs } from '@/components/basic';
+import { QueryErrorState } from '@/components/QueryErrorState';
 import { PatientHeader } from '../pet-profile/PatientHeader';
 import { AppointmentsTab } from '../pet-profile/tabs/AppointmentsTab';
 import { BasicInfoTab } from '../pet-profile/tabs/BasicInfoTab';
@@ -68,7 +69,8 @@ export function StaffPetProfilePage() {
   const pet = petQuery.data;
   if (!pet) {
     return (
-      <ErrorState
+      <QueryErrorState
+        error={petQuery.error}
         title="Không tìm thấy hồ sơ thú cưng"
         description="Hồ sơ có thể đã bị xoá, hoặc mã trong đường dẫn không đúng."
         onRetry={() => void petQuery.refetch()}

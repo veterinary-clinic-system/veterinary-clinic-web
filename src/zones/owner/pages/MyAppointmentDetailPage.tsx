@@ -13,7 +13,6 @@ import {
   CardHeader,
   CardTitle,
   DescriptionList,
-  ErrorState,
   Icon,
   Skeleton,
   SkeletonText,
@@ -21,6 +20,7 @@ import {
   TimelineEntry,
   TriageBadge,
 } from '@/components/basic';
+import { QueryErrorState } from '@/components/QueryErrorState';
 import { AppointmentStatus, COMMON_SYMPTOM_LABEL_VI } from '@/types/enums';
 import { Appointment } from '@/types/models';
 import { APPOINTMENT_STATUS_TONE, canCancel } from '@/utils/appointment-status';
@@ -121,7 +121,8 @@ export function MyAppointmentDetailPage() {
   if (isError || !appointment) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-10">
-        <ErrorState
+        <QueryErrorState
+          error={error}
           title="Không xem được lịch hẹn này"
           description={getErrorMessage(
             error,

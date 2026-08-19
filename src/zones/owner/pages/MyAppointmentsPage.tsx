@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { appointmentsApi } from '@/api/appointments.api';
-import { ErrorState, Pagination, TabItem, Tabs, usePagination } from '@/components/basic';
+import { Pagination, TabItem, Tabs, usePagination } from '@/components/basic';
+import { QueryErrorState } from '@/components/QueryErrorState';
 import { AppointmentGroup, appointmentGroupOf } from '@/utils/appointment-status';
 import { AppointmentList } from '../components/AppointmentList';
 
@@ -52,6 +53,7 @@ export function MyAppointmentsPage() {
     data: appointments,
     isLoading,
     isError,
+    error,
     refetch,
   } = useQuery({ queryKey: ['appointments', 'mine'], queryFn: appointmentsApi.mine });
 
@@ -103,7 +105,8 @@ export function MyAppointmentsPage() {
 
       <div className="mt-6">
         {isError ? (
-          <ErrorState
+          <QueryErrorState
+            error={error}
             title="Không tải được danh sách lịch hẹn"
             description="Máy chủ chưa phản hồi. Vui lòng thử lại sau ít phút."
             onRetry={() => void refetch()}

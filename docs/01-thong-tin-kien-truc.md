@@ -168,6 +168,16 @@ Ba hệ quả bắt buộc:
    nhân viên là `STAFF_ROLES`. Chi tiết quyền để từng module tự kiểm.
 3. **Không render module không có quyền.** Không disable, không xám — không có trong
    sidebar. Người dùng không cần biết tồn tại thứ họ không dùng được.
+4. **Giấu khỏi sidebar thì phải chặn cả URL — bằng CÙNG một danh sách.** Hai nơi này
+   từng khai báo riêng: `nav-model.ts` lọc sidebar, còn `routes.tsx` của từng zone viết
+   thẳng mảng vai trò ra. Chúng đã lệch nhau (sidebar giấu "Hàng chờ" khỏi dược sĩ,
+   nhưng gõ thẳng `/staff/queue` vẫn vào được một trang chỉ để nhận 403). Nay cả hai đọc
+   `src/types/permission-groups.ts`.
+5. **Bị từ chối thì NÓI RA, đừng chuyển hướng im lặng.** Một nhân viên bấm vào liên kết
+   đồng nghiệp gửi mà bị ném về Tổng quan sẽ tưởng liên kết hỏng và bấm lại vài lần.
+   Ngoại lệ duy nhất là *sai khu vực* (chủ nuôi lạc vào `/staff`, hoặc nhân viên lạc
+   sang `/my/*`): đó không phải chuyện thiếu quyền, và thứ đúng đắn là đưa họ về khu của
+   mình chứ không phải một khung làm việc rỗng bao quanh một lời từ chối.
 
 ### 3.2 Ma trận quyền và điều hướng
 
@@ -396,6 +406,18 @@ Mọi màn hình có dữ liệu từ mạng phải xử lý đủ **5 trạng t
 | Thành công | Toast hoặc phản hồi tại chỗ |
 | Không có quyền | Câu giải thích cộng nút quay về Tổng quan |
 
+Trạng thái thứ năm có ba cửa vào, tuỳ chỗ phát hiện ra việc thiếu quyền:
+
+| Phát hiện ở đâu | Ai xử lý | Thấy gì |
+|---|---|---|
+| Trước khi vào route (sai vai trò) | `RequireAuth` | `ForbiddenState` nằm TRONG khung hiện tại — sidebar và topbar còn nguyên để người dùng đi tiếp chỗ khác |
+| Khi tải dữ liệu (API trả 403) | `QueryErrorState` | `ForbiddenState` thay cho `ErrorState` — nút "Thử lại" trên một lỗi 403 là mời người ta làm việc vô ích |
+| Trong một khối của trang | ví dụ `OpenRecordError` | Phần còn lại của trang vẫn hiện; chỉ khối bị chặn được thay bằng lời giải thích |
+
+Ví dụ cho hàng thứ ba: lễ tân mở `/staff/appointments/:id/exam` vẫn xem được đầu trang
+(bé nào, bác sĩ nào, mấy giờ) vì họ có quyền xem lịch hẹn — chỉ khối phiếu khám đổi
+thành "Chỉ bác sĩ được lập và xem hồ sơ bệnh án", kèm nút về hàng chờ.
+
 ### 5.6 Khả năng tiếp cận - WCAG 2.1 AA
 
 - Mọi thứ bấm được đều tới được bằng `Tab`, có vòng focus nhìn thấy.
@@ -416,3 +438,16 @@ Mọi màn hình có dữ liệu từ mạng phải xử lý đủ **5 trạng t
 | owner | Thẻ thú cưng một cột, stepper đặt lịch cuộn dọc |
 | clinical | Hàng chờ và lịch hẹn chuyển thành thẻ; phiếu khám 3 cột xếp chồng |
 | admin | Bảng cuộn ngang trong khung riêng - **trang không bao giờ cuộn ngang** |
+
+
+---
+
+## 6. Những thứ CỐ Ý chưa làm
+
+Ghi lại để lần sau không ai phải dò lại từ đầu rồi kết luận y hệt.
+
+| Thứ | Vì sao chưa làm |
+|---|---|
+| Quên mật khẩu / đặt lại mật khẩu | `auth.controller.ts` phía backend chỉ có `register`, `login`, `refresh`, `logout`. Dựng biểu mẫu "Quên mật khẩu" bây giờ là dựng một ngõ cụt: người dùng nhập số điện thoại rồi không bao giờ nhận được gì. Mở endpoint trước, màn hình sau. |
+| Màn hình "Cài đặt hệ thống" | Không có trong 42 màn hình, và cũng chưa có nhóm cấu hình nào ở backend cần một trang riêng. Những thứ giống "cài đặt" hiện đang nằm đúng chỗ của chúng: chi nhánh ở `/staff/branches`, quyền ở `/staff/permissions`, danh mục ở `/staff/catalog`. |
+| Tab "Tiêm phòng" và "Đơn thuốc" trong hồ sơ thú cưng của CHỦ NUÔI | Backend yêu cầu `MEDICAL_RECORD_VIEW` cho các route đó, mà ma trận quyền không cấp cho `PET_OWNER` (xem mục 2.2). Bốn tab hiện có đều dựng từ dữ liệu thật. |

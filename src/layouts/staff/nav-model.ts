@@ -1,5 +1,13 @@
 import { IconName } from '@/components/basic';
 import { Role, STAFF_ROLES } from '@/types/enums';
+import {
+  CLINIC_ROLES,
+  COUNTER_ROLES,
+  CUSTOMER_ROLES,
+  MANAGEMENT_ROLES,
+  SYSTEM_ROLES,
+  WAREHOUSE_ROLES,
+} from '@/types/permission-groups';
 
 /**
  * Cây điều hướng của khu nhân viên - MỘT nguồn sự thật cho sidebar, breadcrumb và
@@ -16,15 +24,18 @@ import { Role, STAFF_ROLES } from '@/types/enums';
  * Xem `docs/01-thong-tin-kien-truc.md` mục 3.
  */
 
-/** Bốn vai trò làm việc trực tiếp với bệnh nhân. */
-const CLINIC_ROLES = [Role.ADMIN, Role.MANAGER, Role.DOCTOR, Role.RECEPTIONIST];
-/** Bốn vai trò đứng quầy - có POS_SELL trong ma trận quyền. */
-const COUNTER_ROLES = [Role.ADMIN, Role.MANAGER, Role.RECEPTIONIST, Role.STAFF];
-/** Ba vai trò duy nhất có INVENTORY_IMPORT/INVENTORY_EXPORT. */
-const WAREHOUSE_ROLES = [Role.ADMIN, Role.MANAGER, Role.PHARMACIST];
-/** Mọi vai trò nhân viên TRỪ bác sĩ - bác sĩ không làm việc kho. */
+/**
+ * Các nhóm vai trò dùng chung với router nằm ở `@/types/permission-groups` - sidebar và
+ * `RequireAuth` phải đọc CÙNG một danh sách, nếu không sẽ có mục bị giấu khỏi sidebar
+ * mà gõ thẳng URL vẫn vào được.
+ *
+ * `NON_DOCTOR_ROLES` thì ngược lại, cố ý chỉ dùng ở đây: ma trận quyền cho MỌI vai trò
+ * nhân viên `INVENTORY_VIEW`, kể cả bác sĩ, nên router không chặn ai cả. Việc bỏ hai
+ * mục kho khỏi sidebar của bác sĩ là quyết định về KIẾN TRÚC THÔNG TIN (bác sĩ không
+ * làm việc kho), không phải về quyền - bác sĩ theo một liên kết từ phiếu khám tới trang
+ * tồn kho vẫn phải vào được.
+ */
 const NON_DOCTOR_ROLES = STAFF_ROLES.filter((role) => role !== Role.DOCTOR);
-const MANAGEMENT_ROLES = [Role.ADMIN, Role.MANAGER];
 
 export interface NavItem {
   to: string;
@@ -64,12 +75,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Vận hành',
     items: [
-      {
-        to: '/staff/customers',
-        label: 'Khách hàng',
-        icon: 'customers',
-        roles: [...CLINIC_ROLES, Role.STAFF],
-      },
+      { to: '/staff/customers', label: 'Khách hàng', icon: 'customers', roles: CUSTOMER_ROLES },
       { to: '/staff/catalog', label: 'Dịch vụ & thuốc', icon: 'catalog', roles: MANAGEMENT_ROLES },
       { to: '/staff/products', label: 'Sản phẩm', icon: 'box', roles: WAREHOUSE_ROLES },
       { to: '/staff/categories', label: 'Danh mục hàng hoá', icon: 'tag', roles: WAREHOUSE_ROLES },
@@ -109,18 +115,18 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Tổ chức',
     items: [
-      { to: '/staff/branches', label: 'Chi nhánh', icon: 'building', roles: [Role.ADMIN] },
+      { to: '/staff/branches', label: 'Chi nhánh', icon: 'building', roles: SYSTEM_ROLES },
       { to: '/staff/employees', label: 'Hồ sơ nhân sự', icon: 'id-card', roles: MANAGEMENT_ROLES },
-      { to: '/staff/users', label: 'Tài khoản', icon: 'user-cog', roles: [Role.ADMIN] },
+      { to: '/staff/users', label: 'Tài khoản', icon: 'user-cog', roles: SYSTEM_ROLES },
     ],
   },
   {
     label: 'Hệ thống',
     items: [
       // BR-16: chỉ Admin được quản lý role và permission.
-      { to: '/staff/permissions', label: 'Phân quyền', icon: 'shield', roles: [Role.ADMIN] },
+      { to: '/staff/permissions', label: 'Phân quyền', icon: 'shield', roles: SYSTEM_ROLES },
       // FR-26/BR-17: `AUDIT_VIEW` trong ma trận mặc định chỉ thuộc về Admin.
-      { to: '/staff/audit-logs', label: 'Nhật ký kiểm toán', icon: 'history', roles: [Role.ADMIN] },
+      { to: '/staff/audit-logs', label: 'Nhật ký kiểm toán', icon: 'history', roles: SYSTEM_ROLES },
     ],
   },
 ];

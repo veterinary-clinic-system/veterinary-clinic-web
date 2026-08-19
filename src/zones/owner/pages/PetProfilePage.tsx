@@ -5,13 +5,13 @@ import { appointmentsApi } from '@/api/appointments.api';
 import { petsApi } from '@/api/pets.api';
 import {
   DescriptionList,
-  ErrorState,
   Icon,
   Skeleton,
   SkeletonText,
   TabItem,
   Tabs,
 } from '@/components/basic';
+import { QueryErrorState } from '@/components/QueryErrorState';
 import { GENDER_LABEL_VI } from '@/utils/display';
 import { formatDate } from '@/utils/format';
 import { AppointmentList } from '../components/AppointmentList';
@@ -75,7 +75,8 @@ export function PetProfilePage() {
   if (petError || !pet) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-10">
-        <ErrorState
+        <QueryErrorState
+          error={petError}
           title="Không tải được hồ sơ thú cưng"
           description="Hồ sơ có thể đã bị xoá, hoặc không thuộc về tài khoản của bạn."
           onRetry={() => void refetch()}

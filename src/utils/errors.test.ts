@@ -1,7 +1,7 @@
 import { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { describe, expect, it } from 'vitest';
 
-import { getErrorMessage, isConflictError } from './errors';
+import { getErrorMessage, isConflictError, isForbiddenError } from './errors';
 
 /**
  * Đây là đầu kia của hợp đồng lỗi 409 mà backend tạo ra trong
@@ -61,5 +61,18 @@ describe('isConflictError', () => {
   it('không nhầm lỗi thường thành xung đột', () => {
     expect(isConflictError(new Error('409'))).toBe(false);
     expect(isConflictError(null)).toBe(false);
+  });
+});
+
+describe('isForbiddenError', () => {
+  it('chỉ đúng với HTTP 403', () => {
+    expect(isForbiddenError(axiosErrorWith(403, {}))).toBe(true);
+    expect(isForbiddenError(axiosErrorWith(401, {}))).toBe(false);
+    expect(isForbiddenError(axiosErrorWith(404, {}))).toBe(false);
+  });
+
+  it('không nhầm lỗi mạng thành lỗi phân quyền', () => {
+    expect(isForbiddenError(new AxiosError('Network Error', 'ERR_NETWORK'))).toBe(false);
+    expect(isForbiddenError(undefined)).toBe(false);
   });
 });

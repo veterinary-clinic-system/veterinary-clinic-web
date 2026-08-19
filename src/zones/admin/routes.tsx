@@ -1,7 +1,12 @@
 import { lazy } from 'react';
 import { Route } from 'react-router-dom';
 import { RequireAuth } from '@/routes/RequireAuth';
-import { Role } from '@/types/enums';
+import {
+  COUNTER_ROLES,
+  MANAGEMENT_ROLES,
+  SYSTEM_ROLES,
+  WAREHOUSE_ROLES,
+} from '@/types/permission-groups';
 
 /**
  * ZONE QUẢN TRỊ - phần vận hành phòng khám: tổng quan, bán hàng tại quầy, hoá đơn,
@@ -77,15 +82,16 @@ export function adminRoutes() {
       Bán hàng tại quầy (P8). Quyền POS_SELL trong ma trận thuộc về STAFF,
       RECEPTIONIST, MANAGER, ADMIN - đúng bốn vai trò của COUNTER_ROLES ở nav.
     */
-    <Route
-      key="pos"
-      element={<RequireAuth allow={[Role.ADMIN, Role.MANAGER, Role.RECEPTIONIST, Role.STAFF]} />}
-    >
+    <Route key="counter" element={<RequireAuth allow={COUNTER_ROLES} />}>
       <Route path="/staff/pos" element={<PosPage />} />
+      {/*
+        Hoá đơn nằm CÙNG chốt với bán hàng. Trước đây hai đường dẫn này để trần, nên một
+        bác sĩ hoặc dược sĩ gõ `/staff/billing` mở ra được một bảng rỗng kèm lỗi tải dữ
+        liệu - trong khi sidebar của họ không hề có mục đó.
+      */}
+      <Route path="/staff/billing" element={<BillingListPage />} />
+      <Route path="/staff/billing/:id" element={<InvoiceDetailPage />} />
     </Route>,
-
-    <Route key="billing" path="/staff/billing" element={<BillingListPage />} />,
-    <Route key="invoice" path="/staff/billing/:id" element={<InvoiceDetailPage />} />,
 
     /*
       Tồn kho và cảnh báo mở cho MỌI vai trò nhân viên: ma trận `role_permissions` cho
@@ -95,7 +101,7 @@ export function adminRoutes() {
     <Route key="inventory" path="/staff/inventory" element={<InventoryPage />} />,
     <Route key="alerts" path="/staff/inventory/alerts" element={<InventoryAlertsPage />} />,
 
-    <Route key="manage" element={<RequireAuth allow={[Role.ADMIN, Role.MANAGER]} />}>
+    <Route key="manage" element={<RequireAuth allow={MANAGEMENT_ROLES} />}>
       <Route path="/staff/catalog" element={<CatalogAdminPage />} />
       {/* BR-15: chỉ Manager/Admin được xem báo cáo doanh thu. */}
       <Route path="/staff/reports" element={<ReportsPage />} />
@@ -107,10 +113,7 @@ export function adminRoutes() {
       backend cho họ CATALOG_MANAGE, nên chặn ở router sẽ tạo ra một danh sách vai trò
       thứ hai lệch với nguồn sự thật kia.
     */
-    <Route
-      key="warehouse"
-      element={<RequireAuth allow={[Role.ADMIN, Role.MANAGER, Role.PHARMACIST]} />}
-    >
+    <Route key="warehouse" element={<RequireAuth allow={WAREHOUSE_ROLES} />}>
       <Route path="/staff/products" element={<ProductsPage />} />
       <Route path="/staff/categories" element={<CategoriesPage />} />
       <Route path="/staff/suppliers" element={<SuppliersPage />} />
@@ -129,7 +132,7 @@ export function adminRoutes() {
       <Route path="/staff/pharmacy" element={<PharmacyPage />} />
     </Route>,
 
-    <Route key="admin-only" element={<RequireAuth allow={[Role.ADMIN]} />}>
+    <Route key="admin-only" element={<RequireAuth allow={SYSTEM_ROLES} />}>
       <Route path="/staff/branches" element={<BranchesAdminPage />} />
       <Route path="/staff/users" element={<UsersAdminPage />} />
       {/* BR-16: chỉ Admin được quản lý role và permission. */}
