@@ -289,6 +289,15 @@ Giảm ma sát ở ba chỗ:
 
 Stepper phải cho **quay lại bước bất kỳ đã hoàn thành** mà không mất dữ liệu đã nhập.
 
+**Khung giờ ở bước 5 không phải dữ liệu nhập tay.** `AvailabilityService` sinh chúng từ
+giao của hai thứ: giờ mở cửa của chi nhánh (`operating_hours`) và ca làm việc của bác sĩ
+(`doctor_shifts`). Một ngày có **nhiều ca**, không phải một - dữ liệu thật là 07:00-11:00
+và 13:30-17:30, tách đôi bởi giờ nghỉ trưa. Bất kỳ màn hình nào sửa `operating_hours`
+phải giữ đủ mọi ca của mọi ngày: `PUT /branches/:id/opening-hours` thay CẢ TUẦN (xoá hết
+rồi chèn lại), nên gửi thiếu một ca là xoá vĩnh viễn ca đó cùng các khung giờ khách đặt
+được trong đó. Đây là lỗi bản đầu của `/staff/branches` mắc phải - xem
+`zones/admin/branches/week-schedule.ts` và bộ test cạnh nó.
+
 ### 4.2 Tiếp nhận, khám, thanh toán (luồng vận hành lõi)
 
 ```
@@ -369,6 +378,14 @@ vẽ một kiểu, không đổi màu theo trạng thái được, và trên tha
 phòng khám thì đọc ra "trang web dễ thương" chứ không phải "công cụ làm việc". Emoji vẫn
 dùng ở trạng thái rỗng, nơi nó là hình minh hoạ lớn.
 
+**Sửa dữ liệu diễn ra trong hộp thoại, không phải tại chỗ trên trang.** Ba màn hình
+từng có biểu mẫu thường trực trên đầu danh sách cộng với việc sửa ngay trên hàng
+(`UsersAdminPage`, `BranchesAdminPage`, và ba tab của `/staff/catalog`). Hai vấn đề đi
+kèm nhau: biểu mẫu chiếm chỗ của chính danh sách mà người ta mở trang ra để tra cứu, và
+ô nhập sửa tại chỗ thì không có nhãn — chỉ có `placeholder`, tức là nhãn biến mất ngay
+khi gõ chữ đầu tiên và trình đọc màn hình không có gì để đọc. Hai màn hình đầu đã chuyển
+sang `Modal`; ba tab danh mục còn lại (xem mục 6).
+
 Hộp thoại của trình duyệt (`window.prompt` / `alert` / `confirm`) **không còn được dùng**:
 chúng chặn cả tab, không định dạng được nên không nói rõ đang thao tác trên bản ghi nào,
 và không kiểm tra được đầu vào trước khi đóng. Ba chỗ từng dùng chúng nay là
@@ -381,7 +398,9 @@ nhỏ vẫn dùng `Table` trần.
 **Không trang nào được tự dựng `<table>` nữa.** Mỗi bảng viết tay là một bảng thiếu ít
 nhất một trạng thái: `BillingListPage` và `UsersAdminPage` từng có bảng riêng, chữ
 "Đang tải…" thay cho skeleton, và không có nhánh lỗi nào — máy chủ hỏng hiện ra y hệt
-"chưa có hoá đơn nào". Ba tab Dịch vụ / Thuốc / Vaccine còn sửa tại chỗ trên từng hàng
+"chưa có hoá đơn nào". `BranchesAdminPage` không có bảng nào cả, chỉ là một chồng thẻ
+dựng bằng lớp Tailwind thô — cùng một hậu quả: máy chủ hỏng đọc ra "phòng khám chưa có
+chi nhánh nào". Ba tab Dịch vụ / Thuốc / Vaccine còn sửa tại chỗ trên từng hàng
 nên chưa chuyển được sang `Table`; chúng dùng `TabTableStates` để có đủ ba trạng thái
 dưới dạng hàng của `<tbody>`.
 

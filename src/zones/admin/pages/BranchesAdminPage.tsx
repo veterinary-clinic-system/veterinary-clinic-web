@@ -1,213 +1,212 @@
-import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { branchesApi } from '@/api/branches.api';
-import { Pagination, usePagination } from '@/components/basic';
+import {
+  Button,
+  DataTable,
+  Icon,
+  PageHeader,
+  SearchInput,
+  Select,
+  StatusBadge,
+} from '@/components/basic';
+import type { DataColumn } from '@/components/basic';
 import { Branch } from '@/types/models';
+import { groupOpeningHours } from '@/utils/opening-hours';
+import { BranchModal } from '../branches/BranchModal';
+import { OpeningHoursModal } from '../branches/OpeningHoursModal';
 
 const PAGE_SIZE = 10;
 
-const WEEKDAYS = [
-  { dayOfWeek: 1, label: 'Thứ 2' },
-  { dayOfWeek: 2, label: 'Thứ 3' },
-  { dayOfWeek: 3, label: 'Thứ 4' },
-  { dayOfWeek: 4, label: 'Thứ 5' },
-  { dayOfWeek: 5, label: 'Thứ 6' },
-];
+type StatusFilter = '' | 'active' | 'inactive';
 
-interface BranchFormState {
-  branchName: string;
-  phone: string;
-  description: string;
-  address: string;
-}
-
-const EMPTY_FORM: BranchFormState = { branchName: '', phone: '', description: '', address: '' };
-
-/** Admin-only branch management: list, create, inline edit, and per-branch opening hours. */
+/**
+ * Chi nhánh - chỉ ADMIN.
+ *
+ * Trang lắp ráp mỏng: danh sách là `DataTable` như mọi màn hình danh sách của zone quản
+ * trị, còn hai việc sửa nằm trong hộp thoại ở `../branches/`. Bản trước tự dựng lấy ô
+ * nhập, nút bấm và thẻ chi nhánh bằng lớp Tailwind thô, và không có một trạng thái nào
+ * trong ba trạng thái tài liệu kiến trúc bắt buộc: máy chủ hỏng hiện ra y hệt "phòng
+ * khám chưa có chi nhánh nào".
+ *
+ * `GET /branches/admin` trả về toàn bộ chi nhánh trong một lần (số chi nhánh của một
+ * phòng khám luôn đếm trên đầu ngón tay), nên lọc, tìm và cắt trang đều làm ở client.
+ */
 export function BranchesAdminPage() {
-  const queryClient = useQueryClient();
-  const listQuery = useQuery({ queryKey: ['branches-admin'], queryFn: () => branchesApi.listAll() });
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState<StatusFilter>('');
+  const [page, setPage] = useState(1);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<Branch | null>(null);
+  const [hoursBranch, setHoursBranch] = useState<Branch | null>(null);
 
-  // `listAll` trả về toàn bộ chi nhánh trong một lần - cắt trang ở client.
-  const branches = listQuery.data ?? [];
-  const { page, setPage, pageItems, totalPages } = usePagination(branches, PAGE_SIZE);
-
-  const [form, setForm] = useState<BranchFormState>(EMPTY_FORM);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<BranchFormState & { active: boolean }>({ ...EMPTY_FORM, active: true });
-  const [hoursBranchId, setHoursBranchId] = useState<string | null>(null);
-
-  const createMutation = useMutation({
-    mutationFn: () =>
-      branchesApi.create({
-        branchName: form.branchName,
-        phone: form.phone,
-        description: form.description || undefined,
-        address: form.address,
-      }),
-    onSuccess: () => {
-      setForm(EMPTY_FORM);
-      void queryClient.invalidateQueries({ queryKey: ['branches-admin'] });
-    },
+  const listQuery = useQuery({
+    queryKey: ['branches-admin'],
+    queryFn: () => branchesApi.listAll(),
   });
 
-  const updateMutation = useMutation({
-    mutationFn: (id: string) =>
-      branchesApi.update(id, {
-        branchName: editForm.branchName,
-        phone: editForm.phone,
-        description: editForm.description || null,
-        address: editForm.address,
-        active: editForm.active,
-      }),
-    onSuccess: () => {
-      setEditingId(null);
-      void queryClient.invalidateQueries({ queryKey: ['branches-admin'] });
-    },
-  });
+  const filtered = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    return (listQuery.data ?? []).filter((branch) => {
+      if (status === 'active' && !branch.active) return false;
+      if (status === 'inactive' && branch.active) return false;
+      if (!keyword) return true;
+      return [branch.branchName, branch.address, branch.phone].some((field) =>
+        field.toLowerCase().includes(keyword),
+      );
+    });
+  }, [listQuery.data, search, status]);
 
-  function startEdit(b: Branch) {
-    setEditingId(b.id);
-    setEditForm({ branchName: b.branchName, phone: b.phone, description: b.description ?? '', address: b.address, active: b.active });
+  /*
+    Trang hiện tại có thể vượt quá số trang sau khi lọc (đang ở trang 3, gõ một từ khoá
+    chỉ còn 4 kết quả). Kẹp lại khi vẽ thay vì đặt lại state trong effect - ít một vòng
+    render, và người dùng bỏ bộ lọc thì quay về đúng trang cũ.
+    */
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pageItems = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  function openCreate() {
+    setEditing(null);
+    setFormOpen(true);
   }
 
-  return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">Chi nhánh</h1>
+  function openEdit(branch: Branch) {
+    setEditing(branch);
+    setFormOpen(true);
+  }
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          createMutation.mutate();
-        }}
-        className="flex flex-wrap items-end gap-3 rounded border border-border bg-surface p-4"
-      >
-        <h2 className="w-full font-medium">Thêm chi nhánh</h2>
-        <input required placeholder="Tên chi nhánh" value={form.branchName} onChange={(e) => setForm({ ...form, branchName: e.target.value })} className="rounded border border-border bg-surface px-3 py-2 text-sm" />
-        <input required placeholder="Số điện thoại" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="rounded border border-border bg-surface px-3 py-2 text-sm" />
-        <input required placeholder="Địa chỉ" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="min-w-[220px] rounded border border-border bg-surface px-3 py-2 text-sm" />
-        <input placeholder="Mô tả (tùy chọn)" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="min-w-[220px] rounded border border-border bg-surface px-3 py-2 text-sm" />
-        <button type="submit" disabled={createMutation.isPending} className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
-          Thêm
-        </button>
-      </form>
-
-      <div className="flex flex-col gap-3">
-        {pageItems.map((b) => (
-          <div key={b.id} className="rounded border border-border bg-surface p-4">
-            {editingId === b.id ? (
-              <div className="flex flex-wrap items-end gap-3">
-                <input value={editForm.branchName} onChange={(e) => setEditForm({ ...editForm, branchName: e.target.value })} className="rounded border border-border bg-surface px-3 py-2 text-sm" />
-                <input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="rounded border border-border bg-surface px-3 py-2 text-sm" />
-                <input value={editForm.address} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })} className="min-w-[220px] rounded border border-border bg-surface px-3 py-2 text-sm" />
-                <input value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} className="min-w-[220px] rounded border border-border bg-surface px-3 py-2 text-sm" />
-                <label className="flex items-center gap-1.5 text-sm">
-                  <input type="checkbox" checked={editForm.active} onChange={(e) => setEditForm({ ...editForm, active: e.target.checked })} />
-                  Hoạt động
-                </label>
-                <button type="button" disabled={updateMutation.isPending} onClick={() => updateMutation.mutate(b.id)} className="rounded bg-primary px-3 py-1.5 text-sm text-primary-foreground">
-                  Lưu
-                </button>
-                <button type="button" onClick={() => setEditingId(null)} className="rounded border border-border px-3 py-1.5 text-sm">
-                  Hủy
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="font-medium">
-                    {b.branchName}{' '}
-                    {!b.active && <span className="text-xs font-normal text-destructive">(ngừng hoạt động)</span>}
-                  </p>
-                  <p className="text-sm text-muted">
-                    {b.phone} · {b.address}
-                  </p>
-                  {b.description && <p className="text-sm text-muted">{b.description}</p>}
-                </div>
-                <div className="flex gap-2">
-                  <button type="button" onClick={() => startEdit(b)} className="rounded border border-border px-3 py-1.5 text-sm hover:bg-surface-muted">
-                    Sửa
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setHoursBranchId(hoursBranchId === b.id ? null : b.id)}
-                    className="rounded border border-border px-3 py-1.5 text-sm hover:bg-surface-muted"
-                  >
-                    Giờ mở cửa
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {hoursBranchId === b.id && <OpeningHoursEditor branch={b} />}
-          </div>
-        ))}
-
-        <Pagination
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          total={branches.length}
-        />
-      </div>
-    </div>
-  );
-}
-
-function OpeningHoursEditor({ branch }: { branch: Branch }) {
-  const queryClient = useQueryClient();
-
-  const [hours, setHours] = useState(() =>
-    WEEKDAYS.map((d) => {
-      const existing = branch.openingHours?.find((h) => h.dayOfWeek === d.dayOfWeek);
-      return { dayOfWeek: d.dayOfWeek, openTime: existing?.openTime ?? '08:00', closeTime: existing?.closeTime ?? '17:00' };
-    }),
-  );
-
-  const saveMutation = useMutation({
-    mutationFn: () => branchesApi.setOpeningHours(branch.id, hours),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['branches-admin'] });
-    },
-  });
-
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        saveMutation.mutate();
-      }}
-      className="mt-4 flex flex-col gap-2 border-t border-border pt-4"
-    >
-      <p className="text-sm text-muted">Chỉ áp dụng Thứ 2 - Thứ 6 (đóng cửa Thứ 7, Chủ nhật).</p>
-      {hours.map((h, idx) => (
-        <div key={h.dayOfWeek} className="flex items-center gap-3 text-sm">
-          <span className="w-16">{WEEKDAYS[idx].label}</span>
-          <input
-            type="text"
-            placeholder="HH:mm"
-            value={h.openTime}
-            onChange={(e) => setHours((prev) => prev.map((p, i) => (i === idx ? { ...p, openTime: e.target.value } : p)))}
-            className="w-24 rounded border border-border bg-surface px-2 py-1"
-          />
-          <span>—</span>
-          <input
-            type="text"
-            placeholder="HH:mm"
-            value={h.closeTime}
-            onChange={(e) => setHours((prev) => prev.map((p, i) => (i === idx ? { ...p, closeTime: e.target.value } : p)))}
-            className="w-24 rounded border border-border bg-surface px-2 py-1"
-          />
+  const columns: DataColumn<Branch>[] = [
+    {
+      key: 'branchName',
+      header: 'Chi nhánh',
+      render: (branch) => (
+        <div className="flex flex-col">
+          <span className="font-medium text-foreground">{branch.branchName}</span>
+          {branch.description && (
+            <span className="text-xs text-muted">{branch.description}</span>
+          )}
         </div>
-      ))}
-      <button
-        type="submit"
-        disabled={saveMutation.isPending}
-        className="mt-2 w-fit rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-      >
-        {saveMutation.isPending ? 'Đang lưu…' : 'Lưu giờ mở cửa'}
-      </button>
-      {saveMutation.isSuccess && <span className="text-sm text-success">Đã lưu.</span>}
-    </form>
+      ),
+    },
+    { key: 'phone', header: 'Điện thoại' },
+    { key: 'address', header: 'Địa chỉ', hideBelow: 'md' },
+    {
+      key: 'openingHours',
+      header: 'Giờ mở cửa',
+      hideBelow: 'lg',
+      /*
+        Gộp bằng đúng hàm mà thẻ chi nhánh ở trang công khai dùng - quản trị viên nhìn
+        thấy y hệt thứ khách nhìn thấy.
+      */
+      render: (branch) => {
+        const groups = groupOpeningHours(branch.openingHours ?? []);
+        if (groups.length === 0) {
+          return <span className="text-muted">Chưa đặt giờ</span>;
+        }
+        return (
+          <ul className="flex flex-col">
+            {groups.map((group) => (
+              <li key={group.days} className="whitespace-nowrap text-xs">
+                <span className="text-muted">{group.days}:</span> {group.time}
+              </li>
+            ))}
+          </ul>
+        );
+      },
+    },
+    {
+      key: 'active',
+      header: 'Trạng thái',
+      render: (branch) => (
+        <StatusBadge variant={branch.active ? 'success' : 'destructive'}>
+          {branch.active ? 'Hoạt động' : 'Ngừng hoạt động'}
+        </StatusBadge>
+      ),
+    },
+  ];
+
+  return (
+    <div className="flex flex-col gap-stack">
+      <PageHeader
+        title="Chi nhánh"
+        description="Thông tin liên hệ và giờ mở cửa của từng cơ sở. Giờ mở cửa quyết định khung giờ khách đặt lịch được."
+      />
+
+      <DataTable
+        columns={columns}
+        data={pageItems}
+        getRowId={(branch) => branch.id}
+        loading={listQuery.isLoading}
+        error={listQuery.isError}
+        onRetry={() => void listQuery.refetch()}
+        page={currentPage}
+        limit={PAGE_SIZE}
+        total={filtered.length}
+        onPageChange={setPage}
+        rowActions={(branch) => (
+          <div className="flex justify-end gap-1">
+            <Button variant="ghost" size="sm" onClick={() => openEdit(branch)}>
+              <Icon name="edit" className="h-4 w-4" />
+              Sửa
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setHoursBranch(branch)}>
+              <Icon name="clock" className="h-4 w-4" />
+              Giờ mở cửa
+            </Button>
+          </div>
+        )}
+        emptyTitle={
+          search || status ? 'Không có chi nhánh nào khớp bộ lọc' : 'Chưa có chi nhánh nào'
+        }
+        emptyDescription={
+          search || status
+            ? 'Thử bỏ bớt điều kiện lọc, hoặc tìm bằng tên khác.'
+            : 'Thêm chi nhánh đầu tiên để khách đặt lịch và nhân viên có nơi làm việc.'
+        }
+        emptyAction={<Button onClick={openCreate}>Thêm chi nhánh</Button>}
+        actions={
+          <Button onClick={openCreate}>
+            <Icon name="plus" className="h-4 w-4" />
+            Thêm chi nhánh
+          </Button>
+        }
+        toolbar={
+          <>
+            <SearchInput
+              label="Tìm chi nhánh"
+              placeholder="Tên, địa chỉ hoặc số điện thoại"
+              value={search}
+              onValueChange={(value) => {
+                setSearch(value);
+                setPage(1);
+              }}
+              className="w-64"
+            />
+            <Select
+              label="Trạng thái"
+              value={status}
+              onChange={(value) => {
+                setStatus(value as StatusFilter);
+                setPage(1);
+              }}
+              options={[
+                { value: '', label: 'Tất cả trạng thái' },
+                { value: 'active', label: 'Đang hoạt động' },
+                { value: 'inactive', label: 'Ngừng hoạt động' },
+              ]}
+            />
+          </>
+        }
+      />
+
+      <BranchModal open={formOpen} onClose={() => setFormOpen(false)} editing={editing} />
+
+      <OpeningHoursModal
+        open={hoursBranch !== null}
+        onClose={() => setHoursBranch(null)}
+        branch={hoursBranch}
+      />
+    </div>
   );
 }
