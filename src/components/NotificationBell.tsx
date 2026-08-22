@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { StaffNotification, staffNotificationsApi } from '@/api/staff-notifications.api';
-import { Badge, Button } from '@/components/basic';
+import { Badge, Button, Skeleton } from '@/components/basic';
 import { formatDateTime } from '@/utils/format';
 
 /** Nhịp hỏi lại số chưa đọc. 60s: đủ nhanh để không lỡ việc, đủ chậm để không tốn. */
@@ -145,8 +145,26 @@ export function NotificationBell() {
           </div>
 
           <div className="max-h-96 overflow-y-auto">
-            {listQuery.isLoading && <p className="px-4 py-6 text-center text-muted">Đang tải…</p>}
-            {!listQuery.isLoading && (listQuery.data?.data.length ?? 0) === 0 && (
+            {listQuery.isLoading && (
+              <div className="flex flex-col gap-2 px-4 py-4" aria-busy="true">
+                {[0, 1, 2].map((row) => (
+                  <Skeleton key={row} className="h-10 w-full" />
+                ))}
+              </div>
+            )}
+            {/*
+              "Không có thông báo nào" khi thật ra chuông không gọi được API là cách
+              nhanh nhất để một cảnh báo hết hạn thuốc trôi qua mà không ai biết.
+            */}
+            {listQuery.isError && (
+              <div className="flex flex-col items-center gap-2 px-4 py-6 text-center">
+                <p className="text-sm text-muted">Không tải được thông báo.</p>
+                <Button variant="secondary" size="sm" onClick={() => void listQuery.refetch()}>
+                  Thử lại
+                </Button>
+              </div>
+            )}
+            {!listQuery.isLoading && !listQuery.isError && (listQuery.data?.data.length ?? 0) === 0 && (
               <p className="px-4 py-6 text-center text-muted">Không có thông báo nào.</p>
             )}
             <ul className="divide-y divide-border">

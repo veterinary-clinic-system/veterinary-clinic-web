@@ -74,6 +74,7 @@ export function AssignDoctorModal({
           onChange={setDoctorId}
           options={(doctorsQuery.data ?? []).map((d) => ({ value: d.id, label: d.fullName }))}
           placeholder="— Chọn bác sĩ —"
+          error={doctorsQuery.isError ? 'Không tải được danh sách bác sĩ.' : undefined}
         />
         <Input
           label="Giờ khám (tùy chọn)"

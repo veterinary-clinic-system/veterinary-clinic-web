@@ -55,12 +55,14 @@ export function FollowUpSection({
           value={branchId}
           onChange={setBranchId}
           options={(branchesQuery.data ?? []).map((b) => ({ value: b.id, label: b.branchName }))}
+          error={branchesQuery.isError ? 'Không tải được danh sách chi nhánh.' : undefined}
         />
         <Select
           label="Bác sĩ"
           value={doctorId}
           onChange={setDoctorId}
           options={(doctorsQuery.data ?? []).map((d) => ({ value: d.id, label: d.fullName }))}
+          error={doctorsQuery.isError ? 'Không tải được danh sách bác sĩ.' : undefined}
         />
         <Select
           label="Dịch vụ"
@@ -70,6 +72,7 @@ export function FollowUpSection({
             value: s.id,
             label: s.item.itemName,
           }))}
+          error={servicesQuery.isError ? 'Không tải được danh mục dịch vụ.' : undefined}
         />
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-muted">Thời gian</span>

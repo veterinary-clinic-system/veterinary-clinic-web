@@ -121,6 +121,9 @@ export function DiagnosesSection({ record, readOnly }: { record: MedicalRecord; 
               onChange={setDiseaseId}
               options={diseaseOptions}
               hint="Bỏ trống nếu bệnh chưa có trong danh mục."
+              error={
+                diseasesQuery.isError ? 'Không tải được danh mục bệnh. Tải lại trang để thử lại.' : undefined
+              }
             />
           </div>
           <Input

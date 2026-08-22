@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { branchesApi } from '@/api/branches.api';
 import { doctorsApi } from '@/api/doctors.api';
 import { appointmentsApi } from '@/api/appointments.api';
-import { EmptyState, Skeleton } from '@/components/basic';
+import { EmptyState, ErrorState, Skeleton } from '@/components/basic';
 import { SlotStatus } from '@/types/enums';
 import { SLOT_STATUS_LABEL_VI } from '@/utils/labels';
 import { DoctorAbsenceModal } from '../calendar/DoctorAbsenceModal';
@@ -112,10 +112,11 @@ export function StaffCalendarPage() {
         : `Tuần chứa ${format(anchor, 'dd/MM/yyyy')}`;
 
   const needsDoctor = view !== 'month';
-  const isLoading =
-    (view === 'week' && weekQuery.isLoading) ||
-    (view === 'day' && dayQuery.isLoading) ||
-    (view === 'month' && monthQuery.isLoading);
+  /*
+    Ba truy vấn nhưng mỗi lúc chỉ một cái đang chạy - gom lại một chỗ để trạng thái
+    tải, trạng thái lỗi và nút "Thử lại" cùng đọc từ đúng cái của chế độ hiện tại.
+  */
+  const activeQuery = view === 'week' ? weekQuery : view === 'day' ? dayQuery : monthQuery;
 
   return (
     <div className="flex flex-col gap-6">
@@ -233,7 +234,7 @@ export function StaffCalendarPage() {
         </div>
       )}
 
-      {isLoading ? (
+      {activeQuery.isLoading ? (
         /* Khối lưới cao bằng lịch thật - trang không nhảy một đoạn khi dữ liệu về. */
         <Skeleton className="h-[28rem] w-full rounded-xl" />
       ) : !branchId ? (
@@ -245,6 +246,18 @@ export function StaffCalendarPage() {
         <EmptyState
           title={`Chọn bác sĩ để xem lịch theo ${VIEW_LABELS[view].toLowerCase()}`}
           description="Chế độ xem này hiển thị khung giờ của một bác sĩ."
+        />
+      ) : activeQuery.isError ? (
+        /*
+          Lịch rỗng và lịch KHÔNG TẢI ĐƯỢC là hai câu khác nhau. Bác sĩ mở trang này
+          lúc 7h sáng: "hôm nay chưa có lịch hẹn nào" là tin được, và nếu đó thật ra
+          là một lời gọi API hỏng thì người ta đi pha cà phê trong khi phòng chờ đầy
+          người.
+        */
+        <ErrorState
+          title="Không tải được lịch làm việc"
+          description="Máy chủ không trả lời. Đây KHÔNG có nghĩa là lịch trống."
+          onRetry={() => void activeQuery.refetch()}
         />
       ) : view === 'month' ? (
         <MonthGrid

@@ -112,6 +112,11 @@ export function VaccinationsSection({
                 label: `${vaccine.item.itemName} (${vaccine.diseasePrevented})`,
               })),
             ]}
+            error={
+              vaccinesQuery.isError
+                ? 'Không tải được danh mục vaccine. Tải lại trang để thử lại.'
+                : undefined
+            }
           />
           <Input
             label="Ghi chú"

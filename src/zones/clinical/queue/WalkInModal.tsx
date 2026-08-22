@@ -232,6 +232,7 @@ export function WalkInModal({
                   label: s.speciesName,
                 }))}
                 placeholder="— Chọn loài —"
+                error={speciesQuery.isError ? 'Không tải được danh mục loài.' : undefined}
               />
               <Select
                 label="Giống"
@@ -243,6 +244,7 @@ export function WalkInModal({
                 }))}
                 placeholder="— Chọn giống —"
                 disabled={!form.speciesId}
+                error={breedsQuery.isError ? 'Không tải được danh mục giống.' : undefined}
               />
               <Select
                 label="Giới tính"
@@ -269,6 +271,11 @@ export function WalkInModal({
             }))}
           placeholder="— Chọn dịch vụ —"
           required
+          /*
+            Ô bắt buộc: danh mục hỏng thì lễ tân nhìn thấy một ô trống không chọn được
+            gì và một biểu mẫu không gửi được, mà không có chỗ nào nói vì sao.
+          */
+          error={servicesQuery.isError ? 'Không tải được danh mục dịch vụ.' : undefined}
         />
 
         <Select
@@ -280,6 +287,7 @@ export function WalkInModal({
             ...(doctorsQuery.data ?? []).map((d) => ({ value: d.id, label: d.fullName })),
           ]}
           hint="Để tự động: hệ thống xếp luôn khung giờ trống sớm nhất của cả chi nhánh; hết chỗ thì khách mới vào hàng chờ."
+          error={doctorsQuery.isError ? 'Không tải được danh sách bác sĩ.' : undefined}
         />
 
         <Select

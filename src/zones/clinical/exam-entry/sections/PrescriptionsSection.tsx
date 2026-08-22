@@ -147,6 +147,11 @@ export function PrescriptionsSection({
                   value={line.medicationId}
                   onChange={(value) => updateLine(index, { medicationId: value })}
                   options={medicationOptions}
+                  error={
+                    medicationsQuery.isError
+                      ? 'Không tải được danh mục thuốc. Tải lại trang để thử lại.'
+                      : undefined
+                  }
                 />
                 <Input
                   type="number"

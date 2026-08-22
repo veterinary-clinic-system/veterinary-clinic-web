@@ -32,16 +32,25 @@ export function StaffTopbar({ onOpenMobileNav }: StaffTopbarProps) {
     Chỉ hỏi danh sách chi nhánh khi tài khoản CÓ gắn chi nhánh. ADMIN không gắn chi
     nhánh nào thì không cần gọi API chỉ để hiện chữ "Toàn hệ thống".
   */
-  const { data: branches } = useQuery({
+  const branchesQuery = useQuery({
     queryKey: ['branches'],
     queryFn: branchesApi.list,
     enabled: Boolean(user?.branchId),
     staleTime: 10 * 60_000,
   });
 
-  const branchName = user?.branchId
-    ? (branches?.find((branch) => branch.id === user.branchId)?.branchName ?? 'Đang tải...')
-    : 'Toàn hệ thống';
+  /*
+    Ba trạng thái, không phải hai. Bản trước hiện "Đang tải..." cho cả trường hợp lời
+    gọi đã hỏng - tức là một dòng chữ đứng yên vĩnh viễn, trong khi ngữ cảnh chi nhánh
+    là thứ quyết định người dùng đang thao tác trên kho và hàng chờ của ai.
+  */
+  const branches = branchesQuery.data;
+
+  const branchName = !user?.branchId
+    ? 'Toàn hệ thống'
+    : branchesQuery.isError
+      ? 'Không rõ chi nhánh'
+      : (branches?.find((branch) => branch.id === user.branchId)?.branchName ?? 'Đang tải...');
 
   const displayName = user?.phone ?? 'Tài khoản';
   const roleLabel = user ? ROLE_LABEL_VI[user.role as Role] : '';

@@ -464,6 +464,18 @@ Hai tab nguy hiểm nhất được khoá bằng test riêng (`MedicalHistoryTab
 `VaccinationTab.test.tsx`): với sổ tiêm chủng, "chưa có mũi nào" đọc ra là *cần tiêm*, nên
 một lời gọi hỏng bị hiểu nhầm thành sổ rỗng có thể dẫn tới một mũi tiêm lặp.
 
+Ranh giới này **không chỉ áp cho bảng.** Ba dạng bề mặt khác cũng phải tách lỗi khỏi rỗng:
+
+| Bề mặt | Cách thể hiện |
+|---|---|
+| Lưới và lịch (`/staff/calendar`, lưới hàng ở `/staff/pos`) | `ErrorState` thay cả khối, kèm câu nói thẳng rằng đây không phải trạng thái rỗng. `StaffCalendarPage.test.tsx` giữ ranh giới đó |
+| Ô chọn nạp từ danh mục | `error` của `Select`/`Combobox` — một dòng dưới ô, nối vào input bằng `aria-describedby`. Danh mục bệnh / thuốc / vaccine / dịch vụ / loài / giống / bác sĩ đều đã nối |
+| Khối nội dung trang công khai | `SectionLoadError` trong `HomePage` — giọng nhẹ hơn `ErrorState` (không viền đỏ, `role="status"`), vì người đọc là khách chưa quen phòng khám. Nhưng khối vẫn phải Ở LẠI: giấu luôn cả mục "Đội ngũ bác sĩ" thì khách kết luận phòng khám không công bố bác sĩ nào |
+
+Ô chọn **bắt buộc** là chỗ đau nhất trong ba dạng trên: danh mục hỏng thì người dùng nhìn
+thấy một ô trống không chọn được gì và một biểu mẫu không gửi được, mà không có chỗ nào
+nói vì sao (`WalkInModal`, ô "Dịch vụ").
+
 ### 5.6 Khả năng tiếp cận - WCAG 2.1 AA
 
 - Mọi thứ bấm được đều tới được bằng `Tab`, có vòng focus nhìn thấy.

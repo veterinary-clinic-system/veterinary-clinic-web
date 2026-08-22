@@ -7,6 +7,7 @@ import {
   Badge,
   Button,
   EmptyState,
+  ErrorState,
   Modal,
   Select,
   SkeletonCards,
@@ -219,6 +220,8 @@ export function PosPage() {
         <ProductGrid
           products={productsQuery.data ?? []}
           loading={productsQuery.isLoading}
+          error={productsQuery.isError}
+          onRetry={() => void productsQuery.refetch()}
           onPick={(product) => addItem.mutate(product.itemId)}
         />
 
@@ -384,14 +387,33 @@ export function PosPage() {
 function ProductGrid({
   products,
   loading,
+  error,
+  onRetry,
   onPick,
 }: {
   products: PosProduct[];
   loading: boolean;
+  error: boolean;
+  onRetry: () => void;
   onPick: (product: PosProduct) => void;
 }) {
   if (loading) {
     return <SkeletonCards count={6} label="Đang tải danh sách sản phẩm" />;
+  }
+  /*
+    Nhánh này phải đứng TRƯỚC nhánh rỗng. Câu rỗng bên dưới bảo thu ngân đi kiểm tra
+    xem mặt hàng có tồn tại chi nhánh này không - một lời khuyên đúng khi kho thật sự
+    không có hàng, và là một cuộc điều tra vô ích khi thứ hỏng là mạng. Khách đang
+    đứng ở quầy đợi.
+  */
+  if (error) {
+    return (
+      <ErrorState
+        title="Không tải được danh sách mặt hàng"
+        description="Máy chủ không trả lời. Chưa thể kết luận chi nhánh có mặt hàng này hay không."
+        onRetry={onRetry}
+      />
+    );
   }
   if (products.length === 0) {
     return (
