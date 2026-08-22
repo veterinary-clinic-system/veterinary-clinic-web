@@ -450,6 +450,20 @@ giữa "máy chủ không trả lời" và "kho hết sạch hàng". `Table`, `D
 `TabTableStates` đều tách hai nhánh này, và `src/components/basic/Table.test.tsx` giữ cho
 chúng không nhập lại làm một.
 
+Ranh giới đó chỉ có tác dụng nếu **mọi** bảng được nối vào. Một trang có nhiều lời gọi API
+độc lập thì mỗi lời gọi phải mang nhánh lỗi của nó: hồ sơ thú cưng phía nhân viên có năm
+tab, năm `useQuery` riêng, nên năm bảng đều nhận `error`/`onRetry`. Ở đó nhánh lỗi dùng
+thêm `errorTitle` để nói ra thứ gì hỏng — "Không tải được sổ tiêm chủng" thay vì câu chung
+"Không tải được dữ liệu", vì bác sĩ đang đứng trước con vật cần biết ngay là mình đang
+thiếu sổ tiêm hay thiếu bệnh sử. Ngược lại, khi nhiều bảng trên một trang đọc CHUNG một
+lời gọi (`/staff/inventory/alerts` có bốn nhóm cảnh báo từ một API), nhánh lỗi đặt ở cấp
+trang: bốn hộp lỗi giống hệt nhau xếp chồng không nói thêm gì mà chỉ đẩy nút "Thử lại"
+xuống dưới màn hình.
+
+Hai tab nguy hiểm nhất được khoá bằng test riêng (`MedicalHistoryTab.test.tsx`,
+`VaccinationTab.test.tsx`): với sổ tiêm chủng, "chưa có mũi nào" đọc ra là *cần tiêm*, nên
+một lời gọi hỏng bị hiểu nhầm thành sổ rỗng có thể dẫn tới một mũi tiêm lặp.
+
 ### 5.6 Khả năng tiếp cận - WCAG 2.1 AA
 
 - Mọi thứ bấm được đều tới được bằng `Tab`, có vòng focus nhìn thấy.

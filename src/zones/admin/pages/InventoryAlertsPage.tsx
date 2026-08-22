@@ -3,11 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { branchesApi } from '@/api/branches.api';
 import { inventoryApi } from '@/api/inventory.api';
-import { Badge, Button, ClientPagedTable, Select } from '@/components/basic';
+import { Badge, Button, ClientPagedTable, ErrorState, Select, Skeleton } from '@/components/basic';
 import type { Column } from '@/components/basic';
 import { InventoryAlertRow } from '@/types/models';
 import { formatDate } from '@/utils/format';
-import { EXPIRING_SOON_DAYS, EXPIRY_BADGE_VARIANT, expiryLabel, expiryLevel } from '@/utils/inventory';
+import {
+  EXPIRING_SOON_DAYS,
+  EXPIRY_BADGE_VARIANT,
+  expiryLabel,
+  expiryLevel,
+} from '@/utils/inventory';
 
 interface AlertGroup {
   key: string;
@@ -143,34 +148,53 @@ export function InventoryAlertsPage() {
           onChange={setBranchId}
           options={(branchesQuery.data ?? []).map((b) => ({ value: b.id, label: b.branchName }))}
         />
-        <p className="text-sm text-muted">
-          {alertsQuery.isLoading
-            ? 'Đang tải…'
-            : `${totalAlerts} cảnh báo. Hệ thống cũng tự quét mỗi sáng và đẩy thông báo cho người phụ trách kho.`}
-        </p>
+        {alertsQuery.isLoading ? (
+          <Skeleton className="h-4 w-96 max-w-full" />
+        ) : (
+          <p className="text-sm text-muted">
+            {alertsQuery.isError
+              ? 'Chưa đếm được cảnh báo — lời gọi tới máy chủ đã hỏng.'
+              : `${totalAlerts} cảnh báo. Hệ thống cũng tự quét mỗi sáng và đẩy thông báo cho người phụ trách kho.`}
+          </p>
+        )}
       </div>
 
-      {groups.map((group) => (
-        <section key={group.key} className="flex flex-col gap-2">
-          <div className="flex items-baseline gap-3">
-            <h2 className="text-lg font-medium">{group.title}</h2>
-            <Badge variant={group.rows.length > 0 ? 'warning' : 'outline'}>
-              {group.rows.length}
-            </Badge>
-          </div>
-          <p className="text-sm text-muted">{group.hint}</p>
-          {/* Mỗi nhóm cảnh báo có thể dài hàng trăm dòng khi kho lớn - phân trang
+      {/*
+        Bốn nhóm dưới đây đọc CHUNG một lời gọi API. Hỏng thì hỏng cả bốn, nên đặt
+        nhánh lỗi ở đây thay vì ở từng bảng: bốn hộp lỗi giống hệt nhau xếp chồng
+        không nói thêm được gì so với một hộp, mà lại đẩy nút "Thử lại" xuống dưới
+        màn hình. Bộ chọn chi nhánh phía trên vẫn còn - đổi chi nhánh là một cách
+        thoát khỏi lỗi ngoài việc thử lại.
+      */}
+      {alertsQuery.isError ? (
+        <ErrorState
+          title="Không tải được cảnh báo tồn kho"
+          description="Máy chủ không trả lời. Chưa thể kết luận kho có cảnh báo nào hay không."
+          onRetry={() => void alertsQuery.refetch()}
+        />
+      ) : (
+        groups.map((group) => (
+          <section key={group.key} className="flex flex-col gap-2">
+            <div className="flex items-baseline gap-3">
+              <h2 className="text-lg font-medium">{group.title}</h2>
+              <Badge variant={group.rows.length > 0 ? 'warning' : 'outline'}>
+                {group.rows.length}
+              </Badge>
+            </div>
+            <p className="text-sm text-muted">{group.hint}</p>
+            {/* Mỗi nhóm cảnh báo có thể dài hàng trăm dòng khi kho lớn - phân trang
               riêng từng nhóm, đổi chi nhánh thì cả ba nhóm về trang 1. */}
-          <ClientPagedTable
-            columns={columnsFor(group)}
-            data={group.rows}
-            getRowId={(row) => `${group.key}:${row.batchId ?? row.inventoryItemId}`}
-            loading={alertsQuery.isLoading}
-            emptyMessage="Không có cảnh báo nào ở nhóm này."
-            resetKeys={[branchId]}
-          />
-        </section>
-      ))}
+            <ClientPagedTable
+              columns={columnsFor(group)}
+              data={group.rows}
+              getRowId={(row) => `${group.key}:${row.batchId ?? row.inventoryItemId}`}
+              loading={alertsQuery.isLoading}
+              emptyMessage="Không có cảnh báo nào ở nhóm này."
+              resetKeys={[branchId]}
+            />
+          </section>
+        ))
+      )}
     </div>
   );
 }

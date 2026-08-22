@@ -53,6 +53,9 @@ export function InvoicesTab({ petId }: { petId: string }) {
       data={query.data ?? []}
       getRowId={(row) => row.invoiceId}
       loading={query.isLoading}
+      error={query.isError}
+      errorTitle="Không tải được hoá đơn của thú cưng"
+      onRetry={() => void query.refetch()}
       emptyMessage="Thú cưng chưa có hóa đơn nào."
     />
   );

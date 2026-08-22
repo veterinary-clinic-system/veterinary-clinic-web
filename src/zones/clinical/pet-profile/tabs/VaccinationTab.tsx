@@ -92,6 +92,9 @@ export function VaccinationTab({ petId }: { petId: string }) {
       data={query.data ?? []}
       getRowId={(row) => row.vaccination.id}
       loading={query.isLoading}
+      error={query.isError}
+      errorTitle="Không tải được sổ tiêm chủng"
+      onRetry={() => void query.refetch()}
       emptyMessage="Thú cưng chưa có mũi tiêm nào được ghi nhận."
     />
   );

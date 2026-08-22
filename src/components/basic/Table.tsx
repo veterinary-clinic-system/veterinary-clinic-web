@@ -35,6 +35,14 @@ export interface TableProps<T> {
    */
   error?: boolean;
   onRetry?: () => void;
+  /**
+   * Tiêu đề của trạng thái lỗi. Mặc định là câu chung của `ErrorState`.
+   *
+   * Đáng đặt riêng khi trên cùng một trang có nhiều bảng độc lập - hồ sơ thú cưng có
+   * năm tab, mỗi tab một lời gọi API riêng. "Không tải được dữ liệu" ở đó không cho
+   * bác sĩ biết thứ gì đã hỏng; "Không tải được sổ tiêm chủng" thì có.
+   */
+  errorTitle?: string;
   emptyMessage?: string;
   className?: string;
 }
@@ -68,6 +76,7 @@ export function Table<T>({
   loading = false,
   error = false,
   onRetry,
+  errorTitle,
   emptyMessage = 'Không có dữ liệu',
   className,
 }: TableProps<T>) {
@@ -91,7 +100,7 @@ export function Table<T>({
       dữ liệu chỉ tạo ra một bộ khung rỗng trông như đang chờ, trong khi thứ người dùng
       cần lúc này là một câu giải thích và một nút bấm. Cùng cách `DataTable` làm.
     */
-    return <ErrorState onRetry={onRetry} className={className} />;
+    return <ErrorState title={errorTitle} onRetry={onRetry} className={className} />;
   }
 
   return (

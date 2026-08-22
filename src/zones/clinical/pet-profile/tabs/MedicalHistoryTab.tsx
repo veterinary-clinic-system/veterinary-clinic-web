@@ -76,6 +76,9 @@ export function MedicalHistoryTab({ petId }: { petId: string }) {
       data={query.data ?? []}
       getRowId={(row) => row.medicalRecordId}
       loading={query.isLoading}
+      error={query.isError}
+      errorTitle="Không tải được bệnh sử của thú cưng"
+      onRetry={() => void query.refetch()}
       emptyMessage="Thú cưng chưa có lần khám nào được ghi hồ sơ."
     />
   );

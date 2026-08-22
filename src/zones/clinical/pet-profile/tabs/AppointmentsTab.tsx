@@ -59,6 +59,9 @@ export function AppointmentsTab({ petId }: { petId: string }) {
       data={query.data ?? []}
       getRowId={(row) => row.appointmentId}
       loading={query.isLoading}
+      error={query.isError}
+      errorTitle="Không tải được lịch hẹn của thú cưng"
+      onRetry={() => void query.refetch()}
       emptyMessage="Thú cưng chưa có lịch hẹn nào."
     />
   );

@@ -216,6 +216,9 @@ function PetsTab({ customerId }: { customerId: string }) {
       data={query.data ?? []}
       getRowId={(row) => row.id}
       loading={query.isLoading}
+      error={query.isError}
+      errorTitle="Không tải được danh sách thú cưng"
+      onRetry={() => void query.refetch()}
       emptyMessage="Khách hàng chưa có thú cưng nào."
     />
   );
@@ -281,6 +284,9 @@ function AppointmentsTab({ customerId }: { customerId: string }) {
       data={query.data ?? []}
       getRowId={(row) => row.appointmentId}
       loading={query.isLoading}
+      error={query.isError}
+      errorTitle="Không tải được lịch hẹn của khách hàng"
+      onRetry={() => void query.refetch()}
       emptyMessage="Khách hàng chưa có lịch hẹn nào."
     />
   );
@@ -356,6 +362,9 @@ function MedicalHistoryTab({ customerId }: { customerId: string }) {
       data={query.data ?? []}
       getRowId={(row) => row.medicalRecordId}
       loading={query.isLoading}
+      error={query.isError}
+      errorTitle="Không tải được lịch sử khám"
+      onRetry={() => void query.refetch()}
       emptyMessage="Khách hàng chưa có lần khám nào được ghi hồ sơ."
     />
   );
@@ -426,6 +435,9 @@ function TransactionsTab({ customerId }: { customerId: string }) {
         data={query.data ?? []}
         getRowId={(row) => row.invoiceId}
         loading={query.isLoading}
+        error={query.isError}
+        errorTitle="Không tải được lịch sử giao dịch"
+        onRetry={() => void query.refetch()}
         emptyMessage="Khách hàng chưa có giao dịch nào."
       />
       {(query.data?.length ?? 0) > 0 && (
@@ -505,6 +517,9 @@ function PurchasesTab({ customerId }: { customerId: string }) {
         data={query.data ?? []}
         getRowId={(row) => row.invoiceId}
         loading={query.isLoading}
+        error={query.isError}
+        errorTitle="Không tải được lịch sử mua hàng"
+        onRetry={() => void query.refetch()}
         emptyMessage="Khách hàng chưa mua hàng lẻ tại quầy lần nào."
       />
       {(query.data?.length ?? 0) > 0 && (
