@@ -5,22 +5,13 @@ import { Icon, cn } from '@/components/basic';
 export interface SectionHeaderProps {
   title: string;
   description?: string;
-  /** Liên kết "xem tất cả" - luôn ở cuối tiêu đề, không phải ở cuối danh sách. */
+  
   linkTo?: string;
   linkLabel?: string;
   children?: ReactNode;
   className?: string;
 }
 
-/**
- * Tiêu đề của một mục trên trang công khai.
- *
- * Liên kết "xem tất cả" đặt CẠNH tiêu đề chứ không dưới danh sách: người quét trang
- * quyết định có xem hết mục này hay không ngay khi đọc tiêu đề, chứ không phải sau khi
- * đã cuộn qua sáu thẻ.
- *
- * Luôn phát ra `h2` - trang công khai chỉ có một `h1` ở đầu trang.
- */
 export function SectionHeader({
   title,
   description,

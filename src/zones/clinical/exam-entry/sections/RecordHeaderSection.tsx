@@ -6,7 +6,6 @@ import { MedicalRecord } from '@/types/models';
 import { extractApiMessage } from '../api-utils';
 import { Section } from '../Section';
 
-/** Khối hành chính (FR-07): lý do khám + tình trạng chung + ghi chú của hồ sơ. */
 export function RecordHeaderSection({
   record,
   readOnly,

@@ -6,27 +6,16 @@ import { petAgeLabel, petAlerts, petBreedLabel } from './pet-display';
 
 export interface PetCardProps {
   pet: Pet;
-  /** Lịch hẹn sắp tới gần nhất của bé này, nếu có. */
+
   nextAppointment?: Appointment;
 }
 
-/**
- * Thẻ thú cưng - màn hình quan trọng nhất của chủ nuôi được xây từ những thẻ này.
- *
- * Thông tin xếp theo thứ tự người nuôi hỏi khi nhìn vào tên một bé: **bé nào** (ảnh,
- * tên, giống, tuổi), **có gì cần lưu ý** (dị ứng, bệnh mãn tính), **sắp tới có hẹn
- * không**. Cân nặng và giới tính để trong hồ sơ - chúng không đổi cách hành xử của
- * người đọc ở màn hình danh sách.
- *
- * Cả thẻ là một liên kết tới hồ sơ, và nút "Đặt lịch" nằm ngoài liên kết đó: lồng một
- * nút trong một liên kết là HTML không hợp lệ và làm bàn phím đi qua hai lần.
- */
 export function PetCard({ pet, nextAppointment }: PetCardProps) {
   const age = petAgeLabel(pet.birthDate);
   const alerts = petAlerts(pet);
 
   return (
-    <article className="flex flex-col rounded-xl border border-border bg-surface p-5">
+    <article className="owner-pet-card flex flex-col rounded-xl border border-border bg-surface p-5">
       <Link
         to={`/my/pets/${pet.id}`}
         className="flex items-start gap-3.5 rounded-lg focus-visible:outline-none"
@@ -78,11 +67,7 @@ export function PetCard({ pet, nextAppointment }: PetCardProps) {
         >
           Xem hồ sơ
         </Link>
-        {/*
-          BookingPage đọc `location.state.petId` và chọn sẵn thú cưng này ở bước
-          "Thông tin" (xem `BookingHandoffState`) - chủ nuôi bỏ qua được cả phần khai
-          báo thông tin bé lẫn thông tin của chính mình.
-        */}
+        {}
         <Link
           to="/booking"
           state={{ petId: pet.id }}

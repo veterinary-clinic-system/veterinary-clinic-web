@@ -7,7 +7,6 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
   hint?: string;
 }
 
-/** Same label/error/hint pattern as Input, for multi-line fields (symptom free-text, notes, diagnosis text). */
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
   { label, error, hint, id, className, rows = 4, ...rest },
   ref,

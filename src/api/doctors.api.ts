@@ -4,7 +4,7 @@ import { PaginatedResult, StaffUser } from '@/types/models';
 export interface DoctorPublic {
   id: string;
   fullName: string;
-  avatarUrl: string | null;
+  avatarUrl: string;
   yearOfStart: number | null;
   specialization: string[];
   branch: { id: string; branchName: string };

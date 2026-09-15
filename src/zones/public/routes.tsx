@@ -1,17 +1,6 @@
 import { lazy } from 'react';
 import { Route } from 'react-router-dom';
 
-/**
- * ZONE CÔNG KHAI - khách chưa đăng nhập: giới thiệu phòng khám, bảng giá, đội ngũ,
- * biểu mẫu đặt lịch, đăng nhập/đăng ký.
- *
- * Mỗi trang là một `lazy()` riêng nên chỉ tải khi có người mở tới. Cấu hình
- * `manualChunks` trong vite.config.ts gom chúng lại thành MỘT gói theo zone: 8 gói tí
- * hon cho 8 trang của cùng một luồng chỉ đổi một lần tải lớn thành tám lần tải nhỏ,
- * trong khi khách đi qua zone này gần như luôn xem vài trang liền nhau.
- *
- * Đây là ranh giới CODE, không phải ranh giới URL - đường dẫn giữ nguyên như cũ.
- */
 const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
 const ServicesPage = lazy(() =>
   import('./pages/ServicesPage').then((m) => ({ default: m.ServicesPage })),
@@ -31,12 +20,6 @@ const RegisterPage = lazy(() =>
   import('./pages/RegisterPage').then((m) => ({ default: m.RegisterPage })),
 );
 
-/**
- * Trả về mảng `<Route>` chứ không phải một component: `<Routes>` của react-router chỉ
- * đọc được cây `<Route>` con trực tiếp, nên một zone bọc trong component sẽ cần
- * `<Routes>` lồng và một đường dẫn splat - thừa, vì zone ở đây không sở hữu một tiền
- * tố URL riêng nào.
- */
 export function publicRoutes() {
   return [
     <Route key="home" path="/" element={<HomePage />} />,

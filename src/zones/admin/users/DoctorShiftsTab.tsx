@@ -5,13 +5,6 @@ import { EmptyState, ErrorState, Select, Skeleton } from '@/components/basic';
 import { BreaksPanel } from './BreaksPanel';
 import { ShiftsPanel } from './ShiftsPanel';
 
-/**
- * Lịch làm việc của bác sĩ: ca lặp theo tuần bên trái, nghỉ ngoài lịch bên phải.
- *
- * Chưa chọn bác sĩ thì hiện một trạng thái rỗng có hướng dẫn, không phải một khoảng
- * trắng - người mới vào trang này cần biết là còn thiếu một bước, chứ không phải đoán
- * xem trang có hỏng không.
- */
 export function DoctorShiftsTab() {
   const [doctorId, setDoctorId] = useState('');
 

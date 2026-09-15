@@ -4,20 +4,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Table } from './Table';
 import type { Column } from './Table';
 
-/**
- * Ba trạng thái của một bảng phải PHÂN BIỆT ĐƯỢC với nhau.
- *
- * Bài kiểm tra này tồn tại vì bản trước của `Table` chỉ có hai: đang tải và "Không có dữ
- * liệu". Khi API hỏng, bảng rơi vào nhánh thứ hai - tức là màn hình tồn kho nói với thủ
- * kho rằng chi nhánh không có mặt hàng nào, trong khi thật ra máy chủ không trả lời. Ai
- * gỡ trạng thái lỗi đi sẽ làm đỏ bài này.
- */
-
-/*
-  Dọn DOM sau mỗi bài: vitest chạy với `globals: false` nên testing-library không tự gắn
-  `afterEach` giúp. Thiếu dòng này, cây của bài trước còn nguyên trong document và
-  `getByRole` kêu "tìm thấy nhiều phần tử".
-*/
 afterEach(cleanup);
 
 interface Row {
@@ -55,11 +41,7 @@ describe('Table', () => {
   });
 
   it('lỗi thắng cả dữ liệu cũ còn sót lại', () => {
-    /*
-      `placeholderData` của react-query giữ lại kết quả của lần lọc trước trong lúc lần
-      lọc mới đang chạy. Nếu lần mới hỏng mà bảng vẫn vẽ dữ liệu cũ, người dùng đang nhìn
-      một danh sách KHÔNG khớp với bộ lọc đang hiện trên màn hình.
-    */
+    
     render(<Table columns={COLUMNS} data={ROWS} getRowId={(row) => row.id} error />);
 
     expect(screen.queryByText('Luna')).toBeNull();

@@ -5,12 +5,6 @@ import { DayAvailability, SlotInfo } from '@/types/models';
 import { slotFitsService } from '../slot-fit';
 import { SelectedSlot } from '../types';
 
-/**
- * Bảng khung giờ của một tuần: hàng là giờ, cột là ngày.
- *
- * Tách khỏi `StepSchedule` vì đây là phần duy nhất phải quyết định trạng thái của từng
- * ô, và luật đó (`slotFitsService`) đã được kiểm thử riêng.
- */
 export function SlotGrid({
   days,
   serviceDuration,
@@ -22,7 +16,7 @@ export function SlotGrid({
   selectedSlot: SelectedSlot | null;
   onSelect: (slot: SelectedSlot) => void;
 }) {
-  /* Hợp của mọi giờ bắt đầu trong tuần - các ngày có thể mở cửa lệch nhau. */
+  
   const rowTimes = Array.from(new Set(days.flatMap((d) => d.slots.map((s) => s.start)))).sort();
 
   return (
@@ -99,15 +93,11 @@ function SlotCell({
   }
 
   const isPast = slot.status === SlotStatus.PAST;
-  /*
-    Ô trống nhưng dịch vụ dài không đủ chỗ thì cũng không chọn được - backend sẽ từ
-    chối (`slotsCovering`), nên khoá luôn ở đây thay vì để khách chọn xong mới nhận lỗi.
-  */
+  
   const fits = slotFitsService(day.slots, slot, serviceDuration);
   const isFree = slot.status === SlotStatus.FREE && fits;
   const tooShort = slot.status === SlotStatus.FREE && !fits;
 
-  /* Lý do khoá nói bằng CHỮ chứ không chỉ bằng màu - và cùng chuỗi cho cả chuột lẫn trình đọc màn hình. */
   const reason = isPast
     ? 'Đã qua - chỉ đặt được từ ngày mai'
     : tooShort

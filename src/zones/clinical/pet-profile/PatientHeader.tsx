@@ -3,19 +3,19 @@ import { Alert, Avatar, Badge, Button, Icon } from '@/components/basic';
 import { Pet } from '@/types/models';
 import { GENDER_LABEL_VI } from '@/utils/display';
 import { petAgeLabel } from '@/zones/owner/components/pet-display';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { ImageUpload } from '@/components/ImageUpload';
+import { petsApi } from '@/api/pets.api';
 
-/**
- * Phần đầu hồ sơ bệnh nhân, phía lâm sàng.
- *
- * Khác bản của chủ nuôi ở chỗ nó là một **thanh nhận dạng bệnh nhân**: mọi thứ bác sĩ
- * cần xác nhận trước khi chạm vào con vật đều nằm trên một dòng - tên, mã, loài/giống,
- * tuổi, giới tính, cân nặng, chủ nuôi và số điện thoại. Cân nặng đặc biệt quan trọng:
- * gần như mọi liều thuốc thú y đều tính theo kg, nên nó không được nằm sau một tab.
- *
- * Cảnh báo y tế nằm NGOÀI hệ thống tab và luôn hiển thị: bác sĩ phải thấy nó dù đang mở
- * tab nào. Đây là chỗ duy nhất trong ứng dụng mà một dòng chữ có thể ngăn một tai nạn.
- */
 export function PatientHeader({ pet }: { pet: Pet }) {
+  const queryClient = useQueryClient();
+  const updateAvatar = useMutation({
+    mutationFn: (avatarUrl: string) => petsApi.update(pet.id, { avatarUrl }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['pets', pet.id] });
+      void queryClient.invalidateQueries({ queryKey: ['pets'] });
+    },
+  });
   const age = petAgeLabel(pet.birthDate);
 
   const identity = [
@@ -78,6 +78,14 @@ export function PatientHeader({ pet }: { pet: Pet }) {
           </Link>
         </div>
       </div>
+
+      <ImageUpload
+        label="Ảnh thú cưng"
+        category="pet-avatars"
+        value={pet.avatarUrl}
+        onChange={(avatarUrl) => updateAvatar.mutate(avatarUrl)}
+        required
+      />
 
       {pet.allergies.length > 0 && (
         <Alert tone="danger" title="Dị ứng">

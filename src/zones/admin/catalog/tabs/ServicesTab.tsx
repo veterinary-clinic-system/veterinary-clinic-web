@@ -4,8 +4,10 @@ import { catalogApi } from '@/api/catalog.api';
 import { ItemType, Service } from '@/types/models';
 import { formatCurrency } from '@/utils/format';
 import { CategorySelect, PAGE_SIZE, TabPagination, TabTableStates } from '../shared';
+import { ImageUpload } from '@/components/ImageUpload';
 
 interface ServiceFormState {
+  imageUrl: string;
   itemName: string;
   describe: string;
   unitPrice: string;
@@ -15,6 +17,7 @@ interface ServiceFormState {
 }
 
 const EMPTY_SERVICE_FORM: ServiceFormState = {
+  imageUrl: '/images/default-item.svg',
   itemName: '',
   describe: '',
   unitPrice: '',
@@ -29,7 +32,7 @@ export function ServicesTab() {
   const listQuery = useQuery({
     queryKey: ['catalog-services', page],
     queryFn: () => catalogApi.services({ page, limit: PAGE_SIZE }),
-    // Giữ trang cũ trong lúc tải trang mới - bảng không nhấp nháy về rỗng.
+    
     placeholderData: (prev) => prev,
   });
   const [form, setForm] = useState<ServiceFormState>(EMPTY_SERVICE_FORM);
@@ -40,6 +43,7 @@ export function ServicesTab() {
     mutationFn: () =>
       catalogApi.createService({
         itemName: form.itemName,
+        imageUrl: form.imageUrl,
         describe: form.describe || undefined,
         unitPrice: Number(form.unitPrice) || 0,
         durationMinutes: Number(form.durationMinutes) || 0,
@@ -56,6 +60,7 @@ export function ServicesTab() {
     mutationFn: (id: string) =>
       catalogApi.updateService(id, {
         itemName: editForm.itemName,
+        imageUrl: editForm.imageUrl,
         describe: editForm.describe || undefined,
         unitPrice: Number(editForm.unitPrice) || 0,
         durationMinutes: Number(editForm.durationMinutes) || 0,
@@ -71,6 +76,7 @@ export function ServicesTab() {
   function startEdit(s: Service) {
     setEditingId(s.id);
     setEditForm({
+      imageUrl: s.item.imageUrl,
       itemName: s.item.itemName,
       describe: s.item.describe ?? '',
       unitPrice: String(s.item.unitPrice),
@@ -90,6 +96,9 @@ export function ServicesTab() {
         className="flex flex-wrap items-end gap-3 rounded border border-border bg-surface p-4"
       >
         <h2 className="w-full font-medium">Thêm dịch vụ</h2>
+        <div className="w-full">
+          <ImageUpload label="Ảnh dịch vụ" category="catalog-images" value={form.imageUrl} onChange={(imageUrl) => setForm({ ...form, imageUrl })} required />
+        </div>
         <input required placeholder="Tên dịch vụ" value={form.itemName} onChange={(e) => setForm({ ...form, itemName: e.target.value })} className="rounded border border-border bg-surface px-3 py-2 text-sm" />
         <input placeholder="Mô tả" value={form.describe} onChange={(e) => setForm({ ...form, describe: e.target.value })} className="rounded border border-border bg-surface px-3 py-2 text-sm" />
         <input required type="number" placeholder="Giá (VND)" value={form.unitPrice} onChange={(e) => setForm({ ...form, unitPrice: e.target.value })} className="w-32 rounded border border-border bg-surface px-3 py-2 text-sm" />
@@ -133,6 +142,7 @@ export function ServicesTab() {
                 <tr key={s.id} className="border-t border-border bg-surface-muted">
                   <td className="px-3 py-2 font-mono text-xs text-muted">{s.item.code}</td>
                   <td className="px-3 py-2">
+                    <ImageUpload label="Ảnh" category="catalog-images" value={editForm.imageUrl} onChange={(imageUrl) => setEditForm({ ...editForm, imageUrl })} required />
                     <input value={editForm.itemName} onChange={(e) => setEditForm({ ...editForm, itemName: e.target.value })} className="w-full rounded border border-border bg-surface px-2 py-1" />
                   </td>
                   <td className="px-3 py-2">
@@ -167,7 +177,7 @@ export function ServicesTab() {
               ) : (
                 <tr key={s.id} className="border-t border-border hover:bg-surface-muted">
                   <td className="px-3 py-2 font-mono text-xs text-muted">{s.item.code}</td>
-                  <td className="px-3 py-2">{s.item.itemName}</td>
+                  <td className="px-3 py-2"><span className="flex items-center gap-2"><img src={s.item.imageUrl} alt="" className="h-10 w-10 rounded object-cover" />{s.item.itemName}</span></td>
                   <td className="px-3 py-2 text-muted">{s.item.category?.categoryName ?? '—'}</td>
                   <td className="px-3 py-2 text-muted">{s.item.describe ?? '—'}</td>
                   <td className="px-3 py-2 text-right">{formatCurrency(s.item.unitPrice)}</td>

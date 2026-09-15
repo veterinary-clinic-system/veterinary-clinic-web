@@ -10,11 +10,7 @@ import { Section } from '../Section';
 
 interface PrescriptionLine {
   medicationId: string;
-  /**
-   * Số lượng thực cấp (P7, FR-11-01). Bác sĩ nhập tay chứ hệ thống **không** suy ra từ
-   * liều × tần suất × số ngày: y lệnh thực tế có những dạng không quy về một con số
-   * được ("khi sốt trên 39 độ"), mà đây lại là con số trừ kho và tính tiền.
-   */
+  
   quantity: string;
   dosage: string;
   frequency: string;
@@ -77,8 +73,7 @@ export function PrescriptionsSection({
     onSuccess: (view) => {
       setLines([{ ...EMPTY_LINE }]);
       setNotes('');
-      // FR-11-02: thiếu tồn thì CẢNH BÁO chứ không chặn - đơn đã lưu, bác sĩ vẫn kê
-      // được thuốc bệnh nhân cần. Nói rõ thiếu thuốc nào để dược sĩ biết đường nhập.
+
       const short = view.stockCheck.filter((s) => s.insufficientStock);
       if (short.length > 0) {
         toast.show(
@@ -141,7 +136,7 @@ export function PrescriptionsSection({
             {lines.map((line, index) => (
               <div
                 key={index}
-                className="grid grid-cols-1 gap-2 sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_2fr]"
+                className="grid min-w-0 grid-cols-1 gap-2 md:grid-cols-2"
               >
                 <Select
                   value={line.medicationId}

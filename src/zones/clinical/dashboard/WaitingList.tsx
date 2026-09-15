@@ -20,14 +20,6 @@ export interface WaitingListProps {
   onRetry: () => void;
 }
 
-/**
- * Danh sách bệnh nhân đang chờ.
- *
- * Hiện **thời gian đã chờ**, không phải giờ check-in. "Đã chờ 40 phút" là con số dẫn
- * tới hành động; "check-in lúc 09:15" bắt người đọc tự trừ, và họ sẽ không trừ.
- *
- * Số thứ tự (`ticketNumber`) đứng đầu mỗi hàng vì đó là thứ lễ tân gọi thành tiếng.
- */
 export function WaitingList({ entries, isLoading, isError, onRetry }: WaitingListProps) {
   return (
     <Card as="section">

@@ -15,15 +15,6 @@ function formatRange(min: number | null, max: number | null): string {
   return `${min} – ${max}`;
 }
 
-/**
- * Khối 7 - Laboratory (P9-T6).
- *
- * Ba tầng, theo đúng thứ tự bác sĩ cần: bảng **chỉ số × ngày** để so ngang, biểu đồ một
- * chỉ số để nhìn xu hướng, rồi danh sách yêu cầu kèm kết quả dạng chữ và tệp đính kèm.
- * Bảng đặt ngày MỚI NHẤT ở cột đầu — ngược với biểu đồ (trái sang phải theo thời gian),
- * vì đọc bảng là để xem "lần này ra sao so với lần trước", còn đọc biểu đồ là để xem
- * đường đi.
- */
 export function LaboratoryTab({ petId }: { petId: string }) {
   const [parameter, setParameter] = useState<string>('');
 
@@ -33,8 +24,7 @@ export function LaboratoryTab({ petId }: { petId: string }) {
   });
 
   const orders = ordersQuery.data ?? [];
-  // Chỉ giữ các lần đo CÓ chỉ số định lượng: yêu cầu mới chỉ định (chưa có kết quả) mà
-  // thành một cột rỗng trong bảng thì bảng loãng ra mà không thêm thông tin nào.
+
   const measuredOrders = orders.filter((order) => (order.results ?? []).length > 0);
   const parameters = [
     ...new Set(measuredOrders.flatMap((order) => (order.results ?? []).map((r) => r.parameter))),
@@ -59,8 +49,6 @@ export function LaboratoryTab({ petId }: { petId: string }) {
     );
   }
 
-  // Acceptance P9-T6: thú cưng chưa xét nghiệm lần nào thì hiện empty state, không phải
-  // một biểu đồ rỗng.
   if (orders.length === 0) {
     return (
       <EmptyState
@@ -178,8 +166,7 @@ export function LaboratoryTab({ petId }: { petId: string }) {
               <Badge>{LAB_TEST_STATUS_LABEL_VI[order.status]}</Badge>
             </div>
 
-            {/* Kết quả dạng chữ đi SONG SONG với bảng chỉ số, không thay thế nó - kết
-                quả định tính ("Parvo: dương tính") không quy về số được. */}
+            {}
             {order.resultText && <p className="mt-2 text-sm">{order.resultText}</p>}
 
             {order.resultFileUrls.length > 0 && (

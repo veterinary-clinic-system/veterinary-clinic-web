@@ -1,12 +1,6 @@
 import { apiClient } from './client';
 import { PaginatedResult } from '@/types/models';
 
-/**
- * Một dòng nhật ký kiểm toán — FR-26.
- *
- * `changes` để kiểu mở: nội dung của nó là ảnh chụp trước/sau của một entity bất kỳ,
- * nên không có hình dạng chung nào mô tả đúng được cả mười loại hành động.
- */
 export interface AuditLogRow {
   id: string;
   createdAt: string;
@@ -21,10 +15,6 @@ export interface AuditLogRow {
   userAgent: string | null;
 }
 
-/**
- * Hai hình dạng mà interceptor sinh ra: có ảnh chụp hai đầu thì `before/after/diff`,
- * không có thì chỉ còn body của request đã lọc.
- */
 export interface AuditChanges {
   before?: Record<string, unknown> | null;
   after?: Record<string, unknown> | null;
@@ -47,7 +37,7 @@ export interface AuditLogParams {
 export const auditApi = {
   list: (params: AuditLogParams) =>
     apiClient.get<PaginatedResult<AuditLogRow>>('/audit-logs', { params }).then((r) => r.data),
-  /** Giá trị cho ô chọn — lấy từ backend để không phải chép danh sách sang đây. */
+  
   filters: () =>
     apiClient
       .get<{ actions: string[]; entities: string[] }>('/audit-logs/filters')

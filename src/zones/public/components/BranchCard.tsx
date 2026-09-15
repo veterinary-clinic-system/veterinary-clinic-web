@@ -3,12 +3,6 @@ import { Button, Icon } from '@/components/basic';
 import { Branch } from '@/types/models';
 import { groupOpeningHours } from '@/utils/opening-hours';
 
-/**
- * Thẻ chi nhánh.
- *
- * Số điện thoại là `tel:` chứ không phải chữ trơn: người xem trang này trên điện thoại
- * và cần gọi phòng khám thì một cú chạm là xong, không phải chép tay từng số.
- */
 export function BranchCard({ branch }: { branch: Branch }) {
   const navigate = useNavigate();
   const hours = groupOpeningHours(branch.openingHours ?? []);

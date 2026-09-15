@@ -22,7 +22,6 @@ function toOptionalNumber(value: string): number | undefined {
   return Number.isNaN(n) ? undefined : n;
 }
 
-/** Khối sinh hiệu — vẫn là entity `Examination`, phần "sinh hiệu" của hồ sơ. */
 export function VitalsSection({ record, readOnly }: { record: MedicalRecord; readOnly: boolean }) {
   const queryClient = useQueryClient();
   const toast = useToast();

@@ -13,25 +13,15 @@ const DOT: Record<TimelineTone, string> = {
 
 export interface TimelineEntry {
   id: string;
-  /** Mốc thời gian đã định dạng sẵn - component này không tự format. */
+  
   time: string;
   title: ReactNode;
   description?: ReactNode;
   tone?: TimelineTone;
-  /** Nội dung phụ (thẻ, nút) đặt dưới mô tả. */
+  
   footer?: ReactNode;
 }
 
-/**
- * Dòng thời gian dọc - dùng cho lịch sử khám của một bé và cho vòng đời một lịch hẹn.
- *
- * Lịch sử bệnh án đọc theo trục thời gian chứ không theo bảng: người xem cần thấy
- * "chuyện gì xảy ra, rồi chuyện gì tiếp theo", còn bảng thì mời người ta so sánh cột -
- * việc không ai làm với bệnh án.
- *
- * Là `<ol>` vì thứ tự MANG NGHĨA. Đường nối vẽ bằng viền trái của từng mục nên không
- * cần phần tử trang trí riêng, và mục cuối tự hết đường.
- */
 export function Timeline({ entries, className }: { entries: TimelineEntry[]; className?: string }) {
   return (
     <ol className={cn('relative', className)}>

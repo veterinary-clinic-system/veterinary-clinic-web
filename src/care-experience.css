@@ -1,0 +1,860 @@
+.pet-photo-scene::before,
+.pet-photo-scene::after {
+  display: none;
+}
+.pet-photo-scene {
+  aspect-ratio: 1 / 1.12;
+  margin-bottom: 25px;
+}
+.pet-real-stage {
+  position: absolute;
+  inset: 3% 3% 5%;
+  border-radius: 160px 160px 35px 35px;
+  overflow: hidden;
+  transform: translateZ(30px);
+  background: radial-gradient(circle at 50% 42%, #f6f5e8, #d7e1c8 60%, #b9c9a8);
+  box-shadow:
+    0 28px 55px #34553b22,
+    0 0 0 8px #fff9;
+}
+.pet-real-stage::after {
+  content: '';
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 11%;
+  height: 10%;
+  border-radius: 50%;
+  background: #39503322;
+  filter: blur(14px);
+}
+.pet-stage-glow {
+  position: absolute;
+  width: 65%;
+  height: 65%;
+  left: 18%;
+  top: 9%;
+  border-radius: 50%;
+  border: 1px solid #fff8;
+  box-shadow: 0 0 80px #fff8;
+}
+.pet-real-dog,
+.pet-real-cat {
+  position: absolute;
+  object-fit: contain;
+  z-index: 2;
+  filter: drop-shadow(0 18px 12px #33482c2b);
+  transform-origin: center bottom;
+  will-change: transform;
+}
+.pet-real-dog {
+  width: 83%;
+  height: 83%;
+  left: -9%;
+  bottom: 7%;
+  animation: real-dog-walk 5.5s ease-in-out infinite;
+}
+.pet-real-cat {
+  width: 54%;
+  height: 54%;
+  right: -2%;
+  bottom: 8%;
+  animation: real-cat-jump 4.2s cubic-bezier(0.4, 0, 0.25, 1) infinite;
+}
+.pet-real-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: care-photo-drift 12s ease-in-out infinite;
+}
+.pet-photo-signature {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 55px 25px 25px;
+  background: linear-gradient(transparent, #1f382dbb);
+  color: white;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.pet-real-stage .pet-photo-signature {
+  z-index: 3;
+  pointer-events: none;
+}
+.pet-photo-signature strong {
+  font-size: 20px;
+  letter-spacing: -0.03em;
+}
+.pet-photo-scene .pet-note-top {
+  top: 11%;
+  left: -2%;
+}
+.pet-photo-scene .pet-note-bottom {
+  bottom: 18%;
+  right: -2%;
+}
+@keyframes care-photo-drift {
+  0%,
+  100% {
+    transform: scale(1.01) translateY(0);
+  }
+  50% {
+    transform: scale(1.045) translateY(-3px);
+  }
+}
+@keyframes real-dog-walk {
+  0%,
+  100% {
+    transform: translate3d(-7px, 0, 18px) rotateY(-2deg);
+  }
+  25% {
+    transform: translate3d(3px, -5px, 30px) rotateY(1deg);
+  }
+  50% {
+    transform: translate3d(10px, 0, 22px) rotateY(3deg);
+  }
+  75% {
+    transform: translate3d(1px, -4px, 28px) rotateY(0);
+  }
+}
+@keyframes real-cat-jump {
+  0%,
+  15%,
+  100% {
+    transform: translate3d(0, 0, 60px) rotate(-2deg);
+  }
+  35% {
+    transform: translate3d(-8px, -38px, 95px) rotate(5deg) scale(1.025);
+  }
+  50% {
+    transform: translate3d(-4px, -43px, 100px) rotate(2deg) scale(1.035);
+  }
+  68% {
+    transform: translate3d(2px, -7px, 70px) rotate(-3deg);
+  }
+  76% {
+    transform: translate3d(2px, 0, 60px) scaleY(0.97);
+  }
+}
+.care-eyebrow {
+  display: block;
+  color: #65836e;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  line-height: 1.8;
+  margin-bottom: 14px;
+}
+.care-text-link {
+  display: inline-flex;
+  margin-top: 20px;
+  font-size: 13px;
+  font-weight: 650;
+  color: #2b6950;
+}
+.owner-space {
+  background: radial-gradient(ellipse at 95% 0%, #e8efdd, transparent 50%), #faf9f4;
+}
+.owner-navigation {
+  max-width: 1120px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 16px;
+  border-bottom: 1px solid #dde5d7;
+}
+.owner-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 650;
+  color: #2b6950;
+}
+.owner-brand small {
+  display: block;
+  margin-top: 3px;
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  font-weight: 500;
+}
+.owner-navigation nav {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.owner-navigation nav a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 30px;
+  font-size: 12px;
+}
+.owner-navigation nav a.active {
+  background: #2b6950;
+  color: white;
+  box-shadow: 0 5px 15px #2b695020;
+}
+.owner-welcome {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  background: #e8efdf;
+  border-radius: 30px;
+  overflow: hidden;
+  margin-bottom: 22px;
+  min-height: 285px;
+}
+.owner-welcome > div {
+  padding: 35px 38px;
+  z-index: 1;
+}
+.owner-welcome h2 {
+  font-size: clamp(27px, 4vw, 39px);
+  line-height: 1.2;
+  font-weight: 650;
+}
+.owner-welcome p {
+  font-size: 13px;
+  line-height: 1.8;
+  margin-top: 15px;
+  color: #677460;
+}
+.owner-welcome img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  max-height: 340px;
+  mask-image: linear-gradient(to right, transparent, black 25%);
+}
+.owner-overview {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 0 0 38px;
+}
+.owner-overview > div,
+.owner-overview > a {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 23px;
+  background: white;
+  border: 1px solid #e2e8dc;
+  border-radius: 20px;
+}
+.owner-overview small {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: #71816b;
+}
+.owner-overview strong {
+  font-size: 27px;
+  letter-spacing: -0.04em;
+  font-weight: 650;
+}
+.owner-overview span {
+  font-size: 12px;
+  color: #71816b;
+}
+.owner-overview > a {
+  background: #f6eadd;
+}
+.owner-pet-card {
+  position: relative;
+  overflow: hidden;
+  border-top: 5px solid #b3cfa8;
+  padding: 24px;
+}
+.owner-pet-card:nth-child(3n + 2) {
+  border-top-color: #dfbaa0;
+}
+.owner-pet-card:nth-child(3n + 3) {
+  border-top-color: #b8c9d7;
+}
+.owner-pet-card > a:first-child {
+  padding: 6px 0 15px;
+  border-bottom: 1px dashed #e2e7dc;
+}
+.owner-pet-card > a:first-child img {
+  width: 74px;
+  height: 74px;
+}
+.owner-pet-card h3 {
+  font-size: 21px;
+}
+.owner-appointment-heading {
+  padding: 28px;
+  background: #eaf0e3;
+  border-radius: 24px;
+}
+.owner-care-note {
+  max-width: 992px;
+  margin: 0 auto;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 26px 16px 40px;
+  color: #6e8169;
+  font-size: 12px;
+}
+.owner-care-note a {
+  margin-left: auto;
+  color: #2b6950;
+  white-space: nowrap;
+}
+.booking-intro {
+  max-width: 720px;
+  margin: 0 auto 30px;
+  text-align: center;
+}
+.booking-intro h1 {
+  font-size: clamp(30px, 4.5vw, 46px);
+  font-weight: 650;
+  line-height: 1.17;
+  letter-spacing: -0.045em;
+}
+.booking-intro h1 span {
+  color: #688268;
+}
+.booking-intro p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #70816a;
+  margin-top: 16px;
+}
+.booking-experience > div > ol {
+  justify-content: center;
+}
+.booking-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  gap: 26px;
+  align-items: start;
+  margin-top: 30px;
+}
+.booking-form-panel {
+  min-width: 0;
+  border: 1px solid #e0e6d9;
+  border-radius: 26px;
+  background: #fff;
+  box-shadow: 0 14px 45px #30432b06;
+  overflow: hidden;
+}
+.booking-step-caption {
+  display: flex;
+  justify-content: space-between;
+  padding: 22px 26px;
+  gap: 10px;
+  color: #70816a;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  font-weight: 650;
+}
+.booking-step-caption:focus-visible {
+  outline: 2px solid #2b6950;
+  outline-offset: -4px;
+}
+.booking-step-progress {
+  height: 3px;
+  background: #eef2e9;
+}
+.booking-step-progress span {
+  display: block;
+  height: 100%;
+  background: #8ca982;
+  transition: width 0.4s;
+}
+.booking-step-content {
+  padding: 26px;
+  animation: pet-enter 0.35s both;
+}
+.booking-step-content section > h2 {
+  font-size: 24px;
+}
+.booking-actions {
+  padding: 20px 26px;
+  border-top: 1px solid #e7ebe1;
+  background: #fdfefb;
+  gap: 12px;
+}
+.booking-summary {
+  position: sticky;
+  top: 106px;
+  border: 1px solid #e0e6d9;
+  background: #fff;
+  border-radius: 24px;
+  overflow: hidden;
+}
+.booking-summary-photo {
+  position: relative;
+  height: 165px;
+  background: #aab39a;
+  overflow: hidden;
+}
+.booking-summary-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 33%;
+}
+.booking-summary-photo > span {
+  position: absolute;
+  inset: 0;
+  padding: 65px 20px 16px;
+  color: white;
+  background: linear-gradient(transparent, #203426a8);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.booking-summary-photo strong {
+  font-size: 20px;
+}
+.booking-summary-body {
+  padding: 22px;
+}
+.booking-summary h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 650;
+}
+.booking-summary dl {
+  margin: 20px 0;
+}
+.booking-summary dl > div {
+  padding: 11px 0;
+  border-bottom: 1px dashed #e4e8df;
+}
+.booking-summary dt {
+  font-size: 11px;
+  color: #77856f;
+}
+.booking-summary dd {
+  font-size: 13px;
+  margin-top: 5px;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+.booking-unselected {
+  color: #8d9587;
+  font-style: italic;
+  font-weight: 400 !important;
+}
+.booking-estimate {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+.booking-estimate strong {
+  font-size: 25px;
+  color: #2b6950;
+}
+.booking-assurance {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 20px;
+  padding: 15px 12px;
+  background: #edf3e6;
+  color: #617658;
+  font-size: 11px;
+  line-height: 1.6;
+  border-radius: 14px;
+}
+.doctor-editorial-card {
+  padding: 26px;
+  background: linear-gradient(120deg, #f0f4e9, white 42%);
+}
+.doctor-editorial-card > div:first-child {
+  border: 4px solid white;
+  box-shadow: 0 5px 15px #30432b12;
+}
+.doctor-profile-details {
+  margin-top: 16px;
+  border-top: 1px solid #e3e9dd;
+}
+.doctor-profile-details summary {
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 44px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #2b6950;
+  list-style: none;
+  gap: 8px;
+}
+.doctor-profile-details summary::-webkit-details-marker {
+  display: none;
+}
+.doctor-profile-details summary > span {
+  font-size: 20px;
+  transition: transform 0.2s;
+}
+.doctor-profile-details[open] summary > span {
+  transform: rotate(45deg);
+}
+.doctor-profile-expanded {
+  padding: 18px;
+  background: #f6f8f1;
+  border-radius: 16px;
+  animation: pet-enter 0.3s;
+}
+.doctor-profile-expanded h4 {
+  font-size: 17px;
+  font-weight: 650;
+  margin-bottom: 12px;
+}
+.doctor-profile-expanded dl > div {
+  padding: 8px 0;
+}
+.doctor-profile-expanded dt {
+  font-size: 10px;
+  color: #77856f;
+  margin-bottom: 3px;
+}
+.doctor-profile-expanded dd {
+  font-size: 12px;
+  line-height: 1.7;
+}
+.doctor-visit-note {
+  margin-top: 12px;
+  border-top: 1px dashed #d7e0d0;
+  padding-top: 12px;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #6e7b65;
+}
+.doctor-visit-note strong {
+  color: #405d42;
+}
+.booking-doctor-choice {
+  min-width: 0;
+  border: 1px solid #e1e7db;
+  border-radius: 20px;
+  overflow: hidden;
+  transition: box-shadow 0.25s;
+}
+.booking-doctor-choice.is-selected {
+  box-shadow: 0 0 0 2px #5f8867;
+}
+.booking-doctor-choice > button {
+  border: 0;
+  border-radius: 0;
+}
+.booking-doctor-choice .doctor-profile-details {
+  margin: 0;
+  padding: 0 16px 10px;
+}
+@media (max-width: 900px) {
+  .booking-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .booking-summary {
+    position: static;
+  }
+  .booking-summary-photo {
+    display: none;
+  }
+  .booking-summary dl {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+  }
+  .owner-navigation {
+    flex-wrap: wrap;
+  }
+  .owner-navigation nav {
+    width: 100%;
+  }
+}
+@media (max-width: 600px) {
+  .owner-welcome {
+    grid-template-columns: 1fr;
+  }
+  .owner-welcome > div {
+    padding: 26px;
+  }
+  .owner-welcome img {
+    display: none;
+  }
+  .owner-overview {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .owner-overview > a {
+    grid-column: 1/-1;
+  }
+  .owner-overview > div,
+  .owner-overview > a {
+    padding: 18px;
+  }
+  .owner-care-note {
+    flex-wrap: wrap;
+  }
+  .owner-care-note a {
+    margin-left: 0;
+  }
+  .booking-step-content {
+    padding: 20px 16px;
+  }
+  .booking-actions {
+    padding: 16px;
+  }
+  .booking-actions button {
+    font-size: 12px;
+  }
+  .pet-photo-scene .pet-note {
+    max-width: 85%;
+  }
+  .owner-navigation nav a {
+    padding: 10px;
+    font-size: 11px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pet-real-photo,
+  .booking-step-content,
+  .doctor-profile-expanded {
+    animation: none !important;
+  }
+  .booking-step-progress span,
+  .doctor-profile-details summary > span {
+    transition: none;
+  }
+}
+.payment-method-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 22px;
+}
+.payment-method-grid > button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 114px;
+  padding: 15px;
+  text-align: left;
+  border: 1px solid #e0e6dd;
+  border-radius: 16px;
+  background: #fff;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    transform 0.2s;
+}
+.payment-method-grid > button:hover {
+  border-color: #91b49b;
+  transform: translateY(-2px);
+}
+.payment-method-grid > button.is-selected {
+  border-color: #2b6950;
+  background: #f0f7f2;
+  box-shadow: 0 0 0 2px #2b695020;
+}
+.payment-method-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: #eef2e9;
+  font-size: 20px;
+  color: #2b6950;
+}
+.payment-method-grid strong,
+.payment-method-grid small {
+  display: block;
+}
+.payment-method-grid strong {
+  font-size: 12px;
+  color: #263b31;
+}
+.payment-method-grid small {
+  margin-top: 4px;
+  font-size: 10px;
+  line-height: 1.45;
+  color: #77837c;
+}
+.payment-method-check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #2b6950;
+  color: #fff;
+  text-align: center;
+  font-size: 12px;
+  line-height: 20px;
+}
+.payment-method-grid > button.is-selected .payment-method-check {
+  display: block;
+}
+.manual-payment-form {
+  padding: 18px;
+  background: #f8faf7;
+  border-radius: 16px;
+}
+.sepay-checkout {
+  padding: 20px;
+  border: 1px solid #dce6dc;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #f7faf5, #edf5ee);
+}
+.payment-progress {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin-bottom: 24px;
+}
+.payment-progress li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  color: #8a948c;
+  text-align: center;
+}
+.payment-progress li::before {
+  content: '';
+  position: absolute;
+  top: 13px;
+  left: -50%;
+  width: 100%;
+  height: 2px;
+  background: #dce3dc;
+}
+.payment-progress li:first-child::before {
+  display: none;
+}
+.payment-progress li > span {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e1e7e1;
+  font-size: 11px;
+  font-weight: 700;
+}
+.payment-progress li > small {
+  font-size: 9px;
+  line-height: 1.3;
+}
+.payment-progress li.is-done,
+.payment-progress li.is-current {
+  color: #2b6950;
+}
+.payment-progress li.is-done::before,
+.payment-progress li.is-current::before {
+  background: #6d9879;
+}
+.payment-progress li.is-done > span {
+  background: #6d9879;
+  color: white;
+}
+.payment-progress li.is-current > span {
+  background: #fff;
+  box-shadow: 0 0 0 3px #6d9879;
+}
+.sepay-ticket > img {
+  width: 235px;
+  height: 235px;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px #2d4c3220;
+}
+.sepay-copy {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  margin-top: 7px;
+  padding: 0 11px;
+  border: 1px solid #cedbd0;
+  border-radius: 9px;
+  color: #2b6950;
+  font-size: 11px;
+  font-weight: 600;
+}
+.sepay-waiting {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px;
+  background: #fff;
+  border-radius: 13px;
+}
+.sepay-waiting > span {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #bad0bf;
+  border-top-color: #2b6950;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+.sepay-waiting strong,
+.sepay-success strong {
+  font-size: 12px;
+}
+.sepay-waiting p,
+.sepay-success p {
+  margin-top: 2px;
+  font-size: 10px;
+  color: #738078;
+}
+.sepay-success {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  background: #ecf8ef;
+  border: 1px solid #bcd8c3;
+  border-radius: 14px;
+}
+.sepay-success-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #2f855a;
+  color: white;
+  font-weight: 700;
+}
+.sepay-success button {
+  margin-left: auto;
+}
+@media (max-width: 900px) {
+  .payment-method-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 550px) {
+  .payment-method-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .payment-progress li > small {
+    font-size: 8px;
+  }
+  .sepay-ticket > img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+  }
+}

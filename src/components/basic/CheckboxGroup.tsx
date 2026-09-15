@@ -7,7 +7,7 @@ export interface CheckboxGroupOption {
 }
 
 export interface CheckboxGroupProps {
-  /** Optional group heading, rendered as a <legend>. */
+  
   label?: string;
   value: string[];
   onChange: (value: string[]) => void;
@@ -16,11 +16,6 @@ export interface CheckboxGroupProps {
   className?: string;
 }
 
-/**
- * Generic multi-select checklist over an arbitrary {value, label}[] option list -
- * deliberately not tied to any one domain concept (e.g. symptoms) so it can be reused
- * anywhere a "pick any of these" control is needed.
- */
 export function CheckboxGroup({ label, value, onChange, options, disabled, className }: CheckboxGroupProps) {
   function toggle(optionValue: string, checked: boolean) {
     if (checked) {

@@ -19,13 +19,14 @@ import {
 import { getErrorMessage } from '@/utils/errors';
 import { formatDate } from '@/utils/format';
 import { ROLE_LABEL_VI } from '@/utils/labels';
+import { ImageUpload } from '@/components/ImageUpload';
 
 const LIMIT = 20;
 
-/** Vai trò tài khoản có thể gán cho một hồ sơ nhân sự. */
 const ACCOUNT_ROLES = [Role.ADMIN, ...BRANCH_SCOPED_ROLES];
 
 interface EmployeeFormState {
+  avatarUrl: string;
   fullName: string;
   phone: string;
   email: string;
@@ -41,6 +42,7 @@ interface EmployeeFormState {
 }
 
 const EMPTY_FORM: EmployeeFormState = {
+  avatarUrl: '/images/default-staff.svg',
   fullName: '',
   phone: '',
   email: '',
@@ -55,10 +57,6 @@ const EMPTY_FORM: EmployeeFormState = {
   password: '',
 };
 
-/**
- * Hồ sơ nhân sự — SRS FR-22. Khác với trang "Nhân sự" cũ (`/staff/users`) vốn chỉ quản
- * lý **tài khoản đăng nhập**: ở đây quản lý con người, kể cả người không dùng phần mềm.
- */
 export function EmployeesPage() {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -98,6 +96,7 @@ export function EmployeesPage() {
       if (editing) {
         return employeesApi.update(editing.id, {
           fullName: form.fullName,
+          avatarUrl: form.avatarUrl,
           email: form.email || undefined,
           address: form.address || undefined,
           position: form.position || undefined,
@@ -109,6 +108,7 @@ export function EmployeesPage() {
       }
       const payload: CreateEmployeePayload = {
         fullName: form.fullName,
+        avatarUrl: form.avatarUrl,
         phone: form.phone,
         email: form.email || undefined,
         address: form.address || undefined,
@@ -142,6 +142,7 @@ export function EmployeesPage() {
     setEditing(employee);
     setForm({
       ...EMPTY_FORM,
+      avatarUrl: employee.avatarUrl,
       fullName: employee.fullName,
       phone: employee.phone,
       email: employee.email ?? '',
@@ -168,7 +169,17 @@ export function EmployeesPage() {
 
   const columns: Column<Employee>[] = [
     { key: 'employeeCode', header: 'Mã NV', sortable: true },
-    { key: 'fullName', header: 'Họ tên', sortable: true },
+    {
+      key: 'fullName',
+      header: 'Họ tên',
+      sortable: true,
+      render: (row) => (
+        <span className="flex items-center gap-2">
+          <img src={row.avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+          {row.fullName}
+        </span>
+      ),
+    },
     { key: 'phone', header: 'Số điện thoại' },
     { key: 'position', header: 'Chức danh', render: (row) => row.position ?? '—' },
     { key: 'branch', header: 'Chi nhánh', render: (row) => row.branch?.branchName ?? '—' },
@@ -297,6 +308,13 @@ export function EmployeesPage() {
         }
       >
         <form id="employee-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <ImageUpload
+            label="Ảnh nhân viên"
+            category="employee-avatars"
+            value={form.avatarUrl}
+            onChange={(avatarUrl) => setForm({ ...form, avatarUrl })}
+            required
+          />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Input
               label="Họ tên"

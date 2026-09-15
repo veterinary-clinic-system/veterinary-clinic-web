@@ -5,7 +5,6 @@ import { slotFitsService } from '../slot-fit';
 import { BookingForm } from '../use-booking-form';
 import { SlotGrid } from './SlotGrid';
 
-/** Bước 4 - chọn ngày và giờ khám. */
 export function StepSchedule({
   schedule,
   service,
@@ -15,7 +14,6 @@ export function StepSchedule({
 }) {
   const days = schedule.days;
 
-  /* Cả tuần không còn ô nào đủ chỗ cho dịch vụ đã chọn. */
   const weekIsFull =
     !!days &&
     days.some((d) => d.slots.length > 0) &&
@@ -82,12 +80,7 @@ export function StepSchedule({
             <p className="mt-3 text-muted">Không có khung giờ nào trong tuần này.</p>
           )}
 
-          {/*
-            Tuần đang xem có thể không còn ô nào đặt được - hay gặp nhất là khi đặt vào
-            cuối tuần, lúc mọi ngày còn lại đều đã qua hoặc phòng khám đóng cửa. Nói
-            thẳng ra và đưa luôn nút sang tuần sau, thay vì để khách nhìn một bảng xám
-            và tự đoán.
-          */}
+          {}
           {weekIsFull && (
             <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg bg-surface-muted px-4 py-3 text-sm">
               <span className="text-muted">
@@ -122,7 +115,7 @@ export function StepSchedule({
         </li>
       </ul>
 
-      {/* `aria-live` để trình đọc màn hình báo lại lựa chọn ngay khi khách bấm một ô. */}
+      {}
       <p aria-live="polite" className="mt-4">
         {schedule.selectedSlot && (
           <span className="inline-block rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">

@@ -14,18 +14,6 @@ import { OwnerTab } from '../pet-profile/tabs/OwnerTab';
 import { PrescriptionsTab } from '../pet-profile/tabs/PrescriptionsTab';
 import { VaccinationTab } from '../pet-profile/tabs/VaccinationTab';
 
-/**
- * Hồ sơ thú cưng nhìn từ phía nhân viên - tám khối theo FR-04-03 / mục 12.4 SRS:
- * Basic Info -> Owner -> Medical History -> Appointment -> Vaccination -> Prescription
- * -> Laboratory -> Invoice.
- *
- * **Lịch sử khám là tab mặc định, không phải Thông tin cơ bản.** Bác sĩ mở hồ sơ để
- * xem lần trước đã chẩn đoán gì, không phải để đọc lại màu lông - và những thông tin
- * nhận dạng ấy giờ đã nằm sẵn trên thanh đầu trang, không cần một tab riêng để xem.
- *
- * Mỗi khối là một tab component độc lập trong `../pet-profile/tabs/` - tự có truy vấn
- * riêng. Trang này chỉ còn header, tab bar và lắp ráp.
- */
 type Tab =
   | 'medical'
   | 'appointments'

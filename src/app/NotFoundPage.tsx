@@ -3,14 +3,6 @@ import { Icon } from '@/components/basic';
 import { useAuth } from '@/context/AuthContext';
 import { STAFF_ROLES } from '@/types/enums';
 
-/**
- * 404 - nằm NGOÀI cả hai khung hiển thị, vì router không biết đường dẫn hỏng này lẽ ra
- * thuộc về khung nào.
- *
- * Bù lại, lối ra phải đúng người: một lễ tân gõ nhầm `/staff/appointmnets` mà bị mời
- * "Về trang chủ" sẽ rơi ra trang giới thiệu phòng khám rồi bị `StaffConsoleOnly` đẩy
- * ngược lại `/staff` - hai lần nhảy trang cho một cú gõ nhầm. Đưa thẳng họ về Tổng quan.
- */
 export function NotFoundPage() {
   const { user } = useAuth();
   const isStaff = user !== null && STAFF_ROLES.includes(user.role);

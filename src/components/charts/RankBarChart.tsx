@@ -2,17 +2,6 @@ import { useState } from 'react';
 import { buildScale, ChartPoint, formatValue, ValueFormat } from './chart-utils';
 import { EmptyPlot } from './TrendLineChart';
 
-/**
- * Bảng xếp hạng dạng thanh ngang — dùng cho "bán chạy / dùng nhiều / phổ biến" (FR-24).
- *
- * NGANG chứ không đứng: tên hàng hoá tiếng Việt dài ("Thức ăn hạt Royal Canin 2kg"),
- * đặt dưới trục hoành của biểu đồ cột thì phải xoay nghiêng hoặc cắt bớt — cả hai đều
- * khó đọc. Thanh ngang cho nhãn nằm ngang, đọc bình thường.
- *
- * Dựng bằng div chứ không SVG: thanh ngang là những hình chữ nhật xếp dọc, đúng thứ
- * bố cục dòng chảy của HTML làm sẵn — và nhãn dài tự xuống dòng được, việc mà `<text>`
- * trong SVG không tự làm.
- */
 export function RankBarChart({
   points,
   format,
@@ -29,8 +18,7 @@ export function RankBarChart({
   }
 
   const rows = points.slice(0, limit);
-  // Chia theo TRẦN LÀM TRÒN chứ không theo giá trị lớn nhất: nếu chia theo giá trị lớn
-  // nhất thì hạng nhất luôn dài kín khung, và người đọc mất mốc so sánh tuyệt đối.
+
   const { ceiling } = buildScale(Math.max(...rows.map((row) => row.value)), format);
 
   return (
@@ -50,8 +38,7 @@ export function RankBarChart({
               {hover === row.label ? formatValue(row.value, format) : row.value.toLocaleString('vi-VN')}
             </span>
           </div>
-          {/* Rãnh nền là một bậc nhạt của cùng sắc màu, không phải xám trung tính —
-              nhờ vậy phần chưa lấp vẫn thuộc về cùng một thang đo. */}
+          {}
           <div className="h-2 w-full rounded-sm bg-primary/10">
             <div
               className="h-2 rounded-r-[4px] bg-primary"

@@ -37,14 +37,6 @@ const today = () => format(new Date(), 'yyyy-MM-dd');
 
 const PAGE_SIZE = 20;
 
-/**
- * Quầy lễ tân - hàng chờ trong ngày. Bốn thao tác của nhân viên:
- * xác nhận khách đã đến, tạo lượt khám không đặt lịch, đưa vào hàng chờ (cả hai thao
- * tác trên đều tạo một lượt chờ), và gán bác sĩ.
- *
- * Ba thao tác đó là ba Modal độc lập trong `../queue/` - tự có state, truy vấn và
- * mutation riêng. Trang này chỉ còn bảng chính, bộ lọc và lắp ráp ba Modal.
- */
 export function QueuePage() {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -60,7 +52,6 @@ export function QueuePage() {
 
   const branchesQuery = useQuery({ queryKey: ['branches'], queryFn: () => branchesApi.list() });
 
-  // Chi nhánh đầu tiên được chọn sẵn để lễ tân mở trang là thấy hàng chờ ngay.
   useEffect(() => {
     if (!branchId && branchesQuery.data?.length) {
       setBranchId(branchesQuery.data[0].id);
@@ -77,7 +68,7 @@ export function QueuePage() {
     queryKey: ['queue', queueParams],
     queryFn: () => queueApi.list(queueParams),
     enabled: Boolean(branchId),
-    // Nhiều người cùng đứng ở quầy - làm mới định kỳ để không gọi trùng số thứ tự.
+    
     refetchInterval: 30_000,
   });
 
@@ -146,11 +137,7 @@ export function QueuePage() {
         ),
     },
     {
-      /*
-        Hiện THỜI GIAN ĐÃ CHỜ, không chỉ giờ check-in. "Đã chờ 40 phút" là con số dẫn
-        tới hành động (gọi ai tiếp theo); "vào lúc 09:15" bắt lễ tân tự trừ trong đầu,
-        và giữa giờ cao điểm thì họ sẽ không trừ.
-      */
+      
       key: 'checkedInAt',
       header: 'Đã chờ',
       render: (row) =>
@@ -182,7 +169,7 @@ export function QueuePage() {
               size="sm"
               onClick={() => updateMutation.mutate({ id: row.id, status: QueueStatus.IN_ROOM })}
             >
-              Gọi vào phòng
+              Gọi vào khám
             </Button>
           )}
           {row.status === QueueStatus.IN_ROOM && (
@@ -214,18 +201,12 @@ export function QueuePage() {
   ];
 
   const entries = queueQuery.data ?? [];
-  /*
-    "Đang chờ" gồm cả WAITING lẫn ASSIGNED: với người ngồi ngoài phòng chờ, đã gán bác
-    sĩ hay chưa không đổi việc gì - họ vẫn đang đợi được gọi. Đếm riêng WAITING làm ô
-    này hiện 0 trong khi vẫn còn người chờ, đúng thứ nó phải cảnh báo.
-  */
+  
   const waiting = entries.filter(
     (e) => e.status === QueueStatus.WAITING || e.status === QueueStatus.ASSIGNED,
   ).length;
   const inRoom = entries.filter((e) => e.status === QueueStatus.IN_ROOM).length;
 
-  // Hàng chờ một ngày của một chi nhánh trả về trong một lần gọi - cắt trang ở client
-  // giữ nguyên thứ tự ưu tiên backend đã sắp.
   const { page, setPage, pageItems } = usePagination(entries, PAGE_SIZE, [
     branchId,
     date,
@@ -241,11 +222,11 @@ export function QueuePage() {
           <>
             <Button variant="secondary" onClick={() => setCheckInOpen(true)} disabled={!branchId}>
               <Icon name="check" className="h-4 w-4" />
-              Khách đã đến
+              Tiếp nhận (Check-in)
             </Button>
             <Button onClick={() => setWalkInOpen(true)} disabled={!branchId}>
               <Icon name="plus" className="h-4 w-4" />
-              Khách vãng lai
+              Tiếp nhận vãng lai
             </Button>
           </>
         }
@@ -270,11 +251,7 @@ export function QueuePage() {
         </label>
       </div>
 
-      {/*
-        Hai con số này là thứ lễ tân liếc mắt nhiều nhất trong ngày, nên tách khỏi thanh
-        bộ lọc thành ô riêng: nhét chúng vào cuối một hàng bộ lọc thì chúng bị đọc như
-        một nhãn phụ của ô lọc bên cạnh.
-      */}
+      {}
       <div className="grid grid-cols-2 gap-4 sm:max-w-md">
         <StatTile
           label="Đang chờ"
@@ -320,7 +297,7 @@ export function QueuePage() {
         onDone={invalidateQueue}
       />
 
-      {/* Huỷ lượt chờ kéo theo lịch hẹn sang "đã huỷ" và ghi lý do (FR-05-04). */}
+      {}
       <CancelQueueEntryDialog
         entry={cancelTarget}
         loading={updateMutation.isPending}

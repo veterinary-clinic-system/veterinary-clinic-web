@@ -18,13 +18,6 @@ interface LocationState {
   from?: { pathname: string; search?: string };
 }
 
-/**
- * On success, redirects back to `location.state.from` (the shape RequireAuth passes,
- * see src/routes/RequireAuth.tsx) or a role-based default. The role is read straight off
- * the freshly-stored access token via tokenStore/decodeAccessToken instead of the
- * post-login `user` from useAuth(), since that context update may not have flushed to
- * this render yet by the time login() resolves.
- */
 export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -47,8 +40,7 @@ export function LoginPage() {
       const payload = accessToken ? decodeAccessToken(accessToken) : null;
       const isStaff = !!payload && STAFF_ROLES.includes(payload.role);
       const roleHome = isStaff ? '/staff' : '/my/pets';
-      // Nhân viên luôn về /staff kể cả khi `from` trỏ tới một trang công khai - nếu đi
-      // theo `from`, `StaffConsoleOnly` cũng lập tức đẩy họ về đây, chỉ tốn một nhịp.
+
       const target = from && !isStaff ? `${from.pathname}${from.search ?? ''}` : roleHome;
       navigate(target, { replace: true });
     } catch (error) {
@@ -87,10 +79,7 @@ export function LoginPage() {
           {...register('password', { required: 'Vui lòng nhập mật khẩu' })}
         />
 
-        {/*
-          Lỗi từ máy chủ đặt NGAY TRÊN nút gửi, không phải ở đầu biểu mẫu: mắt người dùng
-          đang ở nút vừa bấm, và một dòng lỗi cách đó ba trường thường bị bỏ qua hẳn.
-        */}
+        {}
         {serverError && <Alert tone="danger">{serverError}</Alert>}
 
         <Button type="submit" fullWidth size="lg" loading={isSubmitting}>

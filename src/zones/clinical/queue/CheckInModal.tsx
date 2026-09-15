@@ -8,7 +8,6 @@ import { Appointment, AppointmentStatus, PriorityColor, PRIORITY_COLOR_LABEL_VI 
 import { getErrorMessage } from '@/utils/errors';
 import { formatTime } from '@/utils/format';
 
-/** Trạng thái lịch hẹn còn "chờ khách đến" - đủ điều kiện để lễ tân bấm check-in. */
 const CHECK_IN_ELIGIBLE = [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED];
 
 export function CheckInModal({
@@ -76,7 +75,7 @@ export function CheckInModal({
           loading={checkInMutation.isPending && checkInMutation.variables === row.id}
           onClick={() => checkInMutation.mutate(row.id)}
         >
-          Đã đến
+          Tiếp nhận (Check-in)
         </Button>
       ),
     },

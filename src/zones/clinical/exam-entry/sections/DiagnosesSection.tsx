@@ -14,7 +14,6 @@ const SEVERITY_OPTIONS = Object.values(DiagnosisSeverity).map((value) => ({
   label: DIAGNOSIS_SEVERITY_LABEL_VI[value],
 }));
 
-/** Khối chẩn đoán (FR-09) — nhiều chẩn đoán trên cùng một hồ sơ, đúng một cái là chính. */
 export function DiagnosesSection({ record, readOnly }: { record: MedicalRecord; readOnly: boolean }) {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -25,8 +24,6 @@ export function DiagnosesSection({ record, readOnly }: { record: MedicalRecord; 
   const [diseaseId, setDiseaseId] = useState('');
   const [notes, setNotes] = useState('');
 
-  // `limit` tối đa 100 (PaginationQueryDto phía backend) - gửi 200 sẽ bị trả 400 và ô
-  // chọn bệnh lặng lẽ rỗng.
   const diseasesQuery = useQuery({
     queryKey: ['diseases', 'for-diagnosis'],
     queryFn: () => catalogApi.diseases({ limit: 100 }),

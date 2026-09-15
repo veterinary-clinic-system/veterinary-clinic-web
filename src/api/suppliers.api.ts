@@ -6,7 +6,7 @@ export interface SupplierListParams {
   limit?: number;
   sortBy?: string;
   sortOrder?: 'ASC' | 'DESC';
-  /** Đối chiếu với tên, mã NCC và số điện thoại cùng lúc. */
+  
   search?: string;
   active?: boolean;
 }
@@ -22,7 +22,6 @@ export interface SupplierPayload {
   active?: boolean;
 }
 
-/** `supplierCode` do backend sinh (NCC0001) — không gửi lên khi tạo. */
 export const suppliersApi = {
   list: (params: SupplierListParams = {}) =>
     apiClient

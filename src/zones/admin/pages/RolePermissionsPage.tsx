@@ -12,13 +12,6 @@ import { Role } from '@/types/enums';
 import { getErrorMessage } from '@/utils/errors';
 import { ROLE_LABEL_VI } from '@/utils/labels';
 
-/**
- * Ma trận vai trò × quyền — SRS FR-02, BR-16 (chỉ Admin).
- *
- * Cột ADMIN hiển thị nhưng khóa cứng: backend từ chối mọi thay đổi quyền của Admin để
- * quản trị viên không tự khóa mình ra ngoài hệ thống. Không ẩn cột đi, vì người dùng
- * cần thấy Admin có toàn quyền — ẩn sẽ khiến bảng trông như Admin không có quyền nào.
- */
 export function RolePermissionsPage() {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -32,7 +25,6 @@ export function RolePermissionsPage() {
     queryFn: () => permissionsApi.matrix(),
   });
 
-  /** Bản nháp cục bộ: tick nhiều ô rồi mới lưu một lần cho mỗi vai trò. */
   const [draft, setDraft] = useState<Record<string, Set<PermissionCode>>>({});
 
   useEffect(() => {
@@ -168,7 +160,7 @@ export function RolePermissionsPage() {
           </thead>
           <tbody>
             {(catalogQuery.data ?? []).map((group) => (
-              // Fragment cần key vì nằm trong map — dùng `<>` sẽ bị React cảnh báo lúc chạy.
+              
               <Fragment key={group.group}>
                 <tr className="border-t border-border bg-surface-muted/50">
                   <td colSpan={roles.length + 1} className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted">

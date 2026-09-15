@@ -10,13 +10,6 @@ import { LAB_TEST_STATUS_LABEL_VI, labResultFlagClasses } from '@/utils/labels';
 import { extractApiMessage } from '../api-utils';
 import { Section } from '../Section';
 
-/**
- * Khối xét nghiệm. Chỉ định phải đi qua `POST /examinations/:id/lab-tests`, nên phải có
- * phiếu sinh hiệu trước - đó là lý do khối này nhắc bác sĩ lưu sinh hiệu khi chưa có.
- *
- * `readOnly` chỉ khoá việc CHỈ ĐỊNH THÊM, không khoá việc nhập kết quả - xem ghi chú ở
- * `LabTestRow` về ngoại lệ có chủ đích của BR-08 (P9-T7).
- */
 export function LabTestsSection({ record, readOnly }: { record: MedicalRecord; readOnly: boolean }) {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -81,16 +74,6 @@ export function LabTestsSection({ record, readOnly }: { record: MedicalRecord; r
   );
 }
 
-/**
- * Một yêu cầu xét nghiệm kèm bảng chỉ số — P9-T5, P9-T7.
- *
- * `readOnly` (hồ sơ đã COMPLETED) **không** khoá phần nhập kết quả, khác mọi khối khác
- * trên màn hình này. Đây là ngoại lệ có chủ đích của BR-08: kết quả xét nghiệm về muộn
- * là chuyện bình thường, và bắt hồ sơ mở chờ kết quả thì hoặc hồ sơ bị treo hàng loạt,
- * hoặc kết quả về rồi không có chỗ ghi vào. Ghi một con số đo được không sửa kết luận
- * chuyên môn nào — chẩn đoán, điều trị, đơn thuốc vẫn khoá cứng. Xem `LaboratoriesService`
- * ở backend, nơi cùng quyết định này được ghi lại đầy đủ.
- */
 function LabTestRow({ test }: { test: LabTestOrder }) {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -112,9 +95,7 @@ function LabTestRow({ test }: { test: LabTestOrder }) {
             unit: row.unit || undefined,
             referenceMin: row.referenceMin === '' ? null : Number(row.referenceMin),
             referenceMax: row.referenceMax === '' ? null : Number(row.referenceMax),
-            // Bỏ trống = để backend tự tính từ khoảng tham chiếu. Chỉ gửi `flag` khi kỹ
-            // thuật viên chủ động chọn - gửi kèm mọi lần lưu sẽ biến mọi kết quả thành
-            // "đã ghi đè" và cờ tự động không bao giờ chạy nữa.
+
             flag: row.flag === '' ? undefined : (row.flag as LabResultFlag),
           })),
       }),
@@ -299,7 +280,7 @@ interface LabResultLine {
   unit: string;
   referenceMin: string;
   referenceMax: string;
-  /** Chuỗi rỗng = để backend tự tính cờ từ khoảng tham chiếu. */
+  
   flag: string;
 }
 

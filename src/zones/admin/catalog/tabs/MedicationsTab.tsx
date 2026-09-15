@@ -7,8 +7,10 @@ import { ItemType, Medication } from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';
 import { formatCurrency } from '@/utils/format';
 import { CategorySelect, PAGE_SIZE, TabPagination, TabTableStates } from '../shared';
+import { ImageUpload } from '@/components/ImageUpload';
 
 interface MedicationFormState {
+  imageUrl: string;
   itemName: string;
   describe: string;
   unitPrice: string;
@@ -23,6 +25,7 @@ interface MedicationFormState {
 }
 
 const EMPTY_MEDICATION_FORM: MedicationFormState = {
+  imageUrl: '/images/default-item.svg',
   itemName: '',
   describe: '',
   unitPrice: '',
@@ -36,14 +39,6 @@ const EMPTY_MEDICATION_FORM: MedicationFormState = {
   minimumStock: '',
 };
 
-/**
- * Thuốc (SRS FR-15).
- *
- * Việc sửa nằm trong **Modal** chứ không sửa tại chỗ trong hàng bảng như trước: P5 bổ
- * sung 6 trường (danh mục, tên gốc, nhà sản xuất, nhà cung cấp, giá vốn, tồn tối
- * thiểu), nhồi thêm 6 ô nhập vào một hàng ngang sẽ không còn dùng được. Bảng giữ vai
- * hiển thị, Modal lo phần nhập — cùng khuôn với `ProductsPage`.
- */
 export function MedicationsTab() {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -53,8 +48,7 @@ export function MedicationsTab() {
     queryFn: () => catalogApi.medications({ page, limit: PAGE_SIZE }),
     placeholderData: (prev) => prev,
   });
-  // `limit` tối đa 100 (PaginationQueryDto phía backend) - gửi 200 sẽ bị trả 400 và ô
-  // chọn nhà cung cấp lặng lẽ rỗng.
+
   const suppliersQuery = useQuery({
     queryKey: ['suppliers', 'for-medication'],
     queryFn: () => suppliersApi.list({ limit: 100 }),
@@ -72,6 +66,7 @@ export function MedicationsTab() {
     mutationFn: () => {
       const payload = {
         itemName: form.itemName,
+        imageUrl: form.imageUrl,
         describe: form.describe || undefined,
         unitPrice: Number(form.unitPrice) || 0,
         unit: form.unit,
@@ -104,6 +99,7 @@ export function MedicationsTab() {
   function openEdit(m: Medication) {
     setEditing(m);
     setForm({
+      imageUrl: m.item.imageUrl,
       itemName: m.item.itemName,
       describe: m.item.describe ?? '',
       unitPrice: String(m.item.unitPrice),
@@ -125,7 +121,6 @@ export function MedicationsTab() {
     setForm(EMPTY_MEDICATION_FORM);
   }
 
-  // Bán lỗ là nghiệp vụ có thật (xả hàng cận hạn) nên chỉ CẢNH BÁO, không chặn.
   const sellingBelowCost =
     form.costPrice !== '' &&
     form.unitPrice !== '' &&
@@ -166,7 +161,7 @@ export function MedicationsTab() {
             {(listQuery.data?.data ?? []).map((m) => (
               <tr key={m.id} className="border-t border-border hover:bg-surface-muted">
                 <td className="px-3 py-2 font-mono text-xs text-muted">{m.item.code}</td>
-                <td className="px-3 py-2">{m.item.itemName}</td>
+                <td className="px-3 py-2"><span className="flex items-center gap-2"><img src={m.item.imageUrl} alt="" className="h-10 w-10 rounded object-cover" />{m.item.itemName}</span></td>
                 <td className="px-3 py-2 text-muted">{m.item.category?.categoryName ?? '—'}</td>
                 <td className="px-3 py-2 text-muted">{m.genericName ?? '—'}</td>
                 <td className="px-3 py-2 text-muted">{m.activeIngredient ?? '—'}</td>
@@ -212,6 +207,13 @@ export function MedicationsTab() {
           }}
           className="flex flex-col gap-4"
         >
+          <ImageUpload
+            label="Ảnh thuốc"
+            category="catalog-images"
+            value={form.imageUrl}
+            onChange={(imageUrl) => setForm({ ...form, imageUrl })}
+            required
+          />
           <Input
             label="Tên thuốc"
             required

@@ -2,8 +2,8 @@ import { EmptyState, Skeleton } from '@/components/basic';
 import { getInitial, specializationLabel } from '@/utils/display';
 import { ANY_DOCTOR } from '../types';
 import { BookingForm } from '../use-booking-form';
+import { DoctorProfileDetails } from '../../components/DoctorProfileDetails';
 
-/** Bước 3 - chọn bác sĩ, hoặc để phòng khám tự sắp xếp. */
 export function StepDoctor({
   doctor,
   branchName,
@@ -18,10 +18,7 @@ export function StepDoctor({
       </h2>
       <p className="mt-1 text-sm text-muted">Bác sĩ đang công tác tại {branchName}.</p>
 
-      {/*
-        Không phải khách nào cũng có bác sĩ ruột. Lựa chọn này gửi `doctorId` rỗng và để
-        backend chọn người đang trống đúng khung giờ khách chọn.
-      */}
+      {}
       <button
         type="button"
         aria-pressed={doctor.id === ANY_DOCTOR}
@@ -68,44 +65,55 @@ export function StepDoctor({
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         {doctor.list?.map((item) => (
-          <button
-            type="button"
+          <div
             key={item.id}
-            aria-pressed={doctor.id === item.id}
-            onClick={() => doctor.select(item.id)}
-            className={
-              'flex gap-3 rounded-xl border p-4 text-left transition-colors ' +
-              (doctor.id === item.id
-                ? 'border-primary bg-primary/5'
-                : 'border-border bg-surface hover:border-primary/50')
-            }
+            className={`booking-doctor-choice${doctor.id === item.id ? 'is-selected' : ''}`}
           >
-            {item.avatarUrl ? (
-              <img
-                src={item.avatarUrl}
-                alt=""
-                className="h-12 w-12 shrink-0 rounded-full object-cover"
-              />
-            ) : (
-              <span
-                aria-hidden="true"
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary"
-              >
-                {getInitial(item.fullName)}
-              </span>
-            )}
-            <span className="min-w-0">
-              <span className="block font-semibold text-foreground">{item.fullName}</span>
-              {item.yearOfStart && (
-                <span className="block text-xs text-muted">Hành nghề từ năm {item.yearOfStart}</span>
-              )}
-              {item.specialization.length > 0 && (
-                <span className="mt-1 block text-xs text-muted">
-                  {item.specialization.map((s) => specializationLabel(s)).join(', ')}
+            <button
+              type="button"
+              key={item.id}
+              aria-pressed={doctor.id === item.id}
+              onClick={() => doctor.select(item.id)}
+              className={
+                'flex w-full gap-3 rounded-xl border p-4 text-left transition-colors ' +
+                (doctor.id === item.id
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border bg-surface hover:border-primary/50')
+              }
+            >
+              {item.avatarUrl ? (
+                <img
+                  src={item.avatarUrl}
+                  alt=""
+                  className="h-20 w-20 shrink-0 rounded-2xl object-cover"
+                />
+              ) : (
+                <span
+                  aria-hidden="true"
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary"
+                >
+                  {getInitial(item.fullName)}
                 </span>
               )}
-            </span>
-          </button>
+              <span className="min-w-0">
+                <span className="block font-semibold text-foreground">{item.fullName}</span>
+                {item.yearOfStart && (
+                  <span className="block text-xs text-muted">
+                    Hành nghề từ năm {item.yearOfStart}
+                  </span>
+                )}
+                {item.specialization.length > 0 && (
+                  <span className="mt-1 block text-xs text-muted">
+                    {item.specialization.map((s) => specializationLabel(s)).join(', ')}
+                  </span>
+                )}
+                <span className="mt-2 block text-xs font-semibold text-primary">
+                  {doctor.id === item.id ? '✓ Đã chọn bác sĩ' : 'Chọn bác sĩ này →'}
+                </span>
+              </span>
+            </button>
+            <DoctorProfileDetails doctor={item} />
+          </div>
         ))}
       </div>
 

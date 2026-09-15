@@ -16,8 +16,8 @@ import { Role, Specialization } from '@/types/enums';
 import { StaffUser } from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';
 import { ROLE_LABEL_VI, SPECIALIZATION_LABEL_VI } from '@/utils/labels';
+import { ImageUpload } from '@/components/ImageUpload';
 
-/** Vai trò tài khoản nhân sự Admin tạo được - thứ tự theo cấp bậc, không theo enum. */
 const CREATABLE_ROLES = [
   Role.ADMIN,
   Role.MANAGER,
@@ -28,6 +28,7 @@ const CREATABLE_ROLES = [
 ];
 
 interface FormState {
+  avatarUrl: string;
   phone: string;
   fullName: string;
   email: string;
@@ -40,6 +41,7 @@ interface FormState {
 }
 
 const EMPTY_FORM: FormState = {
+  avatarUrl: '/images/default-staff.svg',
   phone: '',
   fullName: '',
   email: '',
@@ -54,21 +56,10 @@ const EMPTY_FORM: FormState = {
 export interface StaffAccountModalProps {
   open: boolean;
   onClose: () => void;
-  /** `null` là tạo mới; có giá trị là sửa tài khoản đó. */
+  
   editing: StaffUser | null;
 }
 
-/**
- * Tạo và sửa tài khoản nhân viên.
- *
- * Trước đây biểu mẫu tạo nằm THƯỜNG TRỰC phía trên danh sách và việc sửa diễn ra ngay
- * trên hàng của bảng. Hai chỗ đó cùng một vấn đề: bảy ô nhập chiếm gần hết màn hình đầu
- * tiên của một trang mà phần lớn thời gian người ta mở ra chỉ để TRA CỨU. Thêm tài khoản
- * là việc vài tuần một lần - nó thuộc về một hộp thoại, không phải về trang.
- *
- * Mọi ô nhập đều có `label` thật. Bản trước chỉ có `placeholder`, tức là nhãn biến mất
- * ngay khi người dùng gõ chữ đầu tiên, và trình đọc màn hình không có gì để đọc.
- */
 export function StaffAccountModal({ open, onClose, editing }: StaffAccountModalProps) {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -87,6 +78,7 @@ export function StaffAccountModal({ open, onClose, editing }: StaffAccountModalP
         ? {
             ...EMPTY_FORM,
             phone: editing.phone,
+            avatarUrl: editing.avatarUrl,
             fullName: editing.fullName,
             email: editing.email ?? '',
             role: editing.role,
@@ -100,19 +92,17 @@ export function StaffAccountModal({ open, onClose, editing }: StaffAccountModalP
   const mutation = useMutation({
     mutationFn: () => {
       if (editing) {
-        /*
-          Backend chỉ nhận đổi chi nhánh và trạng thái khoá trên tài khoản đã có. Số điện
-          thoại là định danh đăng nhập, còn đổi vai trò thì kéo theo cả bộ quyền - cả hai
-          nằm ngoài phạm vi màn hình này.
-        */
+        
         return usersApi.update(editing.id, {
           active: form.active,
+          avatarUrl: form.avatarUrl,
           branchId: form.branchId || null,
         });
       }
       return usersApi.create({
         phone: form.phone,
         fullName: form.fullName,
+        avatarUrl: form.avatarUrl,
         email: form.email || undefined,
         password: form.password,
         role: form.role,
@@ -158,6 +148,13 @@ export function StaffAccountModal({ open, onClose, editing }: StaffAccountModalP
       }
     >
       <form id="staff-account-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <ImageUpload
+          label={form.role === Role.DOCTOR ? 'Ảnh bác sĩ' : 'Ảnh nhân viên'}
+          category={form.role === Role.DOCTOR ? 'doctor-avatars' : 'user-avatars'}
+          value={form.avatarUrl}
+          onChange={(avatarUrl) => setForm({ ...form, avatarUrl })}
+          required
+        />
         {editing ? (
           <p className="text-sm text-muted">
             {editing.phone} · {ROLE_LABEL_VI[editing.role]} · đổi được chi nhánh và trạng thái hoạt
@@ -205,10 +202,7 @@ export function StaffAccountModal({ open, onClose, editing }: StaffAccountModalP
           </>
         )}
 
-        {/*
-          Quản trị viên không gắn chi nhánh - họ làm việc trên toàn hệ thống. Ẩn ô này
-          thay vì để trống rồi chờ backend trả lỗi.
-        */}
+        {}
         {form.role !== Role.ADMIN && (
           <Select
             label="Chi nhánh"

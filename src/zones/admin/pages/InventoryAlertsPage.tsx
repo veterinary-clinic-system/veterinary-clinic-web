@@ -19,11 +19,10 @@ interface AlertGroup {
   title: string;
   hint: string;
   rows: InventoryAlertRow[];
-  /** Nhóm về hạn dùng hiện thêm cột lô + HSD; nhóm về số lượng thì không. */
+  
   showBatch: boolean;
 }
 
-/** SRS FR-18-04 — bốn nhóm cảnh báo tồn kho. */
 export function InventoryAlertsPage() {
   const navigate = useNavigate();
   const [branchId, setBranchId] = useState('');
@@ -88,7 +87,7 @@ export function InventoryAlertsPage() {
         render: (row) => (
           <button
             type="button"
-            // Bấm vào đi thẳng tới hàng liên quan trên màn hình kho — yêu cầu P6-T9.
+            
             onClick={() => navigate(`/staff/inventory?item=${row.itemId}&branch=${row.branchId}`)}
             className="font-medium text-primary hover:underline"
           >
@@ -159,13 +158,7 @@ export function InventoryAlertsPage() {
         )}
       </div>
 
-      {/*
-        Bốn nhóm dưới đây đọc CHUNG một lời gọi API. Hỏng thì hỏng cả bốn, nên đặt
-        nhánh lỗi ở đây thay vì ở từng bảng: bốn hộp lỗi giống hệt nhau xếp chồng
-        không nói thêm được gì so với một hộp, mà lại đẩy nút "Thử lại" xuống dưới
-        màn hình. Bộ chọn chi nhánh phía trên vẫn còn - đổi chi nhánh là một cách
-        thoát khỏi lỗi ngoài việc thử lại.
-      */}
+      {}
       {alertsQuery.isError ? (
         <ErrorState
           title="Không tải được cảnh báo tồn kho"
@@ -182,8 +175,7 @@ export function InventoryAlertsPage() {
               </Badge>
             </div>
             <p className="text-sm text-muted">{group.hint}</p>
-            {/* Mỗi nhóm cảnh báo có thể dài hàng trăm dòng khi kho lớn - phân trang
-              riêng từng nhóm, đổi chi nhánh thì cả ba nhóm về trang 1. */}
+            {}
             <ClientPagedTable
               columns={columnsFor(group)}
               data={group.rows}

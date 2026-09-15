@@ -1,7 +1,6 @@
 import { apiClient } from './client';
 import { Role } from '@/types/models';
 
-/** Mã quyền — khớp `Permission` enum ở backend, giữ dạng string vì UI chỉ hiển thị. */
 export type PermissionCode = string;
 
 export interface PermissionCatalogEntry {

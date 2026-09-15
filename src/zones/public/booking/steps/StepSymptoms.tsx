@@ -2,7 +2,6 @@ import { Textarea } from '@/components/basic';
 import { COMMON_SYMPTOM_LABEL_VI, CommonSymptom } from '@/types/enums';
 import { BookingForm } from '../use-booking-form';
 
-/** Bước 6 - triệu chứng, ảnh đính kèm. Toàn bộ bước này không bắt buộc. */
 export function StepSymptoms({ symptoms }: { symptoms: BookingForm['symptoms'] }) {
   return (
     <section aria-labelledby="buoc-trieu-chung">
@@ -33,10 +32,7 @@ export function StepSymptoms({ symptoms }: { symptoms: BookingForm['symptoms'] }
       </fieldset>
 
       <div className="mt-4">
-        {/*
-          FR-05-01 gọi trường này là `Reason`; xem ghi chú ánh xạ trong
-          appointment.entity.ts về việc vì sao không có cột `reason` riêng.
-        */}
+        {}
         <Textarea
           label="Lý do khám / triệu chứng"
           value={symptoms.other}
@@ -64,7 +60,7 @@ export function StepSymptoms({ symptoms }: { symptoms: BookingForm['symptoms'] }
         />
 
         {symptoms.photos.length > 0 && (
-          /* `aria-live` để người dùng bàn phím biết ảnh đã tải lên xong hay hỏng. */
+          
           <ul aria-live="polite" className="mt-2 space-y-1 text-sm">
             {symptoms.photos.map((item) => (
               <li

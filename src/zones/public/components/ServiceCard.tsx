@@ -3,23 +3,12 @@ import { Button, Icon } from '@/components/basic';
 import { Service } from '@/types/models';
 import { formatCurrency } from '@/utils/format';
 
-/**
- * Thẻ dịch vụ - dùng chung ở trang chủ và trang bảng giá.
- *
- * Ba thông tin khách cần trước khi bấm đặt lịch: **làm gì, bao nhiêu tiền, mất bao
- * lâu**. Giá và thời lượng nằm ở hàng dưới cùng, cùng một vị trí trên mọi thẻ, để mắt
- * so sánh được theo cột khi lướt qua chín thẻ.
- *
- * Nút đặt lịch mang theo `serviceId` trong `location.state`, nên khách vào biểu mẫu là
- * đã qua bước 1 (xem `BookingHandoffState`). Đây là chỗ giảm ma sát rẻ nhất của cả
- * luồng - không có nó, khách phải tự nhớ tên dịch vụ vừa xem rồi tìm lại trong danh
- * sách thả xuống.
- */
 export function ServiceCard({ service }: { service: Service }) {
   const navigate = useNavigate();
 
   return (
     <article className="flex flex-col rounded-xl border border-border bg-surface p-5 transition-colors hover:border-primary/40">
+      <img src={service.item.imageUrl} alt="" className="mb-4 h-36 w-full rounded-lg object-cover" />
       <div className="flex-1">
         <h3 className="text-base font-semibold text-foreground">{service.item.itemName}</h3>
         {service.item.describe && (

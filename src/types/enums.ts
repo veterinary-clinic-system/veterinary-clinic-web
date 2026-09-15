@@ -1,14 +1,5 @@
-/**
- * Mirrors veterinary-clinic-backend/src/common/enums/*.ts exactly (string values are
- * the wire format sent/received over the REST API). Keep in sync by hand - there's no
- * shared package between the two projects.
- */
 
-/**
- * 6 vai trò nghiệp vụ của SRS (mục 4) cộng PET_OWNER.
- * `DOCTOR` chính là `Veterinarian` của SRS — không đổi tên, xem ghi chú trong
- * `veterinary-clinic-backend/src/shared/common/enums/role.enum.ts`.
- */
+
 export enum Role {
   ADMIN = 'ADMIN',
   MANAGER = 'MANAGER',
@@ -19,7 +10,6 @@ export enum Role {
   PET_OWNER = 'PET_OWNER',
 }
 
-/** Vai trò làm việc tại cơ sở — bắt buộc phải gán chi nhánh khi tạo tài khoản. */
 export const BRANCH_SCOPED_ROLES: Role[] = [
   Role.MANAGER,
   Role.DOCTOR,
@@ -28,10 +18,8 @@ export const BRANCH_SCOPED_ROLES: Role[] = [
   Role.STAFF,
 ];
 
-/** Mọi vai trò nhân viên (khác khách hàng). */
 export const STAFF_ROLES: Role[] = [Role.ADMIN, ...BRANCH_SCOPED_ROLES];
 
-/** Trạng thái làm việc của nhân viên — SRS FR-22. */
 export enum EmployeeStatus {
   PROBATION = 'PROBATION',
   ACTIVE = 'ACTIVE',
@@ -94,22 +82,17 @@ export const COMMON_SYMPTOM_LABEL_VI: Record<CommonSymptom, string> = {
 export enum PaymentMethod {
   CASH = 'CASH',
   E_WALLET = 'E_WALLET',
-  /** = `CARD` của SRS — thẻ tín dụng/ghi nợ quẹt tại quầy. */
+  
   CREDIT_CARD = 'CREDIT_CARD',
   BANK_TRANSFER = 'BANK_TRANSFER',
   QR = 'QR',
 }
 
-/** Nguồn sinh hoá đơn (P8-T1). POS = bán lẻ tại quầy, không có lịch hẹn. */
 export enum InvoiceSource {
   CLINIC = 'CLINIC',
   POS = 'POS',
 }
 
-/**
- * Trạng thái hoá đơn (P8-T2) — backend tính từ tổng các lần thanh toán, **không** đặt
- * bằng tay. Client chỉ đọc.
- */
 export enum InvoiceStatus {
   PENDING = 'PENDING',
   PARTIALLY_PAID = 'PARTIALLY_PAID',
@@ -118,19 +101,17 @@ export enum InvoiceStatus {
   REFUNDED = 'REFUNDED',
 }
 
-/** Vòng đời giỏ hàng POS (P8-T4, FR-19). */
 export enum CartStatus {
   OPEN = 'OPEN',
   CHECKED_OUT = 'CHECKED_OUT',
   ABANDONED = 'ABANDONED',
 }
 
-/** Trạng thái một lần thanh toán (P8-T2, FR-21). */
 export enum PaymentStatus {
   PENDING = 'PENDING',
   SUCCESS = 'SUCCESS',
   FAILED = 'FAILED',
-  /** Dòng hoàn tiền — `amount` luôn âm. */
+  
   REFUNDED = 'REFUNDED',
 }
 
@@ -160,9 +141,9 @@ export enum ItemType {
   SERVICE = 'SERVICE',
   MEDICATION = 'MEDICATION',
   LAB_TEST = 'LAB_TEST',
-  /** Hàng hoá bán lẻ — SRS FR-16 (P5). Gắn vào `items` giống Service và Medication. */
+  
   PRODUCT = 'PRODUCT',
-  /** Vaccine — SRS FR-12 (P9). Cũng là hàng tồn kho có lô và hạn dùng. */
+  
   VACCINE = 'VACCINE',
   OTHER = 'OTHER',
 }
@@ -173,13 +154,6 @@ export enum LabTestStatus {
   COMPLETED = 'COMPLETED',
 }
 
-/**
- * Cờ bất thường của một chỉ số xét nghiệm — SRS FR-13-02 (P9-T5).
- *
- * `CRITICAL` không bao giờ do hệ thống tự tính: nó chỉ đến từ việc kỹ thuật viên ghi
- * đè. Hệ thống chỉ so giá trị với khoảng tham chiếu, tức chỉ kết luận được trong /
- * dưới / trên khoảng — ngưỡng nguy kịch là một phán đoán lâm sàng.
- */
 export enum LabResultFlag {
   NORMAL = 'NORMAL',
   LOW = 'LOW',
@@ -194,7 +168,6 @@ export const LAB_RESULT_FLAG_LABEL_VI: Record<LabResultFlag, string> = {
   [LabResultFlag.CRITICAL]: 'Nguy kịch',
 };
 
-/** Trạng thái lịch nhắc của một mũi tiêm — backend tính sẵn (P9-T3). */
 export type VaccinationDueStatus = 'OVERDUE' | 'DUE_SOON' | 'SCHEDULED' | 'NONE';
 
 export const VACCINATION_DUE_STATUS_LABEL_VI: Record<VaccinationDueStatus, string> = {
@@ -204,16 +177,11 @@ export const VACCINATION_DUE_STATUS_LABEL_VI: Record<VaccinationDueStatus, strin
   NONE: 'Không nhắc lại',
 };
 
-/**
- * Vòng đời hồ sơ bệnh án — SRS FR-08 / BR-08. `COMPLETED` là ranh giới BR-08 bảo vệ:
- * hồ sơ đã chốt thì mọi ô nhập bị khoá.
- */
 export enum MedicalRecordStatus {
   DRAFT = 'DRAFT',
   COMPLETED = 'COMPLETED',
 }
 
-/** Mức độ nặng của một chẩn đoán — SRS FR-09. */
 export enum DiagnosisSeverity {
   MILD = 'MILD',
   MODERATE = 'MODERATE',
@@ -252,14 +220,10 @@ export enum SlotStatus {
   BOOKED = 'BOOKED',
   BREAK = 'BREAK',
   OFF_SHIFT = 'OFF_SHIFT',
-  /**
-   * Khung giờ nằm trước thời điểm sớm nhất còn đặt được (từ ngày mai trở đi). Chỉ
-   * xuất hiện ở lịch công khai — lịch của nhân viên vẫn thấy quá khứ để tra cứu.
-   */
+  
   PAST = 'PAST',
 }
 
-/** Loại giao dịch kho — SRS FR-18-02 (P6). */
 export enum InventoryTransactionType {
   PURCHASE = 'PURCHASE',
   SALE = 'SALE',
@@ -282,12 +246,6 @@ export const INVENTORY_TRANSACTION_TYPE_LABEL_VI: Record<InventoryTransactionTyp
   [InventoryTransactionType.RETURN]: 'Trả hàng',
 };
 
-/**
- * Các lý do xuất kho nhân viên chọn được trên màn hình kho.
- *
- * `SALE`/`DISPENSE` cố ý không có: hai loại đó phải đi kèm hoá đơn (P8) hoặc đơn thuốc
- * (P7) — backend cũng chặn ở `IssueInventoryDto`.
- */
 export const MANUAL_ISSUE_TYPES: InventoryTransactionType[] = [
   InventoryTransactionType.DAMAGED,
   InventoryTransactionType.EXPIRED,
@@ -295,7 +253,6 @@ export const MANUAL_ISSUE_TYPES: InventoryTransactionType[] = [
   InventoryTransactionType.RETURN,
 ];
 
-/** Vòng đời đơn đặt hàng — SRS UC-05 (P6). */
 export enum PurchaseOrderStatus {
   DRAFT = 'DRAFT',
   ORDERED = 'ORDERED',
@@ -312,7 +269,6 @@ export const PURCHASE_ORDER_STATUS_LABEL_VI: Record<PurchaseOrderStatus, string>
   [PurchaseOrderStatus.CANCELLED]: 'Đã hủy',
 };
 
-/** Trạng thái phiếu kiểm kê — SRS FR-18-03 (P6). */
 export enum StockTakeStatus {
   DRAFT = 'DRAFT',
   CONFIRMED = 'CONFIRMED',
@@ -325,7 +281,6 @@ export const STOCK_TAKE_STATUS_LABEL_VI: Record<StockTakeStatus, string> = {
   [StockTakeStatus.CANCELLED]: 'Đã hủy',
 };
 
-/** Đường dùng thuốc — SRS FR-11-01 (P7). */
 export enum MedicationRoute {
   ORAL = 'ORAL',
   INJECTION = 'INJECTION',
@@ -344,7 +299,6 @@ export const MEDICATION_ROUTE_LABEL_VI: Record<MedicationRoute, string> = {
   [MedicationRoute.OTHER]: 'Khác',
 };
 
-/** Vòng đời đơn thuốc — SRS FR-11-03 (P7). */
 export enum PrescriptionStatus {
   PRESCRIBED = 'PRESCRIBED',
   DISPENSING = 'DISPENSING',
@@ -359,14 +313,6 @@ export const PRESCRIPTION_STATUS_LABEL_VI: Record<PrescriptionStatus, string> = 
   [PrescriptionStatus.CANCELLED]: 'Đã hủy',
 };
 
-/**
- * Nhãn cho nhật ký kiểm toán — FR-26 (P10-T2).
- *
- * Cố tình để kiểu `Record<string, string>` chứ không phải `Record<Enum, string>`: hai
- * danh sách này đến từ `GET /audit-logs/filters`, và bảng `audit_logs` là bất biến nên
- * nó còn giữ những giá trị của các phiên bản trước. Tra không thấy thì hiện nguyên mã —
- * một dòng nhật ký cũ vẫn phải đọc được, chỉ là không có nhãn tiếng Việt.
- */
 export const AUDIT_ACTION_LABEL_VI: Record<string, string> = {
   CREATE: 'Tạo mới',
   UPDATE: 'Cập nhật',

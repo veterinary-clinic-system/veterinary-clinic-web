@@ -17,16 +17,6 @@ import { COMMON_SYMPTOM_LABEL_VI } from '@/types/enums';
 import { GENDER_LABEL_VI } from '@/utils/display';
 import { petAgeLabel } from '@/zones/owner/components/pet-display';
 
-/**
- * Cột trái của màn hình khám: bệnh nhân là AI, và họ tới vì chuyện gì.
- *
- * Tách khỏi cột bệnh sử (cột phải) vì hai thứ này được đọc ở hai thời điểm khác nhau:
- * cột này đọc MỘT LẦN lúc bắt đầu ca khám để xác nhận đúng con vật và đúng lý do; cột
- * bệnh sử thì mở ra đóng vào suốt buổi khám.
- *
- * `sticky` để nó không trôi mất khi bác sĩ cuộn xuống phần kê đơn - đó lại chính là lúc
- * cân nặng và danh sách dị ứng cần được nhìn thấy nhất.
- */
 export function PatientSummaryPanel({ appointment }: { appointment: Appointment }) {
   const petQuery = useQuery({
     queryKey: ['pet', appointment.petId],
@@ -88,11 +78,7 @@ export function PatientSummaryPanel({ appointment }: { appointment: Appointment 
         </CardBody>
       </Card>
 
-      {/*
-        Dị ứng đứng riêng thành một khối cảnh báo, không gộp vào bảng thông tin ở trên:
-        đây là dòng có thể ngăn một phản ứng thuốc, và nó phải khác hẳn về hình thức với
-        "màu lông: vàng".
-      */}
+      {}
       {pet && pet.allergies.length > 0 && (
         <Alert tone="danger" title="Dị ứng">
           <ul className="flex flex-wrap gap-1.5">

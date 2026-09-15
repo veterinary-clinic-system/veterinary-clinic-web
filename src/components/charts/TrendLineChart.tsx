@@ -7,16 +7,6 @@ const PADDING = { top: 12, right: 16, bottom: 26, left: 52 };
 const PLOT_WIDTH = WIDTH - PADDING.left - PADDING.right;
 const PLOT_HEIGHT = HEIGHT - PADDING.top - PADDING.bottom;
 
-/**
- * Biểu đồ đường một chuỗi theo thời gian — dùng cho 5 biểu đồ xu hướng của FR-24.
- *
- * Theo đúng quy cách mark: đường 2px bo tròn đầu nối, nền tô 10% cùng sắc, lưới kẻ
- * mảnh 1px liền nét (không đứt nét), điểm cuối đường kính ≥8px có vành 2px màu nền để
- * không lẫn vào đường khi hai thứ chồng nhau.
- *
- * NHÃN TRỰC TIẾP ĐẶT THƯA: chỉ điểm cuối và điểm cao nhất. In số lên cả 30 điểm thì
- * không ai đọc, và trục tung cùng tooltip đã gánh phần còn lại.
- */
 export function TrendLineChart({
   points,
   format,
@@ -24,7 +14,7 @@ export function TrendLineChart({
 }: {
   points: ChartPoint[];
   format: ValueFormat;
-  /** id của tiêu đề bên ngoài — SVG mượn nó làm tên cho trình đọc màn hình. */
+  
   labelledBy: string;
 }) {
   const [hover, setHover] = useState<number | null>(null);
@@ -53,7 +43,6 @@ export function TrendLineChart({
   const last = coords[coords.length - 1];
   const active = hover ?? points.length - 1;
 
-  // Nhãn trục hoành in thưa: 30 mốc ngày chồng chữ lên nhau, ~6 mốc là đọc được.
   const labelEvery = Math.max(1, Math.ceil(points.length / 6));
 
   return (
@@ -112,7 +101,7 @@ export function TrendLineChart({
           </text>
         ))}
 
-        {/* Điểm cao nhất được gọi tên; nếu nó trùng điểm cuối thì bỏ để khỏi in đè. */}
+        {}
         {peakIndex >= 0 && peakIndex !== points.length - 1 && (
           <text
             x={coords[peakIndex].x}
@@ -134,7 +123,7 @@ export function TrendLineChart({
           {compactNumber(points[points.length - 1].value)}
         </text>
 
-        {/* Vạch dõi theo con trỏ + vùng bắt chuột rộng hơn chính điểm dữ liệu. */}
+        {}
         {hover !== null && (
           <line
             x1={coords[hover].x}

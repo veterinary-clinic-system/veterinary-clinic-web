@@ -11,12 +11,12 @@ export interface MenuAction {
   to?: string;
   onSelect?: () => void;
   disabled?: boolean;
-  /** Hành động phá huỷ - hiện màu cảnh báo và luôn nằm cuối nhóm. */
+  
   destructive?: boolean;
 }
 
 export interface DropdownMenuProps {
-  /** Nút mở menu. Nhận sẵn các thuộc tính ARIA cần thiết. */
+  
   trigger: (props: {
     ref: React.Ref<HTMLButtonElement>;
     onClick: () => void;
@@ -24,21 +24,11 @@ export interface DropdownMenuProps {
     'aria-haspopup': 'menu';
   }) => ReactNode;
   items: MenuAction[];
-  /** Neo menu về bên nào của nút. Mặc định phải - hợp với nút ở cuối hàng. */
+  
   align?: 'left' | 'right';
   className?: string;
 }
 
-/**
- * Menu thả xuống theo mẫu `menu`/`menuitem` của WAI-ARIA.
- *
- * Mũi tên lên/xuống di chuyển giữa các mục, Esc đóng và trả focus về nút - phần trả
- * focus do `useDismissableLayer` lo. Mục `to` render thành `<Link>` để bấm giữa chuột
- * vẫn mở tab mới được; mục `onSelect` render thành `<button>`.
- *
- * Menu này dành cho HÀNH ĐỘNG. Chọn giá trị trong danh sách thì dùng `Select` hoặc
- * `Combobox` - hai thứ đó có ngữ nghĩa khác hẳn với trình đọc màn hình.
- */
 export function DropdownMenu({ trigger, items, align = 'right', className }: DropdownMenuProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);

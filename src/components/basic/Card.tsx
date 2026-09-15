@@ -1,15 +1,6 @@
 import { ReactNode } from 'react';
 import { cn } from './utils';
 
-/**
- * Thẻ nội dung. Ghép từ nhiều mảnh (`Card` / `CardHeader` / `CardTitle` / `CardBody`)
- * thay vì nhận một đống prop cấu hình - trang nào cần gì thì dựng nấy, và không phải
- * thêm một prop mới mỗi lần có một biến thể.
- *
- * Gom lại ở đây vì chuỗi `rounded-xl border border-border bg-surface p-5` đang được
- * chép tay ở hơn hai chục chỗ, và đã bắt đầu trôi (`p-4` / `p-5` / `p-6`, `rounded-lg`
- * lẫn `rounded-xl`).
- */
 export function Card({
   children,
   className,
@@ -17,7 +8,7 @@ export function Card({
 }: {
   children: ReactNode;
   className?: string;
-  /** Đổi sang `section`/`article`/`li` khi ngữ nghĩa đòi - mặc định là `div`. */
+  
   as?: 'div' | 'section' | 'article' | 'li';
 }) {
   return (
@@ -41,9 +32,9 @@ export function CardTitle({
 }: {
   children: ReactNode;
   className?: string;
-  /** Để `aria-labelledby` của biểu đồ/bảng bên trong trỏ ngược lên tiêu đề thẻ. */
+  
   id?: string;
-  /** Cấp tiêu đề phải khớp với cấu trúc trang - đừng nhảy cóc h1 -> h3. */
+  
   as?: 'h2' | 'h3' | 'h4';
 }) {
   return (

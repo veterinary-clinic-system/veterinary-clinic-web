@@ -15,43 +15,16 @@ const NotFoundPage = lazy(() =>
   import('./NotFoundPage').then((m) => ({ default: m.NotFoundPage })),
 );
 
-/*
-  `/staff` khai báo ở ĐÂY chứ không trong `adminRoutes()`: nội dung của nó đổi theo vai
-  trò và cần biết tới cả hai zone. Xem `StaffHomePage`.
-*/
 const StaffHomePage = lazy(() =>
   import('./StaffHomePage').then((m) => ({ default: m.StaffHomePage })),
 );
 
-/**
- * Bản đồ ZONE của ứng dụng - file này chỉ trả lời "khung nào bọc zone nào", còn từng
- * đường dẫn cụ thể thì thuộc về `routes.tsx` của chính zone đó.
- *
- * Bốn zone chia theo ĐỐI TƯỢNG SỬ DỤNG, mỗi zone là một gói JavaScript riêng
- * (`manualChunks` trong vite.config.ts):
- *
- *   public   - khách vãng lai  : giới thiệu, bảng giá, đội ngũ, đặt lịch, đăng nhập
- *   owner    - chủ nuôi        : /my/*  (nằm trong PublicLayout)
- *   clinical - bác sĩ + lễ tân : lịch làm việc, hàng chờ, phiếu khám, hồ sơ
- *   admin    - quản trị + kho  : POS, hoá đơn, danh mục, kho, nhân sự, báo cáo
- *
- * Zone là ranh giới CODE, KHÔNG phải ranh giới URL: `clinical` và `admin` cùng nằm
- * dưới `/staff` và cùng dùng `StaffLayout`. Nhờ vậy mục nghiệm thu #11 (nhân viên gõ
- * "/" bị đẩy về /staff) không bị đụng tới.
- */
 export function AppRoutes() {
   return (
-    /*
-      MỘT `Suspense` bọc toàn bộ cây route thay vì một cái cho mỗi trang: mỗi lần điều
-      hướng chỉ có đúng một zone đang tải, nên nhiều ranh giới `Suspense` lồng nhau chỉ
-      thêm chỗ để quên chứ không đổi thứ người dùng nhìn thấy.
-    */
+    
     <Suspense fallback={<RouteFallback />}>
       <Routes>
-        {/*
-          Nhân viên không dùng site công khai: `StaffConsoleOnly` đẩy họ về /staff, kể cả
-          khi họ gõ thẳng "/". Chủ nuôi và khách vãng lai không bị ảnh hưởng.
-        */}
+        {}
         <Route element={<StaffConsoleOnly />}>
           <Route element={<PublicLayout />}>
             {publicRoutes()}

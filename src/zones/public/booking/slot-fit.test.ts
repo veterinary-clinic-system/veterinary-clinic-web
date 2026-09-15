@@ -5,7 +5,6 @@ import { slotFitsService } from './slot-fit';
 
 const DATE = '2026-08-17';
 
-/** Lưới một ngày làm việc thật: 07:00-11:00, nghỉ trưa, 13:30-17:30, ô 30 phút. */
 function grid(): SlotInfo[] {
   const toMinutes = (hhmm: string) => {
     const [h, m] = hhmm.split(':').map(Number);
@@ -49,7 +48,6 @@ describe('slotFitsService', () => {
     expect(slotFitsService(slots, at('09:00', slots), 60)).toBe(true);
   });
 
-  /* Hai trường hợp dưới đây là lỗi đã tái hiện được trên API thật trước khi sửa. */
   it('từ chối dịch vụ 60 phút bắt đầu ở ô cuối ngày (17:00 -> 18:00)', () => {
     const slots = grid();
     expect(slotFitsService(slots, at('17:00', slots), 60)).toBe(false);
@@ -62,7 +60,7 @@ describe('slotFitsService', () => {
 
   it('từ chối dịch vụ dài nhảy QUA khe hở nghỉ trưa rồi đếm tiếp buổi chiều', () => {
     const slots = grid();
-    // 10:30 + 240 phút = 14:30. Ô cuối có chạm 14:30, nhưng ở giữa đứt quãng.
+    
     expect(slotFitsService(slots, at('10:30', slots), 240)).toBe(false);
   });
 

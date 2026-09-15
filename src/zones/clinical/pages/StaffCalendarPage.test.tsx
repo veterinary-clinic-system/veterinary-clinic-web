@@ -8,15 +8,6 @@ import { ToastProvider } from '@/components/basic';
 
 import { StaffCalendarPage } from './StaffCalendarPage';
 
-/**
- * Lịch làm việc là màn hình bác sĩ mở đầu tiên mỗi sáng, nên nó là chỗ đắt nhất để
- * nhầm "không tải được" thành "không có lịch hẹn nào": kết luận sai ở đây khiến người
- * ta đi pha cà phê trong lúc phòng chờ đầy người.
- *
- * Cùng ranh giới mà `Table.test.tsx` giữ cho các bảng, nhưng lịch không dựng trên
- * `Table` nên phải có bài riêng.
- */
-
 afterEach(cleanup);
 
 vi.mock('@/context/AuthContext', () => ({
@@ -63,7 +54,7 @@ describe('StaffCalendarPage', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).toContain('Không tải được lịch làm việc');
-    /* Câu này là lý do bài test tồn tại - nó phải nằm ngay trong lời giải thích. */
+    
     expect(alert.textContent).toContain('KHÔNG có nghĩa là lịch trống');
     expect(screen.getByRole('button', { name: 'Thử lại' })).toBeTruthy();
   });
@@ -72,7 +63,6 @@ describe('StaffCalendarPage', () => {
     staffCalendar.mockResolvedValue([]);
     renderPage();
 
-    /* Chờ cho query xong rồi mới khẳng định không có hộp lỗi nào. */
     expect(await screen.findByText('Lịch làm việc')).toBeTruthy();
     await vi.waitFor(() => expect(staffCalendar).toHaveBeenCalled());
     expect(screen.queryByRole('alert')).toBeNull();

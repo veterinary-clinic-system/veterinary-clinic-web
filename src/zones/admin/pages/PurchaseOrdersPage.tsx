@@ -49,7 +49,6 @@ function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-/** SRS UC-05 — đơn đặt hàng gửi nhà cung cấp. */
 export function PurchaseOrdersPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -155,7 +154,6 @@ export function PurchaseOrdersPage() {
     setLines(lines.map((line, i) => (i === index ? { ...line, ...patch } : line)));
   }
 
-  // Tổng tiền hiện ngay khi gõ để người đặt đối chiếu với báo giá — backend vẫn tính lại.
   const draftTotal = lines.reduce(
     (sum, line) => sum + (Number(line.quantity) || 0) * (Number(line.unitCost) || 0),
     0,

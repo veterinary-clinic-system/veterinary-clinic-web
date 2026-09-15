@@ -6,10 +6,6 @@ import { MedicalRecord } from '@/types/models';
 import { extractApiMessage } from '../api-utils';
 import { Section } from '../Section';
 
-/**
- * Chốt hồ sơ. Một hành động không lùi được, nên có bước xác nhận: sau khi bấm, BR-08
- * khoá toàn bộ hồ sơ và lịch hẹn chuyển sang COMPLETED.
- */
 export function CompleteSection({ record, readOnly }: { record: MedicalRecord; readOnly: boolean }) {
   const queryClient = useQueryClient();
   const toast = useToast();

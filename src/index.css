@@ -2,53 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-/*
- * Bảng token của giao diện. Mọi màu/bo góc/đổ bóng trong ứng dụng đều đi qua đây, nên
- * đổi các giá trị dưới là re-skin toàn bộ - không phải sửa component nào.
- *
- * Giá trị là bộ ba R G B (không dấu phẩy) để `bg-primary/50` của Tailwind hoạt động.
- *
- * Chọn màu: xanh ngọc (teal) làm màu chính thay vì xanh dương mặc định - đây là phòng
- * khám thú y, tông xanh ngọc đọc ra "y tế" mà vẫn ấm hơn xanh dương công nghệ. Nền hơi
- * ngả ấm (không phải xám thuần) để các thẻ trắng nổi lên mà không cần viền đậm.
- */
 :root {
-  --color-primary: 13 148 136; /* teal-600 */
+  --color-primary: 13 148 136;
   --color-primary-foreground: 255 255 255;
-  --color-primary-soft: 240 253 250; /* teal-50 - nền cho vùng nhấn, không phải cho nút */
+  --color-primary-soft: 240 253 250;
 
   --color-surface: 255 255 255;
   --color-surface-muted: 245 247 246;
-  /*
-    Nền của thứ NỔI LÊN TRÊN mặt phẳng trang: menu thả xuống, tooltip, popover. Tách
-    khỏi `surface` để sau này chuyển sang chủ đề tối thì lớp nổi sáng hơn nền, chứ
-    không phải cùng một màu rồi phải bù bằng đổ bóng.
-  */
+
   --color-surface-raised: 255 255 255;
 
   --color-border: 226 232 231;
-  /* Viền của thứ cần tách bạch hẳn - đầu bảng, đường chia vùng lớn. */
+
   --color-border-strong: 203 213 211;
 
   --color-foreground: 17 27 33;
   --color-muted-foreground: 100 116 116;
 
-  /*
-    Bốn màu trạng thái. Trước đây chỉ có `destructive`, nên Badge phải mượn tạm màu của
-    thang phân loại ưu tiên (`triage-green` cho "thành công") - hai thứ khác nghĩa hẳn
-    nhau bị buộc chung một giá trị, và đổi một cái là hỏng cái kia.
-    Mỗi màu có bản `-soft` dùng làm nền: cùng sắc, đủ nhạt để chữ đậm đọc được trên đó.
-  */
-  --color-success: 21 128 61; /* green-700 - đạt 4.5:1 trên nền trắng */
+  --color-success: 21 128 61;
   --color-success-soft: 240 253 244;
-  --color-warning: 180 83 9; /* amber-700 - vàng thuần không đủ tương phản cho chữ */
+  --color-warning: 180 83 9;
   --color-warning-soft: 255 251 235;
-  --color-danger: 185 28 28; /* red-700 */
+  --color-danger: 185 28 28;
   --color-danger-soft: 254 242 242;
-  --color-info: 29 78 216; /* blue-700 */
+  --color-info: 29 78 216;
   --color-info-soft: 239 246 255;
 
-  /* Giữ tên cũ: hàng chục chỗ đang dùng `text-destructive`. Cùng giá trị với `danger`. */
   --color-destructive: 185 28 28;
 
   --radius: 0.625rem;
@@ -59,25 +38,15 @@ body {
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
-/*
- * Vùng focus nhìn thấy được trên MỌI thứ bấm được. Trước đây chỉ một vài component tự
- * đặt `focus:ring`, nên đi bằng bàn phím qua phần lớn biểu mẫu là mất dấu con trỏ.
- */
 @layer base {
   :where(a, button, input, select, textarea, [tabindex]):focus-visible {
     @apply outline-none ring-2 ring-primary/40 ring-offset-2 ring-offset-surface;
   }
 
-  /* Bảng số liệu đọc dễ hơn nhiều khi chữ số đều bề ngang. */
   :where(td, th) {
     font-variant-numeric: tabular-nums;
   }
 
-  /*
-   * Tôn trọng "giảm chuyển động" của hệ điều hành. Skeleton nhấp nháy và mọi
-   * transition đều tắt - với người nhạy cảm tiền đình, chuyển động lặp vô hạn trên
-   * cả một trang danh sách là thứ gây khó chịu thật sự, không phải chuyện thẩm mỹ.
-   */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -90,25 +59,570 @@ body {
   }
 }
 
-/*
- * MẬT ĐỘ. Zone lâm sàng được mở cả ngày và đọc theo kiểu quét: hàng bảng thấp hơn,
- * đệm thẻ mỏng hơn, chữ dữ liệu nhỏ hơn một bậc. Zone quản trị và trang công khai thì
- * ngược lại - đọc kỹ, ít lần, nên thoáng.
- *
- * Làm bằng biến thay vì bằng prop `density` truyền xuống từng component: chỉ cần đặt
- * `data-density="compact"` ở gốc `StaffLayout` khi người dùng đang ở màn hình lâm sàng,
- * mọi thứ bên trong tự co lại mà không component nào phải biết mình đang ở đâu.
- */
 :root {
-  --row-height: 3rem; /* 48px */
-  --card-padding: 1.25rem; /* 20px */
-  --data-font-size: 0.875rem; /* 14px */
-  --stack-gap: 1.5rem; /* 24px */
+  --row-height: 3rem;
+  --card-padding: 1.25rem;
+  --data-font-size: 0.875rem;
+  --stack-gap: 1.5rem;
 }
 
 [data-density='compact'] {
-  --row-height: 2.25rem; /* 36px */
-  --card-padding: 1rem; /* 16px */
-  --data-font-size: 0.8125rem; /* 13px */
-  --stack-gap: 1rem; /* 16px */
+  --row-height: 2.25rem;
+  --card-padding: 1rem;
+  --data-font-size: 0.8125rem;
+  --stack-gap: 1rem;
+}
+
+/* Public-facing pet care identity; clinical workspace retains its compact layout. */
+.pet-public {
+  --color-primary: 43 105 80;
+  --color-primary-soft: 232 241 228;
+  --color-foreground: 37 61 50;
+  --color-muted-foreground: 102 115 103;
+  --color-surface-muted: 250 249 244;
+  --color-border: 225 231 219;
+  --radius: 1rem;
+  background: #faf9f4;
+}
+.pet-header {
+  background: rgb(250 249 244 / 0.92);
+  box-shadow: 0 4px 24px #25443205;
+}
+.pet-header nav {
+  height: 82px;
+}
+.pet-public a,
+.pet-public button {
+  transition:
+    background-color 0.22s,
+    color 0.22s,
+    box-shadow 0.22s,
+    transform 0.22s;
+}
+.pet-public button:active,
+.pet-primary-button:active {
+  transform: scale(0.97);
+}
+.pet-public article {
+  border-radius: 24px;
+  box-shadow: 0 8px 30px #24453204;
+  transition:
+    transform 0.35s,
+    box-shadow 0.35s,
+    border-color 0.35s;
+}
+@media (hover: hover) {
+  .pet-public article:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px #24453210;
+    border-color: #abc6af;
+  }
+  .pet-public article:hover img {
+    transform: scale(1.025);
+  }
+}
+.pet-public article img {
+  transition: transform 0.5s;
+}
+.pet-public h2 {
+  font-size: clamp(1.6rem, 3vw, 2.15rem);
+  line-height: 1.25;
+  letter-spacing: -0.04em;
+}
+.pet-home > section:not(.pet-hero) {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+.pet-hero {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 78% 24%, #ecf0dc 0, transparent 52%), #faf9f4;
+}
+.pet-hero-grid {
+  display: grid;
+  grid-template-columns: 1.08fr 1fr;
+  align-items: center;
+  gap: 24px;
+}
+.pet-hero-copy {
+  animation: pet-enter 0.8s both;
+}
+.pet-hero-title {
+  margin-top: 24px;
+  font-size: clamp(2.5rem, 4.4vw, 3.65rem);
+  line-height: 1.12;
+  font-weight: 750;
+  letter-spacing: -0.055em;
+}
+.pet-hero-title > span {
+  color: #bc7056;
+  position: relative;
+  white-space: nowrap;
+}
+.pet-hero-title > span::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 7px;
+  border-top: 3px solid #dbb090;
+  border-radius: 50%;
+  transform: rotate(-3deg);
+}
+.pet-primary-button {
+  color: white;
+  background: #2b6950;
+  border-radius: 50px;
+  box-shadow: 0 7px 18px #2b695025;
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+.pet-primary-button:hover {
+  background: #20543e;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 25px #2b695035;
+}
+.pet-primary-button span {
+  font-size: 23px;
+  line-height: 1;
+}
+.pet-secondary-button {
+  color: #2b6950;
+  border: 1px solid #c9d6c7;
+  border-radius: 50px;
+}
+.pet-secondary-button:hover {
+  background: #e8f1e4;
+}
+.pet-trust-strip {
+  position: relative;
+  padding: 30px 0 34px;
+  border-top: 1px solid #dce3d4;
+}
+.pet-trust-strip > li {
+  padding-right: 12px;
+}
+.pet-trust-strip > li > svg {
+  background: #e9eddf;
+  width: 42px;
+  height: 42px;
+  padding: 10px;
+  border-radius: 14px;
+}
+.pet-trust-strip > li:nth-child(even) > svg {
+  background: #f6e8d9;
+  color: #a66e48;
+}
+.pet-trust-strip p:last-child {
+  line-height: 1.7;
+  font-size: 13px;
+}
+.pet-scene {
+  position: relative;
+  min-width: 0;
+  isolation: isolate;
+  aspect-ratio: 1 / 1.08;
+  animation: pet-enter 1s 0.12s both;
+}
+.pet-scene::before {
+  content: '';
+  position: absolute;
+  inset: 7% 2% 10% 4%;
+  border-radius: 48% 48% 40% 44%;
+  background: #dce6ca;
+  z-index: -1;
+  transform: rotate(-6deg);
+}
+.pet-scene::after {
+  content: '';
+  position: absolute;
+  inset: 12% 0 7% 10%;
+  border: 1px solid #becba7;
+  border-radius: 48%;
+  z-index: -2;
+  transform: rotate(12deg);
+}
+.pet-scene-3d {
+  perspective: 1000px;
+}
+.pet-world {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--pet-rx, 0deg)) rotateY(var(--pet-ry, 0deg));
+  transition: transform 0.35s ease-out;
+}
+.pet-stage {
+  position: absolute;
+  width: 78%;
+  height: 29%;
+  bottom: 9%;
+  left: 12%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 40% 30%, #f8f8e9, #c6d5b4 70%);
+  box-shadow:
+    0 14px 0 #b3c6a1,
+    0 26px 28px #38583725;
+  transform: translateZ(10px) rotateX(48deg);
+}
+.pet-scene-3d .pet-art {
+  transform: translateZ(55px);
+}
+.pet-scene-3d .pet-note-top {
+  transform: translateZ(85px) rotate(-5deg);
+}
+.pet-scene-3d .pet-note-bottom {
+  transform: translateZ(110px);
+}
+.pet-scene-3d .pet-spark {
+  transform: translateZ(70px);
+}
+.pet-dog,
+.pet-cat {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  filter: drop-shadow(4px 9px 5px #3c503328);
+}
+.pet-dog {
+  animation: pet-dog-breathe 4s ease-in-out infinite;
+}
+.pet-cat {
+  animation: pet-cat-sway 5s ease-in-out infinite;
+}
+.pet-cat-tail {
+  transform-box: fill-box;
+  transform-origin: left bottom;
+  animation: pet-wag 3s ease-in-out infinite reverse;
+}
+@keyframes pet-dog-breathe {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(1deg);
+  }
+}
+@keyframes pet-cat-sway {
+  0%,
+  100% {
+    transform: rotate(1.5deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(-1.5deg);
+  }
+}
+@media (hover: none) {
+  .pet-world {
+    animation: pet-world-sway 8s ease-in-out infinite;
+  }
+}
+@keyframes pet-world-sway {
+  0%,
+  100% {
+    transform: rotateY(-5deg) rotateX(2deg);
+  }
+  50% {
+    transform: rotateY(5deg) rotateX(-2deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pet-world {
+    transform: none !important;
+  }
+}
+.pet-art {
+  width: 100%;
+  position: relative;
+  margin-top: 4%;
+  overflow: visible;
+}
+.pet-orbit {
+  position: absolute;
+  border-radius: 50%;
+  z-index: -1;
+}
+.pet-orbit-one {
+  width: 100px;
+  height: 100px;
+  background: #f0d4ae;
+  bottom: 8%;
+  left: 0;
+}
+.pet-orbit-two {
+  width: 48px;
+  height: 48px;
+  background: #e7b4a0;
+  right: 2%;
+  top: 16%;
+}
+.pet-note {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: #fffef8ed;
+  border: 1px solid #fff;
+  border-radius: 18px;
+  box-shadow: 0 12px 34px #32452b12;
+  animation: pet-float 6s ease-in-out infinite;
+}
+.pet-note strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 650;
+}
+.pet-note small {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+  color: #77816e;
+}
+.pet-note-top {
+  top: 12%;
+  left: 0;
+  transform: rotate(-5deg);
+}
+.pet-note-bottom {
+  bottom: 13%;
+  right: 0;
+  animation-delay: -3s;
+}
+.pet-note-icon {
+  display: grid;
+  place-items: center;
+  width: 33px;
+  height: 33px;
+  background: #f7e5d7;
+  color: #ba795e;
+  border-radius: 50%;
+  font-size: 22px;
+}
+.pet-note-bottom .pet-note-icon {
+  background: #e4eddb;
+  color: #2b6950;
+}
+.pet-scene-caption {
+  position: absolute;
+  bottom: 2%;
+  left: 20%;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: #77816e;
+}
+.pet-motion-toggle {
+  display: block;
+  position: absolute;
+  right: 0;
+  bottom: -24px;
+  min-height: 44px;
+  padding: 8px;
+  color: #667367;
+  font-size: 11px;
+  border-radius: 12px;
+}
+.pet-motion-toggle:hover {
+  background: #e8f1e4;
+}
+.pet-paused,
+.pet-paused * {
+  animation-play-state: paused !important;
+}
+.pet-spark {
+  position: absolute;
+  color: #b88b4c;
+  font-size: 36px;
+  animation: pet-twinkle 4s ease-in-out infinite;
+}
+.pet-spark-one {
+  top: 4%;
+  right: 25%;
+}
+.pet-spark-two {
+  bottom: 27%;
+  left: 2%;
+  font-size: 26px;
+  animation-delay: -2s;
+}
+.pet-tail {
+  transform-box: fill-box;
+  transform-origin: right bottom;
+  animation: pet-wag 1.7s ease-in-out infinite;
+}
+.pet-eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pet-blink 6s infinite;
+}
+.pet-heart {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pet-heartbeat 3s ease-in-out infinite;
+}
+.pet-how-section {
+  background: #eef2e7;
+  border: 0;
+}
+.pet-step {
+  background: #fafbf5;
+  padding: 25px 22px;
+  border: 1px solid #e0e7d7;
+  border-radius: 22px;
+  transition: transform 0.3s;
+}
+.pet-step:hover {
+  transform: translateY(-4px);
+}
+.pet-step p:last-child {
+  line-height: 1.75;
+}
+.pet-ai-panel {
+  padding: clamp(24px, 4vw, 48px);
+  border-radius: 30px;
+  background: #f0eee5;
+  border: 1px solid #e9e5d8;
+}
+.pet-booking-banner {
+  background: #2b5745;
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+.pet-booking-banner::after {
+  content: '♡';
+  position: absolute;
+  right: 30%;
+  top: -70px;
+  font-size: 250px;
+  color: #ffffff08;
+  pointer-events: none;
+}
+.pet-booking-banner h2 {
+  color: #fff9eb;
+}
+.pet-booking-banner p {
+  color: #cad8c9;
+}
+.pet-booking-banner a {
+  color: #2b5745;
+  background: #f2d4aa;
+  border-radius: 50px;
+  padding: 16px 26px;
+}
+.pet-booking-banner a:hover {
+  background: #ffe7c4;
+  transform: translateY(-3px);
+}
+.pet-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.pet-reveal.pet-visible {
+  opacity: 1;
+  transform: none;
+}
+@keyframes pet-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes pet-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -9px;
+  }
+}
+@keyframes pet-wag {
+  0%,
+  100% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(8deg);
+  }
+}
+@keyframes pet-blink {
+  0%,
+  43%,
+  47%,
+  100% {
+    transform: scaleY(1);
+  }
+  45% {
+    transform: scaleY(0.12);
+  }
+}
+@keyframes pet-heartbeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+}
+@keyframes pet-twinkle {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(0.85) rotate(-8deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(8deg);
+  }
+}
+@media (max-width: 767px) {
+  .pet-header nav {
+    height: 70px;
+  }
+  .pet-hero-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .pet-hero-title {
+    font-size: clamp(2.3rem, 8vw, 3.3rem);
+  }
+  .pet-scene {
+    width: min(100%, 430px);
+    margin: 0 auto;
+  }
+  .pet-note {
+    padding: 10px 12px;
+  }
+  .pet-trust-strip {
+    margin-top: 24px;
+  }
+  .pet-home > section:not(.pet-hero) {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pet-motion-toggle {
+    display: none;
+  }
+  .pet-public *,
+  .pet-public *::before,
+  .pet-public *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .pet-reveal {
+    opacity: 1;
+    transform: none;
+  }
 }

@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { branchesApi } from '@/api/branches.api';
-import { billingApi } from '@/api/billing.api';
+import { billingApi, sepayApi } from '@/api/billing.api';
 import { Button, DataTable, Icon, PageHeader, Select, StatusBadge } from '@/components/basic';
 import type { DataColumn } from '@/components/basic';
 import { useAuth } from '@/context/AuthContext';
 import { Invoice } from '@/types/models';
 import { formatCurrency, formatDateTime } from '@/utils/format';
+import { getErrorMessage } from '@/utils/errors';
 import {
   INVOICE_SOURCE_LABEL_VI,
   INVOICE_STATUS_LABEL_VI,
@@ -17,26 +18,14 @@ import {
 
 const LIMIT = 20;
 
-/**
- * Danh sách hoá đơn có phân trang.
- *
- * Từ P8-T1 cột "Thành tiền" đọc `totalAmount` - con số backend đã chốt lúc lập hoá đơn,
- * có mặt trên mọi dòng của danh sách. Trước đó trang này cố tình bỏ trống cột tổng vì
- * chỉ cộng được từ `items`, mà quan hệ đó không chắc được nạp trong danh sách.
- *
- * Dựng trên `DataTable` như mọi trang danh sách của zone quản trị (tài liệu kiến trúc
- * mục 5.3). Bản trước tự dựng lấy `<table>`, `<select>` và cặp nút phân trang bằng tay,
- * nên lệch khỏi phần còn lại của hệ thống ở ba chỗ đáng kể: không có trạng thái lỗi
- * (máy chủ hỏng hiện ra y hệt "chưa có hoá đơn nào"), chữ "Đang tải…" thay cho skeleton,
- * và huy hiệu thanh toán tô bằng màu `triage-*` - vốn dành riêng cho mức độ ưu tiên cấp
- * cứu, không phải một bảng màu dùng chung.
- */
 export function BillingListPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [branchId, setBranchId] = useState(user?.branchId ?? '');
   const [paid, setPaid] = useState<'' | 'true' | 'false'>('');
   const [page, setPage] = useState(1);
+  const [reconcileCodes, setReconcileCodes] = useState<Record<string, string>>({});
 
   const branchesQuery = useQuery({ queryKey: ['branches'], queryFn: () => branchesApi.list() });
 
@@ -50,6 +39,21 @@ export function BillingListPage() {
         paid: paid === '' ? undefined : paid === 'true',
       }),
     placeholderData: (prev) => prev,
+  });
+
+  const reconciliationQuery = useQuery({
+    queryKey: ['sepay-reconciliation'],
+    queryFn: sepayApi.pendingReconciliations,
+    refetchInterval: 15_000,
+  });
+
+  const reconcileMutation = useMutation({
+    mutationFn: ({ id, invoiceCode }: { id: string; invoiceCode: string }) =>
+      sepayApi.reconcile(id, invoiceCode),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['sepay-reconciliation'] });
+      void queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    },
   });
 
   const columns: DataColumn<Invoice>[] = [
@@ -101,15 +105,7 @@ export function BillingListPage() {
     {
       key: 'status',
       header: 'Trạng thái',
-      /*
-        Đọc `status` chứ không phải cờ `paid`: bản trước gộp "Trả một phần" vào "Chưa
-        thanh toán", tức là giấu mất khoản tiền khách đã đưa trên chính màn hình dùng
-        để đối soát. `INVOICE_STATUS_VARIANT` là bản đồ màu dùng chung với trang chi
-        tiết, nên một hoá đơn không đổi màu khi bấm vào xem.
 
-        Huy hiệu có CHẤM MÀU CỘNG CHỮ: người không phân biệt được xanh với vàng vẫn đọc
-        được trạng thái - đây là hoá đơn, đọc nhầm là mất tiền.
-      */
       render: (invoice) => (
         <StatusBadge variant={INVOICE_STATUS_VARIANT[invoice.status]}>
           {INVOICE_STATUS_LABEL_VI[invoice.status]}
@@ -185,6 +181,68 @@ export function BillingListPage() {
           </>
         }
       />
+
+      {(reconciliationQuery.data?.length ?? 0) > 0 && (
+        <section className="rounded-xl border border-warning/40 bg-surface p-4">
+          <h2 className="text-base font-semibold text-foreground">Giao dịch SePay chờ đối soát</h2>
+          <p className="mt-1 text-sm text-muted">
+            Chỉ ghép thủ công khi mã hóa đơn và số tiền còn phải thu đã được kiểm tra.
+          </p>
+          <div className="mt-4 space-y-3">
+            {reconciliationQuery.data!.map((transaction) => (
+              <div key={transaction.id} className="rounded-lg border border-border p-3 text-sm">
+                <div className="flex flex-wrap justify-between gap-2">
+                  <span className="font-medium">{formatCurrency(transaction.transferAmount)}</span>
+                  <span className="text-muted">
+                    {formatDateTime(transaction.transactionDate ?? transaction.receivedAt)}
+                  </span>
+                </div>
+                <p className="mt-1 font-mono text-xs text-foreground">
+                  {transaction.content || 'Không có nội dung'}
+                </p>
+                <p className="mt-1 text-xs text-destructive">Lý do: {transaction.reviewReason}</p>
+                <div className="mt-3 flex flex-wrap items-end gap-2">
+                  <label className="text-xs text-muted">
+                    Mã hóa đơn
+                    <input
+                      value={reconcileCodes[transaction.id] ?? ''}
+                      onChange={(event) =>
+                        setReconcileCodes((current) => ({
+                          ...current,
+                          [transaction.id]: event.target.value.toUpperCase(),
+                        }))
+                      }
+                      placeholder="HD000123"
+                      className="mt-1 block rounded border border-border bg-surface px-3 py-2 font-mono text-sm text-foreground"
+                    />
+                  </label>
+                  <Button
+                    size="sm"
+                    disabled={!/^HD\d+$/i.test(reconcileCodes[transaction.id] ?? '')}
+                    loading={
+                      reconcileMutation.isPending &&
+                      reconcileMutation.variables?.id === transaction.id
+                    }
+                    onClick={() =>
+                      reconcileMutation.mutate({
+                        id: transaction.id,
+                        invoiceCode: reconcileCodes[transaction.id],
+                      })
+                    }
+                  >
+                    Ghép giao dịch
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          {reconcileMutation.isError && (
+            <p className="mt-3 text-sm text-destructive">
+              {getErrorMessage(reconcileMutation.error)}
+            </p>
+          )}
+        </section>
+      )}
     </div>
   );
 }

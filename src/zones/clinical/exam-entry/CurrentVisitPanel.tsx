@@ -20,8 +20,7 @@ export function CurrentVisitPanel({
   appointmentId: string;
   appt: { doctorId: string; branchId: string; serviceId: string };
 }) {
-  // BR-08 - hồ sơ đã hoàn tất thì mọi ô nhập bị khoá. Một cờ duy nhất, truyền xuống mọi
-  // khối con: nếu để từng khối tự hỏi trạng thái, chỉ cần quên một chỗ là BR-08 thủng.
+
   const readOnly = record.status === MedicalRecordStatus.COMPLETED;
 
   return (

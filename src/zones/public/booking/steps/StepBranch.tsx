@@ -1,7 +1,6 @@
 import { EmptyState, Skeleton } from '@/components/basic';
 import { BookingForm } from '../use-booking-form';
 
-/** Bước 1 - chọn chi nhánh. Bắt buộc: mọi thứ phía sau đều lọc theo chi nhánh. */
 export function StepBranch({ branch }: { branch: BookingForm['branch'] }) {
   return (
     <section aria-labelledby="buoc-chi-nhanh">

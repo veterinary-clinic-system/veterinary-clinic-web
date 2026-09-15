@@ -5,14 +5,6 @@ import { BranchCard } from '../components/BranchCard';
 
 const PAGE_SIZE = 9;
 
-/**
- * Trang hệ thống chi nhánh.
- *
- * Không có bộ lọc: một hệ thống phòng khám thú y có vài chi nhánh, và lọc trong một
- * danh sách ba mục là thêm một thao tác không giải quyết vấn đề gì. Nếu số chi nhánh
- * lên tới hàng chục thì thứ cần thêm là **bản đồ và sắp xếp theo khoảng cách**, không
- * phải một ô lọc.
- */
 export function BranchesPage() {
   const {
     data: branches,

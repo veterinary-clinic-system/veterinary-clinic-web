@@ -15,21 +15,11 @@ export interface AlertProps {
   tone?: AlertTone;
   title?: string;
   children?: ReactNode;
-  /** Nút hành động - đặt ở cuối, không phải trong dòng chữ. */
+  
   action?: ReactNode;
   className?: string;
 }
 
-/**
- * Thông báo nằm trong luồng nội dung (khác `Toast` - thứ tự nổi lên rồi biến mất).
- *
- * `role` đổi theo mức độ: `danger` và `warning` là `alert` (trình đọc màn hình cắt
- * ngang để đọc), `info`/`success` là `status` (đọc xen vào). Một cảnh báo dị ứng thuốc
- * phải được nghe ngay; một dòng "đã lưu" thì không đáng cắt lời.
- *
- * Luôn có icon đi kèm màu: người không phân biệt được đỏ với xanh vẫn đọc ra đây là
- * cảnh báo hay xác nhận.
- */
 export function Alert({ tone = 'info', title, children, action, className }: AlertProps) {
   const style = TONE[tone];
   const critical = tone === 'danger' || tone === 'warning';

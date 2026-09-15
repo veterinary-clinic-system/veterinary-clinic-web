@@ -9,20 +9,8 @@ import { formatDateTime } from '@/utils/format';
 
 const LIMIT = 20;
 
-/** Hành động làm đổi tiền hoặc quyền — tô đậm để lướt mắt là thấy. */
 const SENSITIVE_ACTIONS = new Set(['DELETE', 'PAYMENT', 'STOCK_ADJUSTMENT', 'CANCEL']);
 
-/**
- * Trang xem nhật ký kiểm toán — SRS FR-26, BR-17 (acceptance P10-T2).
- *
- * CHỈ ĐỌC, và không có nút xóa: bảng `audit_logs` là bất biến (xem `AuditLogService`).
- * Quyền `AUDIT_VIEW` trong ma trận mặc định chỉ thuộc về ADMIN, backend vẫn là hàng rào
- * thật — chặn ở router chỉ để không đưa người dùng tới một trang chắc chắn nhận 403.
- *
- * Ô chọn hành động và thực thể lấy từ `GET /audit-logs/filters` chứ không chép cứng ở
- * đây: bảng audit còn giữ giá trị của các phiên bản trước, và một danh sách chép tay sẽ
- * lặng lẽ lệch khỏi dữ liệu thật.
- */
 export function AuditLogsPage() {
   const [page, setPage] = useState(1);
   const [actorUserId, setActorUserId] = useState('');
@@ -34,9 +22,6 @@ export function AuditLogsPage() {
 
   const filtersQuery = useQuery({ queryKey: ['audit-filters'], queryFn: () => auditApi.filters() });
 
-  // Người thực hiện lọc theo tài khoản nhân viên: hồ sơ nhân sự không có `userId` thì
-  // không bao giờ xuất hiện trong nhật ký, nên không đưa vào ô chọn. `limit` là 100 vì
-  // đó là trần `PaginationQueryDto` của backend — xin 200 sẽ nhận 400.
   const employeesQuery = useQuery({
     queryKey: ['audit-employees'],
     queryFn: () => employeesApi.list({ limit: 100 }),
@@ -56,7 +41,6 @@ export function AuditLogsPage() {
       }),
   });
 
-  /** Mọi thay đổi bộ lọc đều phải kéo về trang 1 — trang 5 của kết quả cũ là vô nghĩa. */
   function applyFilter(setter: (value: string) => void) {
     return (value: string) => {
       setter(value);
@@ -206,13 +190,6 @@ export function AuditLogsPage() {
   );
 }
 
-/**
- * Nội dung một bản ghi.
- *
- * Ưu tiên hiện BẢNG KHÁC BIỆT khi có: người đọc nhật ký hỏi "cái gì đã đổi", và một
- * ảnh chụp bốn mươi trường JSON không trả lời được câu đó. Ảnh chụp đầy đủ vẫn để dưới,
- * gập lại.
- */
 function AuditDetail({ row }: { row: AuditLogRow }) {
   const diff = row.changes?.diff;
   const diffEntries = diff ? Object.entries(diff) : [];
@@ -289,7 +266,6 @@ function Field({ label, value, mono }: { label: string; value: string; mono?: bo
   );
 }
 
-/** Giá trị trong `changes` là JSON bất kỳ — chuỗi hóa gọn để một ô bảng vẫn đọc được. */
 function renderValue(value: unknown): string {
   if (value === null || value === undefined) return '—';
   if (typeof value === 'object') return JSON.stringify(value);

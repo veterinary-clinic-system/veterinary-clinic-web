@@ -7,23 +7,11 @@ import { getErrorMessage } from '@/utils/errors';
 import { formatDateTime } from '@/utils/format';
 
 export interface MarkNoShowDialogProps {
-  /** `null` = đóng. Truyền lịch hẹn vào để mở. */
+  
   appointment: Appointment | null;
   onClose: () => void;
 }
 
-/**
- * Đánh dấu "khách không đến" (FR-06-03).
- *
- * Thay `window.prompt` dùng trước đây. Ngoài chuyện hộp thoại trình duyệt chặn cả tab,
- * nó còn có một vấn đề riêng ở đây: nó KHÔNG nói rõ đang đánh dấu lịch hẹn nào. Lễ tân
- * rà lịch cuối ngày thường mở liên tiếp năm sáu hàng, và một hộp thoại chỉ ghi "Ghi chú
- * (tuỳ chọn)" thì không có cách nào biết mình đang ở hàng nào.
- *
- * Ghi chú là TUỲ CHỌN ở đây, khác với huỷ lịch (bắt buộc có lý do): backend chỉ yêu cầu
- * lý do cho `cancel`. Không tự thêm một ràng buộc mà API không đòi - nó chỉ làm chậm
- * một thao tác lặp lại nhiều lần.
- */
 export function MarkNoShowDialog({ appointment, onClose }: MarkNoShowDialogProps) {
   const toast = useToast();
   const queryClient = useQueryClient();

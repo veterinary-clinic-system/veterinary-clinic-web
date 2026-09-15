@@ -7,30 +7,12 @@ export interface StaffSidebarProps {
   role: Role | undefined;
   collapsed: boolean;
   onToggleCollapse: () => void;
-  /** Gọi khi chọn một mục - drawer trên màn hình hẹp cần tự đóng. */
+  
   onNavigate?: () => void;
-  /**
-   * Bỏ logo và nút thu gọn. Bật khi sidebar nằm trong `Drawer` của màn hình hẹp: drawer
-   * đã có tiêu đề và nút đóng của riêng nó, và "thu gọn" thì vô nghĩa với một lớp phủ.
-   */
+  
   bare?: boolean;
 }
 
-/**
- * Thanh điều hướng bên trái của khu nhân viên.
- *
- * Ba điều mà bản phẳng trước đây không có:
- *
- * 1. **Nhóm có nhãn.** 25 mục xếp thẳng là một danh sách phải đọc hết; 6 nhóm là một
- *    cấu trúc để nhắm vào. Nhóm rỗng tự biến mất theo vai trò.
- * 2. **Thu gọn được.** Trên màn hình 1280px, 240px sidebar là 19% chiều ngang - đáng kể
- *    với một bảng kho 12 cột. Trạng thái thu gọn được nhớ lại giữa các phiên.
- * 3. **Vùng cuộn riêng.** Danh sách của ADMIN dài hơn màn hình; trước đây cuộn nó kéo
- *    theo cả trang.
- *
- * Khi thu gọn, mỗi mục chỉ còn icon và nhãn chuyển thành tooltip - `aria-label` vẫn giữ
- * nguyên nên trình đọc màn hình không mất thông tin nào.
- */
 export function StaffSidebar({
   role,
   collapsed,
@@ -114,8 +96,7 @@ function NavGroupSection({
     <div className="mb-4 last:mb-0">
       {group.label &&
         (collapsed ? (
-          /* Thu gọn thì nhãn nhóm thành một đường kẻ - vẫn tách được các nhóm mà không
-             cần chỗ cho chữ. Trình đọc màn hình vẫn nghe được nhãn qua sr-only. */
+          
           <>
             <span className="sr-only">{group.label}</span>
             <hr className="mx-2 mb-2 border-border" />

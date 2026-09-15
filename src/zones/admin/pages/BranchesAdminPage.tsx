@@ -20,18 +20,6 @@ const PAGE_SIZE = 10;
 
 type StatusFilter = '' | 'active' | 'inactive';
 
-/**
- * Chi nhánh - chỉ ADMIN.
- *
- * Trang lắp ráp mỏng: danh sách là `DataTable` như mọi màn hình danh sách của zone quản
- * trị, còn hai việc sửa nằm trong hộp thoại ở `../branches/`. Bản trước tự dựng lấy ô
- * nhập, nút bấm và thẻ chi nhánh bằng lớp Tailwind thô, và không có một trạng thái nào
- * trong ba trạng thái tài liệu kiến trúc bắt buộc: máy chủ hỏng hiện ra y hệt "phòng
- * khám chưa có chi nhánh nào".
- *
- * `GET /branches/admin` trả về toàn bộ chi nhánh trong một lần (số chi nhánh của một
- * phòng khám luôn đếm trên đầu ngón tay), nên lọc, tìm và cắt trang đều làm ở client.
- */
 export function BranchesAdminPage() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<StatusFilter>('');
@@ -57,11 +45,6 @@ export function BranchesAdminPage() {
     });
   }, [listQuery.data, search, status]);
 
-  /*
-    Trang hiện tại có thể vượt quá số trang sau khi lọc (đang ở trang 3, gõ một từ khoá
-    chỉ còn 4 kết quả). Kẹp lại khi vẽ thay vì đặt lại state trong effect - ít một vòng
-    render, và người dùng bỏ bộ lọc thì quay về đúng trang cũ.
-    */
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const pageItems = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -95,10 +78,7 @@ export function BranchesAdminPage() {
       key: 'openingHours',
       header: 'Giờ mở cửa',
       hideBelow: 'lg',
-      /*
-        Gộp bằng đúng hàm mà thẻ chi nhánh ở trang công khai dùng - quản trị viên nhìn
-        thấy y hệt thứ khách nhìn thấy.
-      */
+      
       render: (branch) => {
         const groups = groupOpeningHours(branch.openingHours ?? []);
         if (groups.length === 0) {

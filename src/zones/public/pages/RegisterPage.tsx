@@ -18,14 +18,6 @@ interface LocationState {
   from?: { pathname: string; search?: string };
 }
 
-/**
- * Đăng ký luôn tạo tài khoản PET_OWNER, nên thành công thì về `/my/pets` (hoặc nơi
- * người dùng định tới trước khi bị đẩy sang đăng nhập) - không bao giờ về khu nhân viên.
- *
- * Năm trường, không hơn: họ tên, số điện thoại, email tuỳ chọn, mật khẩu và xác nhận.
- * Thông tin thú cưng KHÔNG hỏi ở đây - người dùng chưa thấy lý do phải nhập, và mỗi
- * trường thêm vào ở bước này là thêm một chỗ để bỏ dở.
- */
 export function RegisterPage() {
   const { registerPetOwner } = useAuth();
   const navigate = useNavigate();

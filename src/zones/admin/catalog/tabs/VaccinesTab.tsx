@@ -41,16 +41,6 @@ const EMPTY_VACCINE_FORM: VaccineFormState = {
   minimumStock: '0',
 };
 
-/**
- * Danh mục vaccine — SRS FR-12 (P9-T1).
- *
- * Cùng khuôn với tab Thuốc, thêm phần **phác đồ**: số mũi, khoảng cách giữa các mũi và
- * khoảng nhắc lại hằng năm. Ba trường đó là thứ `VaccinationsService` đọc để tính ngày
- * hẹn mũi kế tiếp, nên khai sai ở đây sẽ ra lịch nhắc sai cho mọi mũi tiêm sau đó.
- *
- * "Loài áp dụng" bỏ trống = dùng cho mọi loài (vaccine dại). Chọn loài chỉ để **lọc** ô
- * chọn của bác sĩ khi khám, không phải một ràng buộc cứng ở backend.
- */
 export function VaccinesTab() {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -72,8 +62,7 @@ export function VaccinesTab() {
   const [form, setForm] = useState<VaccineFormState>(EMPTY_VACCINE_FORM);
 
   const doseCount = Number(form.doseCount) || 1;
-  // Backend chặn cứng trường hợp này (phác đồ nhiều mũi mà thiếu khoảng cách) - báo
-  // ngay tại form để người khai sửa được trước khi bấm lưu.
+
   const missingInterval = doseCount > 1 && !form.intervalDays;
 
   const saveMutation = useMutation({

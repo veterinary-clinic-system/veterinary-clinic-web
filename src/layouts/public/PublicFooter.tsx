@@ -12,15 +12,6 @@ const CLINIC_LINKS = [
   { to: '/branches', label: 'Hệ thống chi nhánh' },
 ];
 
-/**
- * Chân trang.
- *
- * Giờ làm việc dùng `<dl>` chứ không phải hai dòng chữ: đây là các cặp nhãn - giá trị,
- * và trình đọc màn hình đọc ra đúng quan hệ đó.
- *
- * Không có mục "Về chúng tôi / Tầm nhìn / Sứ mệnh": chân trang của một phòng khám nên
- * trả lời "đi đâu, lúc nào, gọi ai", không phải nhắc lại trang giới thiệu.
- */
 export function PublicFooter() {
   return (
     <footer className="border-t border-border bg-surface">

@@ -1,21 +1,6 @@
 import { SVGProps } from 'react';
 import { cn } from './utils';
 
-/**
- * Bộ icon của hệ thống.
- *
- * Trước đây giao diện dùng emoji (🐾 💉 🧪 ...). Emoji thì mỗi hệ điều hành vẽ một kiểu,
- * không đổi được màu theo trạng thái, và trên thanh điều hướng của một phần mềm phòng
- * khám thì đọc ra "trang web dễ thương" chứ không phải "công cụ làm việc". Emoji vẫn
- * hợp lý ở chỗ trang trí lớn (trạng thái rỗng), không hợp ở chỗ dày đặc.
- *
- * Icon vẽ bằng nét (stroke) trên lưới 24, dày 1.75 - cùng độ dày với chữ đậm ở cỡ nhỏ
- * nên đứng cạnh nhãn không bị nặng hơn. Màu luôn là `currentColor`: icon thừa hưởng màu
- * chữ của chỗ nó đứng, không cần một prop màu riêng.
- *
- * Mọi icon đều `aria-hidden`: chúng đi kèm nhãn chữ. Chỗ nào chỉ có icon (nút biểu
- * tượng) thì NÚT phải có `aria-label`, không phải icon.
- */
 export type IconName =
   | 'dashboard'
   | 'calendar'
@@ -69,7 +54,6 @@ export type IconName =
   | 'trash'
   | 'sparkles';
 
-/* Mỗi giá trị là phần thân của <svg>. Giữ nguyên lưới 24 cho mọi icon. */
 const PATHS: Record<IconName, JSX.Element> = {
   dashboard: (
     <>
@@ -351,7 +335,7 @@ const PATHS: Record<IconName, JSX.Element> = {
 
 export interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {
   name: IconName;
-  /** Cỡ mặc định 20px - vừa với nhãn 14px đứng cạnh. */
+  
   className?: string;
 }
 

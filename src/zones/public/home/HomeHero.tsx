@@ -1,10 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Icon, IconName } from '@/components/basic';
+import { PetIllustration } from './PetIllustration';
 
-/**
- * Bốn điểm tin cậy. Đây là những thứ hệ thống THẬT SỰ có - không phải khẩu hiệu.
- * Không đưa vào con số nào mà dữ liệu không chứng minh được ("10.000 khách hàng").
- */
 const TRUST_POINTS: { icon: IconName; title: string; body: string }[] = [
   {
     icon: 'stethoscope',
@@ -28,58 +25,54 @@ const TRUST_POINTS: { icon: IconName; title: string; body: string }[] = [
   },
 ];
 
-/**
- * Phần mở đầu trang chủ.
- *
- * Cố ý KHÔNG chiếm trọn màn hình: người vào trang một phòng khám đang tìm thông tin
- * (dịch vụ nào, giá bao nhiêu, chi nhánh ở đâu), không tìm một trải nghiệm thị giác.
- * Một hero cao 100vh đẩy toàn bộ thông tin đó xuống dưới nếp gấp và bắt họ cuộn để
- * biết trang này có thứ họ cần hay không.
- *
- * Hai CTA, phân cấp rõ: "Đặt lịch khám" là việc chính, "Xem bảng giá" cho người chưa
- * sẵn sàng đặt. Không có CTA thứ ba - thêm lựa chọn ở đây là thêm do dự.
- */
 export function HomeHero() {
   return (
-    <section className="border-b border-border bg-surface">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
-        <div className="max-w-2xl">
-          <p className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-            <Icon name="paw" className="h-4 w-4" />
-            Hệ thống phòng khám thú y nhiều chi nhánh
-          </p>
+    <section className="pet-hero">
+      <div className="mx-auto max-w-6xl px-4 pt-12 sm:pt-16">
+        <div className="pet-hero-grid">
+          <div className="pet-hero-copy">
+            <p className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+              <Icon name="paw" className="h-4 w-4" />
+              VETAI HUB · Chăm sóc bằng cả trái tim
+            </p>
 
-          <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl">
-            Chăm sóc thú cưng của bạn, bằng hồ sơ bệnh án đầy đủ
-          </h1>
+            <h1 className="pet-hero-title">
+              Vì bé là <span>gia đình.</span>
+              <br />
+              Vì yêu thương
+              <br />
+              cần được chăm sóc.
+            </h1>
 
-          <p className="mt-4 text-lg text-muted">
-            Đặt lịch trực tuyến trong hai phút, chọn đúng bác sĩ và khung giờ còn trống. Mọi lần
-            khám, đơn thuốc và mũi tiêm của bé đều được lưu lại để bạn tra cứu bất cứ lúc nào.
-          </p>
+            <p className="mt-6 max-w-lg text-base leading-relaxed text-muted sm:text-lg">
+              Từ cái vẫy đuôi đầu tiên đến những năm tháng bên nhau. Chúng tôi đồng hành cùng bạn
+              chăm sóc bé, với bác sĩ tận tâm và hồ sơ sức khỏe luôn trong tầm tay.
+            </p>
 
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              to="/booking"
-              className="inline-flex min-h-touch items-center rounded-lg bg-primary px-6 font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              Đặt lịch khám
-            </Link>
-            <Link
-              to="/services"
-              className="inline-flex min-h-touch items-center rounded-lg border border-border px-6 font-semibold text-foreground transition-colors hover:bg-surface-muted"
-            >
-              Xem bảng giá dịch vụ
-            </Link>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                to="/booking"
+                className="pet-primary-button inline-flex min-h-touch items-center gap-3 px-6 font-semibold"
+              >
+                Đặt lịch cho bé <span aria-hidden="true">↗</span>
+              </Link>
+              <Link
+                to="/services"
+                className="pet-secondary-button inline-flex min-h-touch items-center px-6 font-semibold"
+              >
+                Xem bảng giá dịch vụ
+              </Link>
+            </div>
+            <p className="mt-5 flex items-center gap-2 text-xs text-muted">
+              <Icon name="paw" className="h-4 w-4 text-primary" /> Đặt lịch dễ dàng · Giá dịch vụ
+              minh bạch
+            </p>
           </div>
+          <PetIllustration />
         </div>
 
-        {/*
-          Điểm tin cậy nằm NGAY dưới hero, cùng một khối: đây là câu trả lời cho "vì sao
-          tôi nên tin chỗ này", và nó chỉ có tác dụng khi đọc được cùng lúc với lời mời
-          đặt lịch.
-        */}
-        <ul className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {}
+        <ul className="pet-trust-strip mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {TRUST_POINTS.map((point) => (
             <li key={point.title}>
               <Icon name={point.icon} className="h-6 w-6 text-primary" />

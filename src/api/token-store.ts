@@ -1,11 +1,5 @@
 const REFRESH_TOKEN_KEY = 'vetclinic.refreshToken';
 
-/**
- * The access token only ever lives in memory (cleared on full page reload) to limit
- * XSS blast radius; the refresh token is persisted to localStorage so a reload doesn't
- * force a re-login. A production deployment would prefer an httpOnly cookie for the
- * refresh token instead - documented as a known simplification in the root CLAUDE.md.
- */
 let accessToken: string | null = null;
 
 export const tokenStore = {

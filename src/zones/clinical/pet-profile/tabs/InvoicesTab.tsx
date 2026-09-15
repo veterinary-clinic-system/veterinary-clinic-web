@@ -7,7 +7,6 @@ import type { PetInvoice } from '@/types/models';
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/format';
 import { PAYMENT_METHOD_LABEL_VI } from '@/utils/labels';
 
-/** Khối 8 - Invoice. */
 export function InvoicesTab({ petId }: { petId: string }) {
   const query = useQuery({
     queryKey: ['pet-invoices', petId],

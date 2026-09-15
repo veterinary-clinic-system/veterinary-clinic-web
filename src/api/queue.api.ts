@@ -4,9 +4,9 @@ import { CommonSymptom, PriorityColor, QueueEntry, QueueStatus } from '@/types/m
 export interface QueueListParams {
   branchId?: string;
   doctorId?: string;
-  /** 'yyyy-MM-dd'. Bỏ trống = hàng chờ hôm nay. */
+  
   date?: string;
-  /** Bỏ trống = chỉ các lượt còn hoạt động (WAITING/ASSIGNED/IN_ROOM). */
+  
   status?: QueueStatus[];
 }
 
@@ -25,7 +25,7 @@ export interface WalkInPayload {
   petId?: string;
   newPet?: {
     name: string;
-    /** Gửi kèm để backend chặn giống không thuộc loài đã chọn (mục 16 SRS). */
+    
     speciesId?: string;
     breedId: string;
     gender: string;
@@ -36,7 +36,7 @@ export interface WalkInPayload {
   commonSymptoms?: CommonSymptom[];
   reason?: string;
   note?: string;
-  /** Ảnh triệu chứng — giống biểu mẫu đặt lịch công khai. */
+  
   photoUrls?: string[];
 }
 
@@ -45,8 +45,7 @@ export const queueApi = {
     apiClient
       .get<QueueEntry[]>('/queue', {
         params,
-        // `status` là mảng: axios mặc định serialize thành `status[]=A&status[]=B`,
-        // còn DTO ở backend đọc `status=A&status=B` (hoặc `status=A,B`).
+
         paramsSerializer: { indexes: null },
       })
       .then((r) => r.data),
@@ -63,7 +62,7 @@ export const queueApi = {
       status?: QueueStatus;
       priorityColor?: PriorityColor;
       note?: string;
-      /** Lý do hủy lượt chờ - chỉ có nghĩa khi `status = CANCELLED` (FR-05-04). */
+      
       reason?: string;
     },
   ) => apiClient.patch<QueueEntry>(`/queue/${id}`, payload).then((r) => r.data),

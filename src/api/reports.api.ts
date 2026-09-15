@@ -14,13 +14,12 @@ export interface AiAccuracyReport {
   breakdownByColor: { aiPriorityColor: string; acceptedCount: number; overriddenCount: number }[];
 }
 
-/** Một thẻ KPI của `GET /reports/dashboard` — khớp `DashboardKpi` phía backend. */
 export interface DashboardKpi {
   key: string;
   label: string;
   value: number;
   format: 'currency' | 'count';
-  /** `null` khi kỳ trước bằng 0 — không so sánh được, không phải "tăng vô hạn". */
+  
   deltaRatio: number | null;
   link?: string;
 }
@@ -39,7 +38,6 @@ export interface DashboardResponse {
   charts: DashboardSeries[];
 }
 
-/** Bộ lọc của SRS mục 19: khoảng ngày + phương thức thanh toán + nhân viên thu tiền. */
 export interface ReportFilterParams {
   from: string;
   to: string;
@@ -48,7 +46,6 @@ export interface ReportFilterParams {
   employeeUserId?: string;
 }
 
-/** `GET /reports/revenue/summary` — sáu con số của SRS mục 19, đọc từ `payments`. */
 export interface RevenueSummaryReport {
   totalRevenue: number;
   totalPaid: number;
@@ -58,7 +55,6 @@ export interface RevenueSummaryReport {
   unpaidInvoiceCount: number;
 }
 
-/** `GET /reports/inventory` — ảnh chụp kho tại thời điểm đọc, không theo khoảng ngày. */
 export interface InventoryReport {
   totalProducts: number;
   totalMedicines: number;
@@ -90,13 +86,13 @@ export interface ExamSummaryReport {
   completed: number;
   noShow: number;
   cancelled: number;
-  /** Trong khoảng [0, 1]. */
+  
   noShowRate: number;
   topVeterinarians: TopVeterinarian[];
 }
 
 export const reportsApi = {
-  /** FR-24 — một request duy nhất cho cả 8 KPI và 8 biểu đồ. */
+  
   dashboard: (branchId?: string) =>
     apiClient
       .get<DashboardResponse>('/reports/dashboard', { params: { branchId } })
@@ -123,8 +119,6 @@ export const reportsApi = {
   aiAccuracy: (params: { from?: string; to?: string; branchId?: string }) =>
     apiClient.get<AiAccuracyReport>('/reports/ai-accuracy', { params }).then((r) => r.data),
 
-  // ------------------------------------------------- Báo cáo vận hành (P10-T4)
-
   revenueSummary: (params: ReportFilterParams) =>
     apiClient.get<RevenueSummaryReport>('/reports/revenue/summary', { params }).then((r) => r.data),
   inventory: (branchId?: string) =>
@@ -134,13 +128,6 @@ export const reportsApi = {
   exams: (params: { from?: string; to?: string; branchId?: string }) =>
     apiClient.get<ExamSummaryReport>('/reports/exams', { params }).then((r) => r.data),
 
-  /**
-   * Tải file CSV báo cáo bán hàng.
-   *
-   * `responseType: 'blob'` là bắt buộc: mặc định axios diễn giải phần thân là văn bản
-   * theo UTF-8 và sẽ NUỐT MẤT dấu BOM ở đầu file — mà chính dấu đó nói cho Excel trên
-   * Windows biết file là UTF-8. Mất nó thì "Cà phê" mở ra thành "CÃ  phÃª".
-   */
   exportSales: (params: ReportFilterParams) =>
     apiClient
       .get<Blob>('/reports/sales/export', { params, responseType: 'blob' })

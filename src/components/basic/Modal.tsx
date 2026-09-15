@@ -40,12 +40,10 @@ function CloseIcon({ className }: { className?: string }) {
   );
 }
 
-/** Dialog rendered via createPortal into a lazily-created #modal-root appended to document.body. */
 export function Modal({ open, onClose, title, children, footer, className }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleId = 'modal-title';
 
-  // Escape-to-close.
   useEffect(() => {
     if (!open) return;
     function handleKeyDown(event: KeyboardEvent) {
@@ -57,7 +55,6 @@ export function Modal({ open, onClose, title, children, footer, className }: Mod
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [open, onClose]);
 
-  // Lock body scroll while open; restore on close/unmount.
   useEffect(() => {
     if (!open) return;
     const previousOverflow = document.body.style.overflow;
@@ -67,7 +64,6 @@ export function Modal({ open, onClose, title, children, footer, className }: Mod
     };
   }, [open]);
 
-  // Move focus into the dialog when it opens.
   useEffect(() => {
     if (open) {
       dialogRef.current?.focus();

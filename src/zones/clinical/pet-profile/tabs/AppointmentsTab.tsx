@@ -8,7 +8,6 @@ import type { PetAppointment } from '@/types/models';
 import { formatDateTime } from '@/utils/format';
 import { APPOINTMENT_STATUS_LABEL_VI, triageColorClasses } from '@/utils/labels';
 
-/** Khối 4 - Appointment. */
 export function AppointmentsTab({ petId }: { petId: string }) {
   const query = useQuery({
     queryKey: ['pet-appointments', petId],

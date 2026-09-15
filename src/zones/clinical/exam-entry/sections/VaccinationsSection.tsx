@@ -7,14 +7,6 @@ import { formatDate } from '@/utils/format';
 import { extractApiMessage } from '../api-utils';
 import { Section } from '../Section';
 
-/**
- * Khối tiêm chủng trong lúc khám — acceptance P9-T3: "ghi nhận được ngay trong màn hình
- * khám, không phải rời trang".
- *
- * Danh mục vaccine được lọc theo `petId`: backend suy ra loài từ giống của con này, và
- * chỉ trả vaccine dùng được cho loài đó (cộng các vaccine dùng cho mọi loài). Đưa cả
- * danh mục ra rồi để bác sĩ tự tránh là mở đường cho một mũi vaccine chó tiêm vào mèo.
- */
 export function VaccinationsSection({
   record,
   readOnly,
@@ -59,8 +51,7 @@ export function VaccinationsSection({
       void queryClient.invalidateQueries({ queryKey: ['vaccinations'] });
       void queryClient.invalidateQueries({ queryKey: ['medical-record'] });
     },
-    // BR-11 (vaccine hết hạn) và hết hàng đều trả 409 kèm thông báo đã đủ rõ - hiện
-    // nguyên văn thay vì dịch lại một lần nữa ở client.
+
     onError: (error) => toast.show(extractApiMessage(error) ?? 'Ghi nhận thất bại', 'error'),
   });
 

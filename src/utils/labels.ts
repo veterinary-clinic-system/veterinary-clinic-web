@@ -15,10 +15,6 @@ import {
   VaccinationDueStatus,
 } from '@/types/enums';
 
-/**
- * Vietnamese-language labels for enums that don't already have a *_LABEL_VI map in
- * src/types/enums.ts (PriorityColor and CommonSymptom already do - reuse those directly).
- */
 export const APPOINTMENT_STATUS_LABEL_VI: Record<AppointmentStatus, string> = {
   [AppointmentStatus.PENDING]: 'Chờ xác nhận',
   [AppointmentStatus.CONFIRMED]: 'Đã xác nhận',
@@ -50,7 +46,6 @@ export const INVOICE_STATUS_LABEL_VI: Record<InvoiceStatus, string> = {
   [InvoiceStatus.REFUNDED]: 'Đã hoàn tiền',
 };
 
-/** Màu badge của từng trạng thái hoá đơn — dùng chung cho danh sách và trang chi tiết. */
 export const INVOICE_STATUS_VARIANT: Record<
   InvoiceStatus,
   'default' | 'success' | 'warning' | 'destructive' | 'outline'
@@ -124,13 +119,6 @@ export const SPECIALIZATION_LABEL_VI: Record<Specialization, string> = {
   [Specialization.ANESTHESIOLOGY]: 'Gây mê',
 };
 
-/**
- * Màu ô của một chỉ số xét nghiệm theo cờ bất thường — acceptance P9-T6.
- *
- * `NORMAL` cố ý **không** tô gì: tô cả bảng thì không còn gì nổi bật, mà cái bác sĩ cần
- * là liếc một cái thấy ngay ô nào lệch. Dùng lại đúng bộ token `triage-*` đã có nên
- * bảng chỉ số và thẻ phân loại ưu tiên nói cùng một ngôn ngữ màu.
- */
 export function labResultFlagClasses(flag: LabResultFlag): string {
   switch (flag) {
     case LabResultFlag.CRITICAL:
@@ -144,10 +132,6 @@ export function labResultFlagClasses(flag: LabResultFlag): string {
   }
 }
 
-/**
- * Màu dòng sổ tiêm chủng theo lịch nhắc — acceptance P9-T3: "mũi quá hạn nhắc tô đỏ,
- * sắp đến hạn tô vàng".
- */
 export function vaccinationDueClasses(status: VaccinationDueStatus): string {
   switch (status) {
     case 'OVERDUE':
@@ -161,7 +145,6 @@ export function vaccinationDueClasses(status: VaccinationDueStatus): string {
   }
 }
 
-/** Tailwind classes per triage PriorityColor, using only the fixed `bg-triage-*` tokens. */
 export function triageColorClasses(color: string | null | undefined): string {
   switch (color) {
     case 'RED':
@@ -179,10 +162,6 @@ export function triageColorClasses(color: string | null | undefined): string {
   }
 }
 
-/**
- * Nền ĐẶC của thang màu ưu tiên — dùng cho dải màu mảnh bên trái ô lịch, nơi phải
- * nhìn ra màu từ xa. `triageColorClasses` ở trên là nền nhạt + chữ, dành cho nhãn.
- */
 export function triagePriorityBar(color: string | null | undefined): string {
   switch (color) {
     case 'RED':

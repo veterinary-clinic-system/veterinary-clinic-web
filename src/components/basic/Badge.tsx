@@ -16,16 +16,6 @@ export interface BadgeProps {
   className?: string;
 }
 
-/**
- * Nhãn nhỏ gắn vào một dòng dữ liệu.
- *
- * Bốn biến thể trạng thái dùng token `success`/`warning`/`danger`/`info` của bảng màu
- * (src/index.css). Trước đây `success`/`warning` phải mượn màu của thang phân loại ưu
- * tiên vì bảng token chưa có chúng - hai hệ màu khác nghĩa hẳn nhau bị buộc chung một
- * giá trị, đổi một cái là hỏng cái kia. Thang triage giờ chỉ còn `TriageBadge` dùng.
- *
- * Chữ luôn là kênh thông tin chính: badge không bao giờ chỉ là một chấm màu.
- */
 const VARIANT_CLASSES: Record<BadgeVariant, string> = {
   default: 'bg-primary/10 text-primary',
   neutral: 'bg-surface-muted text-muted',
@@ -50,13 +40,6 @@ export function Badge({ variant = 'default', children, className }: BadgeProps) 
   );
 }
 
-/**
- * Badge có thêm một chấm màu ở đầu.
- *
- * Chấm KHÔNG mang thêm thông tin nào - nó chỉ giúp mắt bắt được cột trạng thái khi
- * quét nhanh một bảng dài. Nghĩa vẫn nằm ở chữ, nên người không phân biệt được màu
- * không mất gì.
- */
 export function StatusBadge({
   variant = 'neutral',
   children,

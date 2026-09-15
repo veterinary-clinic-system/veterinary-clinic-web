@@ -9,18 +9,6 @@ import { petAgeLabel } from '@/zones/owner/components/pet-display';
 
 const LIMIT = 20;
 
-/**
- * Tìm hồ sơ bệnh nhân - cửa vào chính của bác sĩ và lễ tân khi khách gọi điện hoặc
- * bước tới quầy.
- *
- * Ô tìm kiếm là thứ được focus đầu tiên: 100% lượt mở trang này bắt đầu bằng việc gõ
- * một từ khoá, nên bắt người dùng bấm chuột vào ô trước là một thao tác thừa lặp lại
- * hàng chục lần mỗi ngày.
- *
- * Trạng thái rỗng phân biệt hai trường hợp - **chưa gõ gì** và **gõ rồi mà không thấy**:
- * cùng một màn hình trắng cho cả hai làm người dùng tưởng hệ thống hỏng khi thực ra họ
- * chưa nhập gì.
- */
 export function PatientsSearchPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
@@ -30,7 +18,7 @@ export function PatientsSearchPage() {
   const query = useQuery({
     queryKey: ['pets-search', debouncedSearch, page],
     queryFn: () => petsApi.search({ search: debouncedSearch || undefined, page, limit: LIMIT }),
-    // Giữ kết quả cũ trong lúc gõ tiếp - danh sách không nháy trắng sau mỗi ký tự.
+    
     placeholderData: (prev) => prev,
   });
 

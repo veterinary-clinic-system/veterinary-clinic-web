@@ -4,16 +4,6 @@ import { Pet } from '@/types/models';
 import { GENDER_LABEL_VI } from '@/utils/display';
 import { petAgeLabel, petAlerts, petBreedLabel } from '../components/pet-display';
 
-/**
- * Phần đầu hồ sơ thú cưng.
- *
- * Cảnh báo y tế (dị ứng, bệnh mãn tính) đặt NGAY DƯỚI tên, trước mọi tab: đó là thứ
- * duy nhất trên trang này có thể thay đổi một quyết định điều trị, nên nó không được
- * nằm sau một cú bấm tab.
- *
- * Mã thú cưng (`TC000456`) hiện ra vì chủ nuôi hay phải đọc nó qua điện thoại khi gọi
- * cho phòng khám.
- */
 export function PetHeader({ pet }: { pet: Pet }) {
   const age = petAgeLabel(pet.birthDate);
   const alerts = petAlerts(pet);

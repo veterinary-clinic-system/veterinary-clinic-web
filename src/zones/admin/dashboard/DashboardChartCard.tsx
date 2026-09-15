@@ -5,16 +5,8 @@ import { RankBarChart } from '@/components/charts/RankBarChart';
 import { TrendLineChart } from '@/components/charts/TrendLineChart';
 import { formatValue } from '@/components/charts/chart-utils';
 
-/** Ba biểu đồ xếp hạng vẽ bằng thanh ngang; số còn lại là đường theo thời gian. */
 const RANK_CHARTS = new Set(['topProducts', 'topMedicines', 'topServices']);
 
-/**
- * Một biểu đồ kèm bảng dữ liệu gập lại.
- *
- * Bảng không phải phần thêm cho vui: nó là đường đọc thay thế khi biểu đồ không dùng
- * được - trình đọc màn hình, in ra giấy, hoặc đơn giản là cần con số chính xác thay vì
- * ước lượng trên trục.
- */
 export function DashboardChartCard({ series }: { series: DashboardSeries }) {
   const titleId = useId();
 

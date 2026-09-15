@@ -6,14 +6,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider } from '@/context/AuthContext';
 import { QueryErrorState } from './QueryErrorState';
 
-/**
- * Một lỗi tải dữ liệu, hai màn hình - và ranh giới giữa chúng là mã HTTP.
- *
- * Điều đáng giữ ở đây không phải là chữ nghĩa mà là NÚT: lỗi mạng phải có "Thử lại",
- * còn 403 thì tuyệt đối không, vì bấm bao nhiêu lần cũng vẫn 403. Đưa nút thử lại vào
- * một lỗi phân quyền là mời người dùng làm một việc chắc chắn thất bại.
- */
-
 afterEach(cleanup);
 
 function axiosErrorWith(status: number): AxiosError {
@@ -42,7 +34,6 @@ describe('QueryErrorState', () => {
   it('403 vẫn cho một lối ra, không bỏ người dùng ở ngõ cụt', () => {
     renderWithProviders(<QueryErrorState error={axiosErrorWith(403)} />);
 
-    /* Chưa đăng nhập trong bài này nên lối ra là trang chủ; nhân viên sẽ về Tổng quan. */
     expect(screen.getByRole('link', { name: 'Về trang chủ' }).getAttribute('href')).toBe('/');
   });
 

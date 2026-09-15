@@ -29,21 +29,14 @@ import {
 
 const LIMIT = 20;
 
-/**
- * Ba vai trò có `INVENTORY_EXPORT` trong ma trận quyền — chỉ họ mới thấy nút xuất kho
- * và điều chỉnh. Đây chỉ là chuyện giao diện: backend vẫn là hàng rào thật, ẩn nút chỉ
- * để người không có quyền khỏi bấm vào rồi nhận 403.
- */
 const CAN_WRITE_ROLES = [Role.ADMIN, Role.MANAGER, Role.PHARMACIST];
 
-/** SRS FR-18 — tồn kho theo chi nhánh, xem theo lô, xuất/điều chỉnh có ghi sổ cái. */
 export function InventoryPage() {
   const queryClient = useQueryClient();
   const toast = useToast();
   const { user } = useAuth();
   const canWrite = user !== null && CAN_WRITE_ROLES.includes(user.role);
 
-  // Trang cảnh báo điều hướng sang đây kèm `?item=&branch=` để mở đúng hàng liên quan.
   const [searchParams, setSearchParams] = useSearchParams();
   const focusedItemId = searchParams.get('item');
 
@@ -69,7 +62,6 @@ export function InventoryPage() {
   const debouncedSearch = useDebouncedValue(search, 300);
   const branchesQuery = useQuery({ queryKey: ['branches'], queryFn: () => branchesApi.list() });
 
-  // Chi nhánh đầu tiên được chọn sẵn — cùng cách QueuePage làm, để mở trang là thấy số.
   useEffect(() => {
     if (!branchId && branchesQuery.data?.length) {
       setBranchId(branchesQuery.data[0].id);
@@ -123,8 +115,7 @@ export function InventoryPage() {
         note: issueForm.note,
       }),
     onSuccess: (allocations) => {
-      // Người dùng không chọn lô (FEFO là quyết định của kho) nên phải nói rõ đã trừ
-      // vào lô nào — nếu không, số tồn của một lô cụ thể sẽ đổi mà không rõ vì sao.
+
       toast.show(
         `Đã xuất kho: ${allocations.map((a) => `${a.batchNo} (${a.quantity})`).join(', ')}`,
         'success',
@@ -182,11 +173,7 @@ export function InventoryPage() {
       key: 'inventoryQuantity',
       header: 'Tồn',
       sortable: true,
-      /*
-        Số lượng đi kèm NHÃN CHỮ, không chỉ tô đỏ khi bằng 0: người không phân biệt được
-        màu vẫn phải đọc ra "hết hàng" (mục 30 của đặc tả giao diện). Màu đỏ trần trên
-        một chữ số cũng dễ bị đọc nhầm thành "số âm".
-      */
+      
       render: (row) => {
         const level = stockLevelOf(row.inventoryQuantity);
         return (
@@ -239,7 +226,7 @@ export function InventoryPage() {
     {
       key: 'expiryDate',
       header: 'Hạn dùng',
-      // Cột được tô màu theo mức độ gần hạn — yêu cầu của P6-T9.
+      
       render: (row) => (
         <div className="flex items-center gap-2">
           <span>{row.expiryDate ? formatDate(row.expiryDate) : '—'}</span>
@@ -264,7 +251,7 @@ export function InventoryPage() {
     {
       key: 'quantityChange',
       header: 'Thay đổi',
-      // Dấu +/- mới là thứ mang nghĩa; màu chỉ giúp quét cột nhanh hơn.
+      
       render: (row) => (
         <span className={row.quantityChange < 0 ? 'text-danger' : 'text-success'}>
           {row.quantityChange > 0 ? `+${row.quantityChange}` : row.quantityChange}

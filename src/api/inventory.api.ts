@@ -13,8 +13,6 @@ import {
   StockTakeStatus,
 } from '@/types/models';
 
-// ------------------------------------------------------------------------ Tồn kho
-
 export interface InventoryListParams {
   page?: number;
   limit?: number;
@@ -22,9 +20,9 @@ export interface InventoryListParams {
   sortOrder?: 'ASC' | 'DESC';
   branchId?: string;
   itemId?: string;
-  /** Đối chiếu với tên và mã mặt hàng. */
+  
   search?: string;
-  /** Chỉ lấy các dòng đã chạm ngưỡng `minimumStock`. */
+  
   lowStock?: boolean;
 }
 
@@ -43,22 +41,15 @@ export interface IssueInventoryPayload {
   itemId: string;
   branchId: string;
   quantity: number;
-  /** Chỉ nhận các lý do thủ công — xem `MANUAL_ISSUE_TYPES`. */
+  
   type: InventoryTransactionType;
   note: string;
 }
 
-/**
- * Kho — SRS FR-18.
- *
- * Không có hàm nào ghi thẳng số tồn: mọi thay đổi đều đi qua `receive`/`issue`/`update`
- * và backend luôn sinh một dòng sổ cái tương ứng. Xem comment đầu `InventoryService`
- * phía backend.
- */
 export const inventoryApi = {
   list: (params: InventoryListParams = {}) =>
     apiClient.get<PaginatedResult<InventoryItem>>('/catalog/inventory', { params }).then((r) => r.data),
-  /** Các lô của một dòng tồn kho, sắp theo hạn dùng gần nhất trước. */
+  
   batches: (inventoryItemId: string) =>
     apiClient
       .get<InventoryBatch[]>(`/catalog/inventory/${inventoryItemId}/batches`)
@@ -76,12 +67,10 @@ export const inventoryApi = {
         payload,
       )
       .then((r) => r.data),
-  /** Điều chỉnh tồn kèm lý do — backend quy về một dòng sổ cái loại `ADJUSTMENT`. */
+  
   adjust: (id: string, payload: { delta?: number; inventoryQuantity?: number; note?: string }) =>
     apiClient.patch<InventoryItem>(`/catalog/inventory/${id}`, payload).then((r) => r.data),
 };
-
-// -------------------------------------------------------------------------- Sổ cái
 
 export interface InventoryTransactionListParams {
   page?: number;
@@ -92,20 +81,17 @@ export interface InventoryTransactionListParams {
   itemId?: string;
   inventoryItemId?: string;
   type?: InventoryTransactionType;
-  /** `YYYY-MM-DD`, tính cả ngày này. */
+  
   fromDate?: string;
   toDate?: string;
 }
 
-/** Chỉ có đọc: sổ cái là bản ghi bất biến (SRS FR-18-02). */
 export const inventoryTransactionsApi = {
   list: (params: InventoryTransactionListParams = {}) =>
     apiClient
       .get<PaginatedResult<InventoryTransaction>>('/catalog/inventory-transactions', { params })
       .then((r) => r.data),
 };
-
-// ------------------------------------------------------------------- Đơn đặt hàng
 
 export interface PurchaseOrderListParams {
   page?: number;
@@ -138,11 +124,7 @@ export const purchaseOrdersApi = {
     apiClient.get<PurchaseOrder>(`/catalog/purchase-orders/${id}`).then((r) => r.data),
   create: (payload: PurchaseOrderPayload) =>
     apiClient.post<PurchaseOrder>('/catalog/purchase-orders', payload).then((r) => r.data),
-  /**
-   * `items` nếu có thì **thay thế toàn bộ** các dòng, và chỉ làm được khi đơn còn
-   * `DRAFT`. `status` chỉ nhận `ORDERED`/`CANCELLED` — hai trạng thái nhận hàng do
-   * backend tính từ số đã nhận.
-   */
+  
   update: (
     id: string,
     payload: Partial<Pick<PurchaseOrderPayload, 'expectedDate' | 'note' | 'items'>> & {
@@ -151,8 +133,6 @@ export const purchaseOrdersApi = {
   ) => apiClient.patch<PurchaseOrder>(`/catalog/purchase-orders/${id}`, payload).then((r) => r.data),
   remove: (id: string) => apiClient.delete(`/catalog/purchase-orders/${id}`).then(() => undefined),
 };
-
-// -------------------------------------------------------------------- Phiếu nhập
 
 export interface GoodsReceiptListParams {
   page?: number;
@@ -183,10 +163,6 @@ export interface GoodsReceiptPayload {
   }[];
 }
 
-/**
- * Không có `update`/`remove`: phiếu nhập đã sinh sổ cái bất biến và đã tăng tồn thật.
- * Nhập sai thì lập phiếu kiểm kê có ghi lý do.
- */
 export const goodsReceiptsApi = {
   list: (params: GoodsReceiptListParams = {}) =>
     apiClient
@@ -197,8 +173,6 @@ export const goodsReceiptsApi = {
   create: (payload: GoodsReceiptPayload) =>
     apiClient.post<GoodsReceipt>('/catalog/goods-receipts', payload).then((r) => r.data),
 };
-
-// --------------------------------------------------------------------- Kiểm kê
 
 export interface StockTakeListParams {
   page?: number;
@@ -214,7 +188,7 @@ export const stockTakesApi = {
   list: (params: StockTakeListParams = {}) =>
     apiClient.get<PaginatedResult<StockTake>>('/catalog/stock-takes', { params }).then((r) => r.data),
   getOne: (id: string) => apiClient.get<StockTake>(`/catalog/stock-takes/${id}`).then((r) => r.data),
-  /** `inventoryItemIds` bỏ trống = kiểm kê toàn bộ mặt hàng của chi nhánh. */
+  
   create: (payload: { branchId: string; takenDate?: string; note?: string; inventoryItemIds?: string[] }) =>
     apiClient.post<StockTake>('/catalog/stock-takes', payload).then((r) => r.data),
   submitCounts: (

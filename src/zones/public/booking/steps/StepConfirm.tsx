@@ -5,7 +5,6 @@ import { formatCurrency } from '@/utils/format';
 import { SummaryRow } from '../SummaryRow';
 import { BookingForm } from '../use-booking-form';
 
-/** Bước 7 - soát lại toàn bộ thông tin trước khi gửi. */
 export function StepConfirm({ form }: { form: BookingForm }) {
   const { branch, service, doctor, schedule, owner, pet, symptoms, result } = form;
 
@@ -68,10 +67,7 @@ export function StepConfirm({ form }: { form: BookingForm }) {
         />
       </dl>
 
-      {/*
-        `role="alert"` chứ không phải một dòng chữ đỏ: khách vừa bấm "Xác nhận đặt lịch"
-        và cần biết ngay là nó hỏng, kể cả khi đang dùng trình đọc màn hình.
-      */}
+      {}
       {result.submitError && (
         <p role="alert" className="mt-3 text-sm text-destructive">
           {result.submitError}

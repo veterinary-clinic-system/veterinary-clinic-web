@@ -9,19 +9,6 @@ const PADDING = { top: 16, right: 16, bottom: 32, left: 56 };
 const PLOT_WIDTH = WIDTH - PADDING.left - PADDING.right;
 const PLOT_HEIGHT = HEIGHT - PADDING.top - PADDING.bottom;
 
-/**
- * Biểu đồ đường một chỉ số xét nghiệm kèm dải tham chiếu — acceptance P9-T6.
- *
- * SVG viết tay chứ không kéo thêm một thư viện chart: cả hệ chỉ cần đúng một biểu đồ,
- * và một thư viện chart kéo theo vài trăm KB cùng một hệ thống theme thứ hai phải đồng
- * bộ với `bg-triage-*` bằng tay. `viewBox` + `preserveAspectRatio` lo phần co giãn.
- *
- * DẢI THAM CHIẾU LẤY TỪ ĐIỂM GẦN NHẤT, không phải một hằng số: khoảng bình thường được
- * **chép lại theo từng kết quả** (chó khác mèo, máy này khác máy kia — xem
- * `laboratory-result.entity.ts`), nên vẽ một dải cố định cho cả chuỗi là bịa. Dải chỉ
- * là nền tham chiếu; màu của từng điểm mới là kết luận, và nó theo `flag` đã chốt lúc
- * lưu kết quả đó.
- */
 export function LabTrendChart({
   points,
   unit,
@@ -35,9 +22,6 @@ export function LabTrendChart({
     return null;
   }
 
-  // Một điểm duy nhất không thành đường. Vẫn vẽ điểm đó (kèm dải tham chiếu) thay vì
-  // báo "chưa đủ dữ liệu": lần đo đầu tiên vẫn đáng nhìn, và nó cho thấy chỉ số này đã
-  // bắt đầu được theo dõi.
   const { xOf, yOf, yTicks, band } = geometry;
 
   return (
@@ -49,7 +33,7 @@ export function LabTrendChart({
         role="img"
         aria-label={`Biểu đồ xu hướng, ${points.length} lần đo`}
       >
-        {/* Dải tham chiếu vẽ TRƯỚC lưới và đường: nó là nền, không được che điểm nào. */}
+        {}
         {band && (
           <rect
             x={PADDING.left}
@@ -104,8 +88,7 @@ export function LabTrendChart({
           </g>
         ))}
 
-        {/* Chỉ ghi nhãn ngày ở điểm đầu, điểm cuối và các điểm cách đều - nhãn chồng lên
-            nhau khi chuỗi dài thì không đọc được gì cả. */}
+        {}
         {points
           .map((point, index) => ({ point, index }))
           .filter(({ index }) => labelVisible(index, points.length))
@@ -133,9 +116,6 @@ function computeGeometry(points: LabTrendPoint[]) {
   const values = points.map((point) => point.value);
   const latest = points[points.length - 1];
 
-  // Trục tung phải bao cả GIÁ TRỊ lẫn KHOẢNG THAM CHIẾU: một chuỗi toàn giá trị cao sẽ
-  // đẩy dải tham chiếu ra ngoài khung, và khi đó biểu đồ trông như mọi thứ đều bình
-  // thường - đúng ngược cái nó cần nói.
   const candidates = [
     ...values,
     ...(latest?.referenceMin != null ? [latest.referenceMin] : []),
@@ -143,8 +123,7 @@ function computeGeometry(points: LabTrendPoint[]) {
   ];
   const rawMin = Math.min(...candidates);
   const rawMax = Math.max(...candidates);
-  // Chuỗi phẳng tuyệt đối (mọi lần đo ra cùng một số) làm mẫu số bằng 0 - nới ra một
-  // khoảng tối thiểu để đường nằm giữa khung thay vì chia cho 0.
+
   const span = rawMax - rawMin || Math.abs(rawMax) * 0.2 || 1;
   const min = rawMin - span * 0.1;
   const max = rawMax + span * 0.1;
@@ -196,7 +175,6 @@ function labelVisible(index: number, total: number): boolean {
   return index === 0 || index === total - 1 || index % step === 0;
 }
 
-/** Số y trên trục - bỏ phần thập phân thừa để trục không dài hơn cả biểu đồ. */
 function formatTick(value: number): string {
   const rounded = Math.round(value * 100) / 100;
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);

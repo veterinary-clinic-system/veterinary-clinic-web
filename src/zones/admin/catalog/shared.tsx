@@ -4,17 +4,8 @@ import { ErrorState, Pagination, Select, Skeleton } from '@/components/basic';
 import { ItemType } from '@/types/models';
 import { flattenCategories } from '@/utils/categories';
 
-/**
- * Số dòng mỗi trang cho mọi bảng của Danh mục.
- *
- * Trước đây cả năm tab gọi API với `limit: 100` rồi vẽ thẳng toàn bộ kết quả: không có
- * thanh phân trang nào (phản hồi nghiệm thu: "Tất cả danh sách phải được hiển thị dưới
- * dạng phân trang"), và tệ hơn là dòng thứ 101 trở đi biến mất không một dấu hiệu.
- * Giờ mỗi tab phân trang phía MÁY CHỦ, nên không còn trần cứng nữa.
- */
 export const PAGE_SIZE = 20;
 
-/** Thanh phân trang dùng chung - đổi `total` của API sang số trang. */
 export function TabPagination({
   page,
   total,
@@ -34,14 +25,6 @@ export function TabPagination({
   );
 }
 
-/**
- * Ô chọn danh mục dùng chung cho tab Dịch vụ, tab Thuốc và tab Vaccine.
- *
- * Dùng `Select` với cây đã làm phẳng (thụt đầu dòng theo độ sâu) thay vì `Combobox`
- * như kế hoạch phase gợi ý: cùng cách đã dùng ở `ProductsPage`, và danh mục của một
- * phòng khám là hàng chục dòng chứ không hàng nghìn nên chưa cần ô tìm kiếm. Đổi sang
- * Combobox sau này chỉ phải sửa đúng ở đây.
- */
 export function CategorySelect({
   itemType,
   value,
@@ -70,16 +53,6 @@ export function CategorySelect({
   );
 }
 
-/**
- * Ba trạng thái của một bảng trong tab Danh mục, vẽ dưới dạng HÀNG của `<tbody>`.
- *
- * Ba tab Dịch vụ, Thuốc và Vaccine dựng bảng bằng tay (mỗi hàng có chế độ sửa tại chỗ)
- * nên chưa dùng được `Table`. Cái giá phải trả trước đây là chúng không có trạng thái
- * nào cả: đang tải thì bảng trống, API hỏng thì cũng bảng trống, mà danh mục rỗng thật
- * thì vẫn bảng trống. Ba tình huống khác hẳn nhau, cùng một màn hình.
- *
- * Trả về `null` khi có dữ liệu - nơi gọi cứ vẽ tiếp các hàng thật ngay sau nó.
- */
 export function TabTableStates({
   loading,
   error,

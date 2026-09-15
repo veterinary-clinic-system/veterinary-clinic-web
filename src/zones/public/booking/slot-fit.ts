@@ -1,24 +1,6 @@
 import { SlotStatus } from '@/types/enums';
 import { SlotInfo } from '@/types/models';
 
-/**
- * Một dịch vụ có đặt vừa vào khung giờ này không?
- *
- * Lưới lịch là 30 phút, nhưng dịch vụ có thể dài hơn: "Phẫu thuật nhỏ" 60 phút chiếm
- * HAI ô liên tiếp. Vì vậy không phải ô FREE nào cũng đặt được - ô cuối buổi và ô ngay
- * trước giờ nghỉ trưa thì không đủ chỗ.
- *
- * Ba điều kiện, giống hệt `slotsCovering()` phía backend
- * (`scheduling/application/availability.service.ts`):
- *   1. Bắt đầu ĐÚNG mép một ô.
- *   2. Các ô phủ LIÊN TỤC - không được nhảy qua khe hở nghỉ trưa rồi đếm tiếp ở bên kia.
- *   3. Ô cuối phải chạm tới thời điểm kết thúc.
- * Và mọi ô bị chiếm đều phải đang FREE.
- *
- * Hàm này chỉ để LÀM MỜ những ô không chọn được, cho khách khỏi chọn xong mới nhận lỗi
- * ở bước cuối. Hàng rào thật vẫn nằm ở backend - đây là bản sao có chủ ý, nên hai bên
- * phải sửa cùng nhau.
- */
 export function slotFitsService(
   daySlots: SlotInfo[],
   slot: SlotInfo,

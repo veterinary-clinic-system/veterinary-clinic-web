@@ -10,13 +10,6 @@ interface NavItem {
   end?: boolean;
 }
 
-/**
- * Điều hướng công khai - giữ nguyên vị trí kể cả khi chủ nuôi đã đăng nhập.
- *
- * Chủ nuôi vẫn là khách của trang giới thiệu: họ xem dịch vụ rồi đặt lịch cho bé đã có
- * hồ sơ. Thay nhóm này bằng một menu tài khoản khi đăng nhập sẽ cắt mất đúng con đường
- * họ hay đi.
- */
 const PUBLIC_NAV: NavItem[] = [
   { to: '/', label: 'Trang chủ', end: true },
   { to: '/services', label: 'Dịch vụ' },
@@ -25,7 +18,6 @@ const PUBLIC_NAV: NavItem[] = [
   { to: '/chat', label: 'Tư vấn AI' },
 ];
 
-/** Phần THÊM VÀO khi đã đăng nhập bằng tài khoản chủ nuôi. */
 const OWNER_NAV: NavItem[] = [
   { to: '/my/pets', label: 'Thú cưng của tôi' },
   { to: '/my/appointments', label: 'Lịch hẹn' },
@@ -43,19 +35,12 @@ function desktopNavClass({ isActive }: { isActive: boolean }): string {
 function drawerNavClass({ isActive }: { isActive: boolean }): string {
   return cn(
     'flex min-h-touch items-center rounded-lg px-3 text-sm transition-colors',
-    isActive ? 'bg-primary/10 font-semibold text-primary' : 'text-foreground hover:bg-surface-muted',
+    isActive
+      ? 'bg-primary/10 font-semibold text-primary'
+      : 'text-foreground hover:bg-surface-muted',
   );
 }
 
-/**
- * Thanh trên của trang công khai và khu chủ nuôi.
- *
- * Hai trạng thái, MỘT cấu trúc (xem `docs/01-thong-tin-kien-truc.md` mục 3.5): phần
- * tài khoản được thêm vào bên phải chứ không thay thế điều hướng công khai.
- *
- * "Đặt lịch khám" là hành động chính của cả zone nên luôn hiện, kể cả ở 320px - đó là
- * lý do nó nằm ngoài menu gấp chứ không nằm trong.
- */
 export function PublicHeader() {
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -69,17 +54,20 @@ export function PublicHeader() {
   }, [location.pathname]);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-surface/95 backdrop-blur">
-      <nav aria-label="Điều hướng chính" className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4">
+    <header className="pet-header sticky top-0 z-30 border-b border-border bg-surface/95 backdrop-blur">
+      <nav
+        aria-label="Điều hướng chính"
+        className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4"
+      >
         <Link to="/" className="flex shrink-0 items-center gap-2.5">
           <span
             aria-hidden="true"
             className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground"
           >
-            <Icon name="stethoscope" className="h-5 w-5" />
+            <Icon name="paw" className="h-5 w-5" />
           </span>
           <span className="hidden text-base font-semibold text-foreground sm:block">
-            Phòng khám thú y
+            VETAI <span className="font-normal text-primary">HUB</span>
           </span>
         </Link>
 
@@ -154,11 +142,7 @@ export function PublicHeader() {
         </div>
       </nav>
 
-      {/*
-        Màn hình hẹp dùng ngăn kéo thay cho bảng gấp trong luồng. Bảng gấp đẩy nội dung
-        trang xuống khi mở, nên bấm "menu" xong thứ đang đọc nhảy đi mất; ngăn kéo phủ
-        lên trên và trả lại đúng vị trí cũ khi đóng.
-      */}
+      {}
       <Drawer
         open={menuOpen}
         onClose={() => setMenuOpen(false)}

@@ -7,6 +7,7 @@ export interface Employee {
   userId: string | null;
   user?: StaffUser | null;
   fullName: string;
+  avatarUrl: string;
   phone: string;
   email: string | null;
   address: string | null;
@@ -33,6 +34,7 @@ export interface EmployeeListParams {
 
 export interface CreateEmployeePayload {
   fullName: string;
+  avatarUrl?: string;
   phone: string;
   email?: string;
   address?: string;
@@ -41,7 +43,7 @@ export interface CreateEmployeePayload {
   hireDate?: string;
   status?: EmployeeStatus;
   note?: string;
-  /** Bỏ trống = hồ sơ nhân sự thuần, không tạo tài khoản đăng nhập. */
+  
   account?: { role: Role; password: string };
 }
 

@@ -29,14 +29,6 @@ import { formatCurrency, formatDateTime } from '@/utils/format';
 import { APPOINTMENT_STATUS_LABEL_VI } from '@/utils/labels';
 import { CancelAppointmentDialog } from '../components/CancelAppointmentDialog';
 
-/**
- * Vòng đời của một lịch hẹn, dựng từ những gì bản ghi thật sự biết.
- *
- * Chỉ ba mốc có dấu thời gian đáng tin: lúc đặt (`startAt` là giờ hẹn, không phải giờ
- * đặt - nên mốc đầu ghi là "giờ hẹn"), lúc kết thúc dự kiến, và lúc huỷ nếu có. Không
- * bịa thêm mốc "đã xác nhận lúc..." khi API không trả về thời điểm đó: một dòng thời
- * gian có mốc sai còn tệ hơn một dòng thời gian ngắn.
- */
 function buildTimeline(appointment: Appointment): TimelineEntry[] {
   const status = appointment.status as AppointmentStatus;
 
@@ -82,16 +74,6 @@ function buildTimeline(appointment: Appointment): TimelineEntry[] {
   return entries;
 }
 
-/**
- * Chi tiết một lịch hẹn của CHÍNH chủ nuôi. Dùng `GET /appointments/:id` - route đó
- * không gắn `@RequirePermissions` mà tự kiểm tra quyền sở hữu trong service
- * (`findOneForOwner`), nên lịch của người khác trả về 403 chứ không lộ dữ liệu.
- *
- * Hành động thay đổi theo trạng thái (mục 20 của đặc tả). Ba hành động khả thi với API
- * hiện có: **huỷ** (còn PENDING/CONFIRMED), **đặt lại** (sau khi đã huỷ hoặc đã khám
- * xong - dẫn sang biểu mẫu đặt lịch với bé đã chọn sẵn), và **gọi chi nhánh**. "Đổi
- * lịch" chưa có cửa API tương ứng, nên không dựng một nút hứa hẹn điều đó.
- */
 export function MyAppointmentDetailPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
@@ -170,11 +152,7 @@ export function MyAppointmentDetailPage() {
         </div>
       </div>
 
-      {/*
-        Hành động đặt NGAY DƯỚI tiêu đề, không ở cuối trang: người mở trang này thường đã
-        biết mình muốn làm gì (huỷ, hoặc đặt lại), và bắt họ cuộn qua ba khối thông tin
-        để tìm nút là bắt họ đọc lại thứ họ vừa đọc.
-      */}
+      {}
       <div className="mt-5 flex flex-wrap gap-2">
         {cancellable && (
           <Button variant="secondary" onClick={() => setCancelOpen(true)}>

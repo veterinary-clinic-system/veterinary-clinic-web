@@ -22,21 +22,6 @@ export interface OpeningHoursModalProps {
   branch: Branch | null;
 }
 
-/**
- * Giờ mở cửa của một chi nhánh - cả tuần, mỗi ngày nhiều ca.
- *
- * Ba thay đổi so với bản trước, tất cả đều bắt nguồn từ việc một ngày có NHIỀU ca:
- *
- * 1. Bản trước chỉ đọc ca đầu tiên của mỗi ngày rồi gửi lại đúng năm dòng đó. Vì máy chủ
- *    thay cả tuần, mở ra bấm Lưu là xoá sạch ca chiều - xem `week-schedule.ts`.
- * 2. Ô giờ là `type="time"` chứ không phải ô chữ gợi ý "HH:mm": có bộ chọn, có kiểm tra,
- *    và trên điện thoại hiện bàn phím số.
- * 3. Lưu hỏng thì nói ra. Bản trước không có nhánh lỗi nào - bấm Lưu, không có gì xảy
- *    ra, và không ai biết vì sao.
- *
- * Hộp thoại chứ không phải khối mở rộng trong danh sách: sửa lịch tuần là việc cần nhìn
- * cả năm ngày cùng lúc, còn khối mở rộng thì đẩy các chi nhánh khác xuống dưới màn hình.
- */
 export function OpeningHoursModal({ open, onClose, branch }: OpeningHoursModalProps) {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -188,10 +173,7 @@ export function OpeningHoursModal({ open, onClose, branch }: OpeningHoursModalPr
           })}
         </div>
 
-        {/*
-          Cả tuần trống là hợp lệ với máy chủ nhưng gần như luôn là nhầm lẫn: chi nhánh
-          sẽ không nhận được một lịch hẹn nào. Cảnh báo, không chặn.
-        */}
+        {}
         {totalBlocks === 0 && (
           <Alert tone="warning" title="Chi nhánh này sẽ đóng cửa cả tuần">
             Không còn ca nào. Khách sẽ không đặt được lịch tới chi nhánh này cho tới khi có ca mới.

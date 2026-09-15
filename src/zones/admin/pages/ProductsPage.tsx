@@ -8,12 +8,14 @@ import { ItemType, Product } from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';
 import { flattenCategories } from '@/utils/categories';
 import { formatCurrency } from '@/utils/format';
+import { ImageUpload } from '@/components/ImageUpload';
 
 const LIMIT = 20;
 
 type ActiveFilter = '' | 'true' | 'false';
 
 interface ProductFormState {
+  imageUrl: string;
   itemName: string;
   describe: string;
   unitPrice: string;
@@ -26,6 +28,7 @@ interface ProductFormState {
 }
 
 const EMPTY_FORM: ProductFormState = {
+  imageUrl: '/images/default-item.svg',
   itemName: '',
   describe: '',
   unitPrice: '',
@@ -37,7 +40,6 @@ const EMPTY_FORM: ProductFormState = {
   minimumStock: '',
 };
 
-/** SRS FR-16 — quản lý hàng hoá bán lẻ. */
 export function ProductsPage() {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -81,6 +83,7 @@ export function ProductsPage() {
     mutationFn: () => {
       const payload = {
         itemName: form.itemName,
+        imageUrl: form.imageUrl,
         describe: form.describe || undefined,
         unitPrice: Number(form.unitPrice) || 0,
         categoryId: form.categoryId || null,
@@ -119,6 +122,7 @@ export function ProductsPage() {
   function openEdit(product: Product) {
     setEditing(product);
     setForm({
+      imageUrl: product.item.imageUrl,
       itemName: product.item.itemName,
       describe: product.item.describe ?? '',
       unitPrice: String(product.item.unitPrice),
@@ -143,7 +147,6 @@ export function ProductsPage() {
     saveMutation.mutate();
   }
 
-  // Bán lỗ là nghiệp vụ có thật (xả hàng cận hạn) nên chỉ CẢNH BÁO, không chặn.
   const sellingBelowCost =
     form.costPrice !== '' && form.unitPrice !== '' && Number(form.costPrice) > Number(form.unitPrice);
 
@@ -154,7 +157,12 @@ export function ProductsPage() {
       render: (row) => <span className="font-mono text-xs text-muted">{row.item.code}</span>,
     },
     { key: 'sku', header: 'SKU', sortable: true, render: (row) => <span className="font-mono text-xs">{row.sku}</span> },
-    { key: 'itemName', header: 'Tên sản phẩm', sortable: true, render: (row) => row.item.itemName },
+    {
+      key: 'itemName',
+      header: 'Tên sản phẩm',
+      sortable: true,
+      render: (row) => <span className="flex items-center gap-2"><img src={row.item.imageUrl} alt="" className="h-10 w-10 rounded object-cover" />{row.item.itemName}</span>,
+    },
     { key: 'brand', header: 'Thương hiệu', render: (row) => row.brand ?? '—' },
     {
       key: 'category',
@@ -303,6 +311,13 @@ export function ProductsPage() {
         }
       >
         <form id="product-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <ImageUpload
+            label="Ảnh sản phẩm"
+            category="catalog-images"
+            value={form.imageUrl}
+            onChange={(imageUrl) => setForm({ ...form, imageUrl })}
+            required
+          />
           <Input
             label="Tên sản phẩm"
             required

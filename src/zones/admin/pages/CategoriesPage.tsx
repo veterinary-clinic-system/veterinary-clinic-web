@@ -15,7 +15,6 @@ import { QueryErrorState } from '@/components/QueryErrorState';
 import { Category, ItemType } from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';
 
-/** Ba loại có danh mục theo SRS: FR-14 dịch vụ, FR-15 thuốc, FR-16 sản phẩm. */
 const ITEM_TYPE_OPTIONS = [
   { value: ItemType.PRODUCT, label: 'Sản phẩm' },
   { value: ItemType.MEDICATION, label: 'Thuốc' },
@@ -30,13 +29,6 @@ interface CategoryFormState {
 
 const EMPTY_FORM: CategoryFormState = { categoryName: '', code: '', parentId: '' };
 
-/**
- * SRS FR-16 — cây danh mục hàng hoá.
- *
- * Hiển thị đúng dạng cây backend trả về thay vì bảng phẳng: quan hệ cha–con là toàn bộ
- * giá trị của màn hình này, một bảng có cột "danh mục cha" bắt người dùng tự ghép lại
- * trong đầu.
- */
 export function CategoriesPage() {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -85,7 +77,7 @@ export function CategoriesPage() {
       toast.show('Đã xoá danh mục.', 'success');
       invalidate();
     },
-    // Backend trả 409 kèm lý do rõ ("còn N mặt hàng…") - hiện nguyên văn.
+    
     onError: (error) => toast.show(getErrorMessage(error), 'error'),
   });
 
@@ -123,8 +115,6 @@ export function CategoriesPage() {
     saveMutation.mutate();
   }
 
-  // Danh mục cha chọn được: mọi nút TRỪ chính nó và các hậu duệ của nó (backend cũng
-  // chặn, nhưng không nên mời người dùng bấm vào thứ chắc chắn sẽ lỗi).
   const parentOptions = [
     { value: '', label: '— Danh mục gốc —' },
     ...flattenExcluding(treeQuery.data ?? [], editing?.id),
@@ -285,7 +275,6 @@ function CategoryNode({
   );
 }
 
-/** Làm phẳng cây, bỏ nhánh gốc ở `excludeId` (chính nó + mọi hậu duệ). */
 function flattenExcluding(
   nodes: Category[],
   excludeId: string | undefined,

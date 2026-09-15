@@ -18,12 +18,6 @@ import {
 import { getErrorMessage } from '@/utils/errors';
 import { formatDate } from '@/utils/format';
 
-/**
- * Nghỉ ngoài lịch: những khoảng bác sĩ bận trong một NGÀY cụ thể, chồng lên ca tuần.
- *
- * Ngày để trống thì nút bị khoá thay vì gọi API rồi nhận lỗi - đây là ràng buộc biết
- * trước, không cần đi một vòng qua máy chủ mới nói cho người dùng.
- */
 export function BreaksPanel({ doctorId }: { doctorId: string }) {
   const queryClient = useQueryClient();
   const toast = useToast();

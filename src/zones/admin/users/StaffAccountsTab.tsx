@@ -11,13 +11,6 @@ import { StaffAccountModal } from './StaffAccountModal';
 
 const LIMIT = 20;
 
-/**
- * Vai trò lọc được - TẤT CẢ bảy vai trò, kể cả chủ thú cưng.
- *
- * `GET /users` trả về mọi tài khoản chứ không riêng nhân viên, nên một danh sách lọc chỉ
- * có sáu vai trò nhân viên tạo ra tình huống khó chịu: bảng đầy tài khoản "Chủ thú cưng"
- * mà không có cách nào lọc chúng đi, cũng không có cách nào chỉ xem chúng.
- */
 const FILTERABLE_ROLES = [
   Role.ADMIN,
   Role.MANAGER,
@@ -28,14 +21,6 @@ const FILTERABLE_ROLES = [
   Role.PET_OWNER,
 ];
 
-/**
- * Danh sách tài khoản đăng nhập.
- *
- * Dựng trên `DataTable` như mọi danh sách của zone quản trị: một chỗ duy nhất lo thanh
- * công cụ, skeleton, trạng thái rỗng, trạng thái lỗi và phân trang. Bản trước tự dựng
- * `<table>` bằng tay và không có trạng thái nào trong bốn cái đó - khi API hỏng, bảng
- * chỉ đơn giản là trống.
- */
 export function StaffAccountsTab() {
   const [roleFilter, setRoleFilter] = useState<Role | ''>('');
   const [branchFilter, setBranchFilter] = useState('');
@@ -74,7 +59,7 @@ export function StaffAccountsTab() {
     {
       key: 'fullName',
       header: 'Họ và tên',
-      render: (user) => <span className="font-medium text-foreground">{user.fullName}</span>,
+      render: (user) => <span className="flex items-center gap-2 font-medium text-foreground"><img src={user.avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />{user.fullName}</span>,
     },
     { key: 'phone', header: 'Số điện thoại' },
     { key: 'email', header: 'Email', hideBelow: 'lg', render: (user) => user.email ?? '—' },
@@ -83,7 +68,7 @@ export function StaffAccountsTab() {
       key: 'branchId',
       header: 'Chi nhánh',
       hideBelow: 'md',
-      /* Quản trị viên không thuộc chi nhánh nào - nói ra thay vì để một gạch ngang. */
+      
       render: (user) => (user.role === Role.ADMIN ? 'Toàn hệ thống' : branchName(user.branchId)),
     },
     {

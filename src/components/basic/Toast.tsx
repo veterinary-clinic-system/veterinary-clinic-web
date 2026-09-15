@@ -29,12 +29,6 @@ const VARIANT_DOT_CLASSES: Record<ToastVariant, string> = {
   info: 'bg-primary',
 };
 
-/**
- * Mount once near the app root (in main.tsx / App.tsx - out of scope for this
- * component library, another agent owns that wiring) so any descendant can call
- * useToast().show(...). Renders its stack bottom-right via a fixed-position container
- * that lives alongside `children`, no portal needed.
- */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -58,7 +52,6 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     [dismiss],
   );
 
-  // Clear any pending auto-dismiss timers if the provider itself unmounts.
   useEffect(() => {
     const timersMap = timers.current;
     return () => {

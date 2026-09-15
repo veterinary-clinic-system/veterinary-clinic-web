@@ -5,7 +5,6 @@ import { StaffNotification, staffNotificationsApi } from '@/api/staff-notificati
 import { Badge, Button, Skeleton } from '@/components/basic';
 import { formatDateTime } from '@/utils/format';
 
-/** Nhịp hỏi lại số chưa đọc. 60s: đủ nhanh để không lỡ việc, đủ chậm để không tốn. */
 const POLL_MS = 60_000;
 
 const TYPE_TONE: Record<string, 'warning' | 'destructive' | 'default'> = {
@@ -28,17 +27,6 @@ const TYPE_LABEL_VI: Record<string, string> = {
   VACCINATION_DUE: 'Đến hạn tiêm',
 };
 
-/**
- * Chuông thông báo trong ứng dụng — SRS FR-23 mục 18 (P10-T5).
- *
- * HỎI LẠI ĐỊNH KỲ chứ không dùng WebSocket. Với một hệ có vài chục nhân viên và những
- * sự kiện tính bằng phút (tồn thấp, thuốc sắp hết hạn), một truy vấn `COUNT` trên khoá
- * đã đánh chỉ mục mỗi phút rẻ hơn nhiều so với việc dựng và trông một kênh realtime —
- * cùng với tất cả những gì đi kèm nó: xác thực lại khi token xoay, kết nối lại khi
- * mạng chập, và một trạng thái thứ hai phải đồng bộ.
- *
- * Danh sách chỉ tải KHI MỞ, không tải cùng số đếm: phần lớn thời gian không ai mở nó ra.
- */
 export function NotificationBell() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -74,7 +62,6 @@ export function NotificationBell() {
     ]);
   }
 
-  // Bấm ra ngoài thì đóng — hộp này che nội dung phía dưới nó.
   useEffect(() => {
     if (!open) return;
     function onPointerDown(event: MouseEvent) {
@@ -95,12 +82,6 @@ export function NotificationBell() {
 
   const unread = countQuery.data?.unread ?? 0;
 
-  /**
-   * Bấm vào một thông báo: đánh dấu đã đọc RỒI mới điều hướng.
-   *
-   * Không chờ mutation xong mới đi — nếu mạng chậm thì người dùng sẽ bấm lần nữa vì
-   * tưởng hụt. Đánh dấu đã đọc là việc phụ, đi tới nơi cần đến mới là việc chính.
-   */
   function openNotification(notification: StaffNotification) {
     if (!notification.readAt) {
       markReadMutation.mutate(notification.id);
@@ -152,10 +133,7 @@ export function NotificationBell() {
                 ))}
               </div>
             )}
-            {/*
-              "Không có thông báo nào" khi thật ra chuông không gọi được API là cách
-              nhanh nhất để một cảnh báo hết hạn thuốc trôi qua mà không ai biết.
-            */}
+            {}
             {listQuery.isError && (
               <div className="flex flex-col items-center gap-2 px-4 py-6 text-center">
                 <p className="text-sm text-muted">Không tải được thông báo.</p>
@@ -201,7 +179,6 @@ export function NotificationBell() {
   );
 }
 
-/** Vẽ tay thay vì kéo một bộ icon: cả hệ chỉ cần đúng một hình này. */
 function BellIcon() {
   return (
     <svg

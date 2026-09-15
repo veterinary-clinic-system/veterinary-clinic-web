@@ -16,16 +16,6 @@ import { DoctorCard } from '../components/DoctorCard';
 
 const PAGE_SIZE = 8;
 
-/**
- * Trang đội ngũ bác sĩ.
- *
- * Ba bộ lọc theo đúng ba cách người ta chọn bác sĩ: **tên** (đã được ai đó giới thiệu),
- * **chuyên khoa** (biết bé bị gì), **chi nhánh** (chọn theo chỗ gần nhà).
- *
- * Danh sách chuyên khoa dựng từ chính dữ liệu trả về, không phải từ một danh sách cứng:
- * phòng khám thêm chuyên khoa mới thì bộ lọc tự có, và không bao giờ hiện một lựa chọn
- * lọc ra danh sách rỗng.
- */
 export function DoctorsPage() {
   const [search, setSearch] = useState('');
   const [branchId, setBranchId] = useState('');

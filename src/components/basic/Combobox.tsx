@@ -13,14 +13,13 @@ export interface ComboboxProps {
   onChange: (value: string) => void;
   placeholder?: string;
   error?: string;
-  /** True while the caller is asynchronously fetching `options`. This component never fetches itself. */
+  
   loading?: boolean;
   disabled?: boolean;
   className?: string;
   id?: string;
 }
 
-/** Strips Vietnamese diacritics (and normalizes đ/Đ) so search is diacritics-tolerant. */
 function normalizeForSearch(input: string): string {
   return input
     .toLowerCase()
@@ -42,18 +41,6 @@ function Spinner({ className }: { className?: string }) {
   );
 }
 
-/**
- * Searchable single-select dropdown (no headless-UI/Radix dependency installed, so this
- * is plain React state + DOM event handling). Filters `options` client-side by
- * case-insensitive, diacritics-tolerant substring match on `label` - it never fetches
- * data itself, the caller owns fetching and passes `loading` while it does.
- *
- * Keyboard contract: ArrowDown/ArrowUp open the list (if closed) and move the
- * highlighted option; Enter selects the highlighted option; Escape closes the list and
- * discards the in-progress query (reverting the input to the current selection's
- * label); clicking outside (via a document `mousedown` listener) also closes without
- * selecting.
- */
 export function Combobox({
   label,
   options,
@@ -89,19 +76,16 @@ export function Combobox({
 
   const displayValue = isOpen ? query : (selectedOption?.label ?? '');
 
-  // Keep the highlighted row valid (and reset to the top) whenever the filtered set changes.
   useEffect(() => {
     setHighlightedIndex(0);
   }, [query]);
 
-  // Scroll the highlighted option into view as the user navigates with the keyboard.
   useEffect(() => {
     if (!isOpen) return;
     const option = listRef.current?.querySelector<HTMLElement>(`[data-index="${highlightedIndex}"]`);
     option?.scrollIntoView({ block: 'nearest' });
   }, [highlightedIndex, isOpen]);
 
-  // Click-outside-to-close.
   useEffect(() => {
     if (!isOpen) return;
     function handleDocumentMouseDown(event: MouseEvent) {

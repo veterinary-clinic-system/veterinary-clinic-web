@@ -7,13 +7,6 @@ import type { VaccinationRecordView } from '@/types/models';
 import { formatDate } from '@/utils/format';
 import { vaccinationDueClasses } from '@/utils/labels';
 
-/**
- * Khối 5 - Vaccination (P9-T3).
- *
- * Trạng thái nhắc (`dueStatus`) do **backend** tính, không tự so ngày ở client: lễ tân
- * gọi nhắc theo `GET /vaccinations/due` và bác sĩ nhìn sổ này, hai chỗ phải tô cùng một
- * màu cho cùng một mũi. Tự so ở client là mở đường cho hai ngưỡng lệch nhau.
- */
 export function VaccinationTab({ petId }: { petId: string }) {
   const query = useQuery({
     queryKey: ['pet-vaccinations', petId],

@@ -12,6 +12,7 @@ import type { Column, SortOrder } from '@/components/basic';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { Customer } from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';
+import { ImageUpload } from '@/components/ImageUpload';
 import { formatDate } from '@/utils/format';
 
 const LIMIT = 20;
@@ -20,6 +21,7 @@ type ActiveFilter = '' | 'true' | 'false';
 type PetsFilter = '' | 'true' | 'false';
 
 interface CustomerFormState {
+  avatarUrl: string;
   phone: string;
   fullName: string;
   email: string;
@@ -30,6 +32,7 @@ interface CustomerFormState {
 }
 
 const EMPTY_FORM: CustomerFormState = {
+  avatarUrl: '/images/default-user.svg',
   phone: '',
   fullName: '',
   email: '',
@@ -39,11 +42,6 @@ const EMPTY_FORM: CustomerFormState = {
   note: '',
 };
 
-/**
- * Danh sách khách hàng của quầy lễ tân: thêm / cập nhật / ngưng hoạt động / tìm kiếm /
- * lọc. Lịch sử giao dịch và danh sách thú cưng nằm ở trang chi tiết
- * (`/staff/customers/:id`) để bảng này không phải tải dữ liệu mà đa số dòng không cần.
- */
 export function CustomersPage() {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -95,6 +93,7 @@ export function CustomersPage() {
       if (editing) {
         return customersApi.update(editing.id, {
           fullName: form.fullName,
+          avatarUrl: form.avatarUrl,
           email: form.email || undefined,
           dateOfBirth: form.dateOfBirth || undefined,
           address: form.address || undefined,
@@ -104,6 +103,7 @@ export function CustomersPage() {
       const payload: CreateCustomerPayload = {
         phone: form.phone,
         fullName: form.fullName,
+        avatarUrl: form.avatarUrl,
         email: form.email || undefined,
         password: form.password || undefined,
         dateOfBirth: form.dateOfBirth || undefined,
@@ -141,6 +141,7 @@ export function CustomersPage() {
     setEditing(customer);
     setForm({
       phone: customer.phone,
+      avatarUrl: customer.avatarUrl,
       fullName: customer.fullName,
       email: customer.email ?? '',
       password: '',
@@ -185,8 +186,9 @@ export function CustomersPage() {
       header: 'Họ tên',
       sortable: true,
       render: (row) => (
-        <Link to={`/staff/customers/${row.id}`} className="font-medium text-primary hover:underline">
-          {row.fullName}
+        <Link to={`/staff/customers/${row.id}`} className="flex items-center gap-2 font-medium text-primary hover:underline">
+          <img src={row.avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+          <span>{row.fullName}</span>
         </Link>
       ),
     },
@@ -358,14 +360,14 @@ export function CustomersPage() {
         }
       >
         <form id="customer-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <ImageUpload label="Ảnh khách hàng" category="user-avatars" value={form.avatarUrl} onChange={(avatarUrl) => setForm({ ...form, avatarUrl })} required />
           <Input
             label="Số điện thoại"
             type="tel"
             required
             value={form.phone}
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            // Số điện thoại là định danh đăng nhập và là khóa tra cứu tại quầy - backend
-            // cố tình không cho đổi, nên khóa ô này khi đang sửa.
+
             disabled={Boolean(editing)}
             hint={editing ? 'Không thể đổi số điện thoại của hồ sơ đã tạo.' : undefined}
           />

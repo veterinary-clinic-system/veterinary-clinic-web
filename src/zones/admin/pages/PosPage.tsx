@@ -20,18 +20,6 @@ import { formatCurrency } from '@/utils/format';
 import { getErrorMessage } from '@/utils/errors';
 import { PAYMENT_METHOD_LABEL_VI } from '@/utils/labels';
 
-/**
- * Màn hình bán hàng tại quầy — bố cục theo mockup SRS mục 12.5: ô tìm sản phẩm trên
- * cùng, danh sách sản phẩm bên trái, giỏ hàng + tổng tiền + nút THANH TOÁN bên phải.
- *
- * BÀN PHÍM LÀ ĐƯỜNG NHẬP LIỆU CHÍNH, chuột chỉ là dự phòng — quầy bán hàng cần nhanh:
- *   - Con trỏ tự về ô tìm kiếm sau mọi thao tác; máy quét mã vạch gõ SKU rồi Enter.
- *   - Enter trong ô tìm: đúng một kết quả thì thêm luôn vào giỏ (đường của máy quét).
- *   - Ô số lượng trong giỏ sửa trực tiếp bằng số, Enter để xác nhận.
- *   - F9 mở modal thanh toán, Esc đóng.
- *
- * Giỏ nằm ở server: mở lại trang trên máy khác vẫn thấy giỏ đang dở của quầy (FR-19).
- */
 export function PosPage() {
   const { user } = useAuth();
   const toast = useToast();
@@ -46,8 +34,6 @@ export function PosPage() {
 
   const branchesQuery = useQuery({ queryKey: ['branches'], queryFn: () => branchesApi.list() });
 
-  // Chi nhánh mặc định: chi nhánh của tài khoản; ADMIN không gắn chi nhánh thì lấy cái
-  // đầu danh sách để màn hình dùng được ngay thay vi bắt chọn trước khi thấy gì.
   useEffect(() => {
     if (!branchId && branchesQuery.data?.length) {
       setBranchId(branchesQuery.data[0].id);
@@ -61,7 +47,6 @@ export function PosPage() {
     placeholderData: (prev) => prev,
   });
 
-  // Giỏ đang mở của chi nhánh — lấy lại khi đổi máy hoặc F5 giữa chừng.
   const openCartsQuery = useQuery({
     queryKey: ['pos-open-carts', branchId],
     queryFn: () => posApi.carts({ branchId, status: CartStatus.OPEN, limit: 1 }),
@@ -115,14 +100,6 @@ export function PosPage() {
     onError: failed,
   });
 
-  /**
-   * Đường của MÁY QUÉT MÃ VẠCH: gõ SKU rồi Enter.
-   *
-   * Hỏi lại API bằng đúng chuỗi vừa gõ thay vì đọc `productsQuery.data`. Máy quét gõ cả
-   * chuỗi trong vài chục mili-giây rồi Enter ngay, nhanh hơn hẳn 250ms debounce của ô
-   * tìm — đọc kết quả đang có trong tay là đọc kết quả của lần gõ TRƯỚC, và cú quét sẽ
-   * lặng lẽ không làm gì.
-   */
   const scan = useMutation({
     mutationFn: (term: string) => posApi.products({ branchId, search: term, limit: 2 }),
     onSuccess: (results) => {
@@ -171,7 +148,6 @@ export function PosPage() {
     [view],
   );
 
-  // F9 mở thanh toán — phím tắt quen thuộc của mọi phần mềm bán hàng ở VN.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'F9' && lines.length > 0) {
@@ -200,7 +176,7 @@ export function PosPage() {
         </div>
       </div>
 
-      {/* Ô tìm sản phẩm trên cùng — mockup SRS 12.5 */}
+      {}
       <input
         ref={searchRef}
         autoFocus
@@ -377,13 +353,6 @@ export function PosPage() {
   );
 }
 
-/**
- * Lưới sản phẩm bên trái.
- *
- * HẾT HÀNG HIỆN NGAY TRÊN LƯỚI, không đợi tới lúc thanh toán mới báo: ô bị mờ, có nhãn
- * "Hết hàng" và không bấm được. Số hiện ở đây là số **bán được** (backend đã loại lô hết
- * hạn), nên nó khớp với con số mà bước thanh toán sẽ kiểm.
- */
 function ProductGrid({
   products,
   loading,
@@ -400,12 +369,7 @@ function ProductGrid({
   if (loading) {
     return <SkeletonCards count={6} label="Đang tải danh sách sản phẩm" />;
   }
-  /*
-    Nhánh này phải đứng TRƯỚC nhánh rỗng. Câu rỗng bên dưới bảo thu ngân đi kiểm tra
-    xem mặt hàng có tồn tại chi nhánh này không - một lời khuyên đúng khi kho thật sự
-    không có hàng, và là một cuộc điều tra vô ích khi thứ hỏng là mạng. Khách đang
-    đứng ở quầy đợi.
-  */
+  
   if (error) {
     return (
       <ErrorState
@@ -436,6 +400,7 @@ function ProductGrid({
             onClick={() => onPick(product)}
             className={`flex flex-col gap-1 rounded border border-border bg-surface p-3 text-left transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border`}
           >
+            <img src={product.imageUrl} alt="" className="mb-1 h-24 w-full rounded object-cover" />
             <span className="line-clamp-2 min-h-[2.5rem] text-sm font-medium">
               {product.itemName}
             </span>
@@ -456,7 +421,6 @@ function ProductGrid({
   );
 }
 
-/** Modal thanh toán: chọn phương thức, xác nhận, rồi mở hoá đơn để in. */
 function PaymentModal({
   cartId,
   totalAmount,
@@ -488,7 +452,6 @@ function PaymentModal({
     onError: (error) => toast.show(getErrorMessage(error), 'error'),
   });
 
-  // Sau khi thanh toán xong, modal đổi thành phiếu xác nhận có liên kết in hoá đơn.
   if (invoiceId) {
     return (
       <Modal

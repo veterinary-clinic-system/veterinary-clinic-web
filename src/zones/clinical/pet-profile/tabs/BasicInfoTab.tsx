@@ -3,7 +3,6 @@ import { formatDate } from '@/utils/format';
 import { GENDER_LABEL_VI } from '@/utils/display';
 import { Row } from '../shared';
 
-/** Khối 1 - Basic Information. Mã thú cưng / microchip / màu lông thêm ở P2-T1, P2-T2. */
 export function BasicInfoTab({ pet }: { pet: Pet }) {
   return (
     <section className="rounded border border-border bg-surface p-4">

@@ -3,12 +3,6 @@ import { describe, expect, it } from 'vitest';
 
 import { getErrorMessage, isConflictError, isForbiddenError } from './errors';
 
-/**
- * Đây là đầu kia của hợp đồng lỗi 409 mà backend tạo ra trong
- * `modules/scheduling/domain/appointment-overlap.ts`: khi hai người cùng đặt một
- * khung giờ, backend trả 409 kèm `{ message }` kiểu NestJS, và màn hình đặt lịch
- * phải hiển thị đúng câu đó thay vì "Đã xảy ra lỗi".
- */
 function axiosErrorWith(status: number, data: unknown): AxiosError {
   const config = {} as InternalAxiosRequestConfig;
   const response = { data, status, statusText: '', headers: {}, config } as AxiosResponse;

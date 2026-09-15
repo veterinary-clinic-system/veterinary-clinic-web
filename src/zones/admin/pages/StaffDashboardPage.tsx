@@ -18,20 +18,8 @@ import { Role } from '@/types/enums';
 import { formatTime } from '@/utils/format';
 import { DashboardChartCard } from '../dashboard/DashboardChartCard';
 
-/**
- * KPI mà TĂNG là XẤU. Delta của chúng phải đổi màu ngược lại - một mũi tên xanh trên
- * "Thuốc sắp hết +40%" là đọc sai hẳn tình hình.
- */
 const LOWER_IS_BETTER = new Set(['lowStockProducts', 'lowStockMedicines', 'waitingPatients']);
 
-/**
- * Gom biểu đồ thành ba nhóm, mỗi nhóm trả lời MỘT câu hỏi kinh doanh.
- *
- * Trước đây tám biểu đồ đổ thành một lưới phẳng, và một lưới tám biểu đồ thì không ai
- * đọc - người xem lướt qua rồi quay lại làm việc khác. Đặt nhóm có tiêu đề dạng câu hỏi
- * buộc mỗi biểu đồ phải thuộc về một câu hỏi nào đó; biểu đồ không thuộc nhóm nào rơi
- * vào "Khác", và đó là tín hiệu nên bỏ nó đi.
- */
 const CHART_GROUPS: { question: string; keys: string[] }[] = [
   {
     question: 'Doanh thu đang đi theo hướng nào?',
@@ -47,26 +35,10 @@ const CHART_GROUPS: { question: string; keys: string[] }[] = [
   },
 ];
 
-/**
- * Trang tổng quan ĐIỀU HÀNH - SRS FR-24 (P10-T3).
- *
- * MỘT REQUEST cho cả 8 thẻ KPI và 8 biểu đồ (`GET /reports/dashboard`, cache Redis 60s).
- * Mở trang mà bắn 16 request song song thì vừa chậm vừa cho ra một trang có 16 trạng
- * thái tải khác nhau, nhấp nháy lệch nhau.
- *
- * BR-15: trang này dẫn đầu bằng doanh thu nên nó nằm sau `REPORT_VIEW` - trong ma trận
- * mặc định chỉ ADMIN và MANAGER có quyền đó.
- *
- * Bác sĩ và lễ tân KHÔNG còn rơi vào đây: `/staff` của họ là bảng công việc hôm nay
- * (xem `src/app/StaffHomePage.tsx`). Trước đây họ nhận một trang chỉ gồm bốn ô liên kết
- * - đúng nghĩa một ngõ cụt cho hai vai trò dùng hệ thống nhiều nhất.
- */
 export function StaffDashboardPage() {
   const { user } = useAuth();
   const canViewReports = user?.role === Role.ADMIN || user?.role === Role.MANAGER;
 
-  // Người dùng gắn với một chi nhánh thì mặc định xem chi nhánh đó; ADMIN không gắn
-  // chi nhánh nào nên mặc định là toàn hệ thống.
   const [branchId, setBranchId] = useState(user?.branchId ?? '');
 
   const branchesQuery = useQuery({
@@ -165,12 +137,6 @@ export function StaffDashboardPage() {
   );
 }
 
-/**
- * Thẻ KPI: nhãn, giá trị, thay đổi so với hôm qua.
- *
- * Cả thẻ là một liên kết - người xem thấy "Đang chờ khám: 7" thì việc tiếp theo họ muốn
- * làm là mở trang Hàng chờ, không phải đi tìm nó ở thanh bên.
- */
 function KpiTile({ kpi }: { kpi: DashboardKpi }) {
   return (
     <StatTile
@@ -186,17 +152,6 @@ function KpiTile({ kpi }: { kpi: DashboardKpi }) {
   );
 }
 
-/**
- * Câu mô tả thay đổi so với hôm qua.
- *
- * `deltaRatio` null nghĩa là KHÔNG SO SÁNH ĐƯỢC (hôm qua bằng 0, hoặc chỉ số không có
- * khái niệm "hôm qua" như số đang chờ khám) - khi đó không nói gì. Vẽ "+100%" cho một
- * phép chia cho 0 là bịa ra một tin tốt.
- *
- * Hướng thay đổi viết bằng CHỮ ("tăng"/"giảm") chứ không chỉ bằng mũi tên và màu: với
- * `lowStockMedicines`, "tăng" là tin xấu, và không có bảng màu nào truyền đạt được điều
- * đó chỉ bằng sắc độ.
- */
 function deltaLabel(kpi: DashboardKpi): string | undefined {
   if (kpi.deltaRatio === null) return undefined;
 
@@ -220,10 +175,6 @@ const QUICK_LINKS = [
   { to: '/staff/billing', label: 'Hoá đơn', desc: 'Danh sách và thanh toán' },
 ];
 
-/**
- * Vai trò không có `REPORT_VIEW` (dược sĩ, nhân viên bán hàng) vẫn cần một trang chủ
- * dùng được - BR-15. Nói rõ vì sao không thấy số liệu thay vì để trang trống.
- */
 function NoReportAccess() {
   return (
     <div className="flex flex-col gap-stack">

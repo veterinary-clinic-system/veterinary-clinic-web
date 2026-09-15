@@ -5,20 +5,10 @@ import { cn } from './utils';
 
 export interface Crumb {
   label: string;
-  /** Bỏ trống ở mục cuối - trang hiện tại không phải là một liên kết. */
+  
   to?: string;
 }
 
-/**
- * Đường dẫn phân cấp trong `StaffLayout`.
- *
- * Mục cuối dùng `aria-current="page"` và KHÔNG phải liên kết: một liên kết trỏ tới
- * chính trang đang mở là cái bẫy nhỏ nhưng gặp ở khắp nơi - người dùng bấm vào rồi
- * không hiểu vì sao không có gì xảy ra.
- *
- * Trên màn hình hẹp chỉ giữ lại mục cuối cùng: ba cấp đường dẫn ở 375px đẩy hết mọi
- * thứ khác ra khỏi thanh trên.
- */
 export function Breadcrumb({ items, className }: { items: Crumb[]; className?: string }) {
   if (items.length === 0) return null;
 

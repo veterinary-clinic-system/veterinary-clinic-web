@@ -4,28 +4,16 @@ import { Button } from './Button';
 import { Icon } from './Icon';
 import { cn } from './utils';
 
-/**
- * Ba trạng thái mà mọi danh sách đều phải có: đang tải, rỗng, lỗi.
- *
- * Trước đây mỗi trang tự viết một câu ("Không tìm thấy...", "Không thể tải..."), nên
- * chỗ thì là một dòng chữ xám lọt thỏm, chỗ thì không có gì cả - người dùng nhìn một
- * màn hình trắng và không biết là đang tải, hỏng, hay thật sự chưa có dữ liệu.
- */
-
 export interface EmptyStateProps {
-  /** Biểu tượng gợi ý - emoji là đủ, dự án chưa có bộ icon riêng. */
+  
   icon?: ReactNode;
   title: string;
   description?: string;
-  /** Hành động đưa người dùng thoát khỏi trạng thái rỗng (tạo mới, xoá bộ lọc...). */
+  
   action?: ReactNode;
   className?: string;
 }
 
-/**
- * `role="status"` chứ không phải `alert`: danh sách rỗng là thông tin bình thường, đọc
- * xen vào chứ không cắt ngang thứ người dùng đang nghe.
- */
 export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
   return (
     <div
@@ -49,17 +37,13 @@ export function EmptyState({ icon, title, description, action, className }: Empt
 
 export interface ErrorStateProps {
   title?: string;
-  /** Câu giải thích cho người dùng - KHÔNG phải thông báo lỗi kỹ thuật. */
+  
   description?: string;
   onRetry?: () => void;
   retryLabel?: string;
   className?: string;
 }
 
-/**
- * `role="alert"` để trình đọc màn hình báo ngay - khác với `EmptyState`, đây là thứ
- * người dùng cần biết lập tức vì thao tác của họ đã không thành.
- */
 export function ErrorState({
   title = 'Không tải được dữ liệu',
   description = 'Đã có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.',
@@ -75,7 +59,7 @@ export function ErrorState({
         className,
       )}
     >
-      {/* Có cả biểu tượng lẫn chữ: không dựa mỗi màu đỏ để truyền đạt "hỏng". */}
+      {}
       <span aria-hidden="true" className="text-2xl">
         ⚠️
       </span>
@@ -98,16 +82,6 @@ export interface ForbiddenStateProps {
   className?: string;
 }
 
-/**
- * Màn hình "không có quyền".
- *
- * Lý do phải có, thay vì cứ điều hướng về trang chủ: một cú chuyển hướng im lặng khiến
- * người dùng tưởng liên kết hỏng và bấm lại liên tục. Nói thẳng ra là tài khoản này
- * không được vào, kèm một lối ra rõ ràng.
- *
- * Đây vẫn chỉ là lớp trải nghiệm - backend mới là nơi chặn thật. Xem
- * `docs/01-thong-tin-kien-truc.md` mục 3.1.
- */
 export function ForbiddenState({
   title = 'Bạn không có quyền truy cập trang này',
   description = 'Tài khoản của bạn không được cấp quyền cho khu vực này. Nếu bạn cho rằng đây là nhầm lẫn, liên hệ quản trị viên của phòng khám.',

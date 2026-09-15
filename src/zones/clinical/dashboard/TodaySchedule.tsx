@@ -26,16 +26,6 @@ export interface TodayScheduleProps {
   onRetry: () => void;
 }
 
-/**
- * Lịch hẹn trong ngày, dạng dòng thời gian.
- *
- * **Ca kế tiếp được đánh dấu.** Trên một danh sách 20 ca, câu hỏi thật sự của người
- * đang mở trang không phải "hôm nay có gì" mà là "ai tiếp theo" - và trả lời nó bằng
- * một đường kẻ ngang có nhãn thì nhanh hơn mọi cách sắp xếp khác.
- *
- * Mật độ cao có chủ ý: giờ ở cột trái cố định, mỗi hàng một dòng, không có ảnh lớn.
- * Đây là màn hình được liếc mắt hàng chục lần mỗi ngày, không phải đọc một lần.
- */
 export function TodaySchedule({ appointments, isLoading, isError, onRetry }: TodayScheduleProps) {
   const now = Date.now();
   const nextIndex = appointments.findIndex(

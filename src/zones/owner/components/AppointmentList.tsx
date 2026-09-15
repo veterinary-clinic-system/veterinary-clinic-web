@@ -13,14 +13,6 @@ export interface AppointmentListProps {
   emptyDescription?: string;
 }
 
-/**
- * Danh sách lịch hẹn của chủ nuôi - dùng ở cả trang "Lịch hẹn của tôi" và tab lịch hẹn
- * trong hồ sơ từng bé.
- *
- * Ngày giờ tách thành một cột riêng bên trái, cỡ chữ lớn: khi lướt một danh sách lịch
- * hẹn, thứ người ta tìm là "hôm nào", còn tên dịch vụ chỉ đọc sau khi đã khoanh được
- * ngày. Xếp ngày sang bên trái cũng làm mọi hàng thẳng cột, quét mắt được theo chiều dọc.
- */
 export function AppointmentList({
   appointments,
   isLoading,

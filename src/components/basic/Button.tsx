@@ -7,7 +7,7 @@ export type ButtonSize = 'sm' | 'md' | 'lg';
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
-  /** Shows an inline spinner and disables the button while true. */
+  
   loading?: boolean;
   fullWidth?: boolean;
 }

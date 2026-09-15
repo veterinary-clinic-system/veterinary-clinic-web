@@ -2,7 +2,7 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { tokenStore } from './token-store';
 
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api/v1',
 });
 
 apiClient.interceptors.request.use((config) => {
@@ -19,7 +19,6 @@ interface RetriableConfig extends InternalAxiosRequestConfig {
 
 let refreshPromise: Promise<string> | null = null;
 
-/** Refresh-token rotation: only ever one refresh in flight, every 401'd request awaits it. */
 async function refreshAccessToken(): Promise<string> {
   const refreshToken = tokenStore.getRefreshToken();
   if (!refreshToken) {

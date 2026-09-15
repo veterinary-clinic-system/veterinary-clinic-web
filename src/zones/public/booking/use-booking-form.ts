@@ -24,17 +24,6 @@ import {
   Step,
 } from './types';
 
-/**
- * Toàn bộ trạng thái, truy vấn và thao tác của biểu mẫu đặt lịch bảy bước.
- *
- * Gom vào một hook để `BookingPage` chỉ còn việc lắp các bước lại với nhau, và để từng
- * bước là component thuần trình bày - nhận đúng những gì nó cần qua props, không tự đi
- * gọi API. Nhờ vậy chúng đọc được, và thay đổi giao diện một bước không đụng tới
- * trạng thái của sáu bước kia.
- *
- * Trạng thái bước vẫn nằm ở `useState` chứ không đẩy lên URL - prompt.md yêu cầu rõ:
- * không routing theo bước, không kho trạng thái ngoài.
- */
 export function useBookingForm() {
   const { user } = useAuth();
   const location = useLocation();
@@ -44,28 +33,17 @@ export function useBookingForm() {
 
   const [step, setStep] = useState<Step>(1);
 
-  // --- Bước 1-3: chi nhánh / dịch vụ / bác sĩ ---------------------------------------
   const [branchId, setBranchId] = useState(handoff.branchId ?? '');
-  /** `null` = chưa chọn gì; `ANY_DOCTOR` = cố ý để phòng khám sắp xếp. */
+  
   const [doctorId, setDoctorId] = useState<string | null>(handoff.doctorId ?? null);
   const [serviceId, setServiceId] = useState(handoff.serviceId ?? '');
 
-  // --- Bước 4: ngày giờ -------------------------------------------------------------
-  //
-  // Mở ở tuần chứa NGÀY MAI chứ không phải hôm nay: sớm nhất đặt được là ngày mai, nên
-  // nếu hôm nay là thứ Sáu thì cả tuần hiện tại đều đã khóa - khách mở bước chọn giờ ra
-  // và thấy một bảng trống trơn không bấm được gì.
-  //
-  // Riêng "tuần chứa ngày mai" vẫn chưa đủ: tuần bắt đầu từ thứ Hai, nên khi hôm nay là
-  // thứ Bảy thì ngày mai (Chủ nhật) là ngày CUỐI của tuần đó và mọi ngày còn lại đều đã
-  // qua. `autoAdvanced` ở dưới xử lý nốt trường hợp đó bằng chính dữ liệu trả về.
   const [weekOf, setWeekOf] = useState(() =>
     format(startOfDay(new Date(Date.now() + 24 * 60 * 60 * 1000)), 'yyyy-MM-dd'),
   );
   const [autoAdvanced, setAutoAdvanced] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null);
 
-  // --- Bước 5: chủ nuôi + thú cưng --------------------------------------------------
   const [phone, setPhone] = useState(user?.phone ?? '');
   const [ownerFullName, setOwnerFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -73,19 +51,16 @@ export function useBookingForm() {
   const [petMode, setPetMode] = useState<PetMode>('existing');
   const [petId, setPetId] = useState(handoff.petId ?? '');
   const [newPet, setNewPet] = useState<NewPetFormState>(EMPTY_NEW_PET);
-  /** Tên đã lấy được từ hệ thống thì khoá lại, có nút "Sửa" nếu khách muốn đổi. */
+  
   const [nameLocked, setNameLocked] = useState(true);
 
-  // --- Bước 6: triệu chứng ----------------------------------------------------------
   const [commonSymptoms, setCommonSymptoms] = useState<CommonSymptom[]>([]);
   const [otherSymptoms, setOtherSymptoms] = useState('');
   const [photoItems, setPhotoItems] = useState<PhotoItem[]>([]);
 
-  // --- Bước 7: gửi ------------------------------------------------------------------
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [bookingResult, setBookingResult] = useState<Appointment | null>(null);
 
-  // --- Truy vấn ---------------------------------------------------------------------
   const { data: branches, isLoading: branchesLoading } = useQuery({
     queryKey: ['branches'],
     queryFn: branchesApi.list,
@@ -120,10 +95,6 @@ export function useBookingForm() {
     enabled: isOwner,
   });
 
-  /**
-   * Đã đăng nhập thì phần thông tin chủ nuôi tự điền - JWT chỉ mang số điện thoại nên
-   * họ tên phải lấy từ hồ sơ.
-   */
   const { data: me } = useQuery({
     queryKey: ['users', 'me'],
     queryFn: usersApi.me,
@@ -144,15 +115,10 @@ export function useBookingForm() {
     setLookupState('found');
   }, [me]);
 
-  /**
-   * Tra cứu theo số điện thoại cho KHÁCH CHƯA ĐĂNG NHẬP: đã có hồ sơ thì lấy tên lên
-   * và tự điền, chưa có thì mới để khách tự nhập. Người đã đăng nhập bỏ qua - hồ sơ
-   * của chính họ đã được `me` điền rồi.
-   */
   const debouncedPhone = useDebouncedValue(phone.trim(), 500);
   useEffect(() => {
     if (isOwner) return;
-    // Số Việt Nam ngắn nhất là 10 chữ số - gọi sớm hơn chỉ tốn request và chắc chắn 400.
+    
     if (debouncedPhone.replace(/\D/g, '').length < 10) {
       setLookupState('idle');
       return;
@@ -172,7 +138,7 @@ export function useBookingForm() {
         }
       })
       .catch(() => {
-        // Tra cứu hỏng thì quay về nhập tay - không được chặn đường đặt lịch.
+        
         if (!cancelled) setLookupState('new');
       });
 
@@ -181,15 +147,6 @@ export function useBookingForm() {
     };
   }, [debouncedPhone, isOwner]);
 
-  /**
-   * Tuần mở đầu có thể không còn ô nào đặt được - hay gặp nhất khi hôm nay là thứ Bảy:
-   * ngày mai là Chủ nhật, tức ngày cuối tuần, nên bảng hiện ra toàn ô đã qua hoặc đóng
-   * cửa. Nhảy sang tuần sau ĐÚNG MỘT LẦN, dựa trên dữ liệu thật chứ không đoán theo thứ
-   * trong tuần (một tuần kín lịch cũng rơi vào đúng tình cảnh này).
-   *
-   * Chỉ chạy khi khách chưa tự bấm chuyển tuần - `goToWeek` đặt `autoAdvanced` để lần
-   * điều hướng thủ công không bị kéo đi tiếp.
-   */
   useEffect(() => {
     if (autoAdvanced || !calendarDays || calendarDays.length === 0) return;
     const hasFreeSlot = calendarDays.some((day) =>
@@ -201,7 +158,6 @@ export function useBookingForm() {
     setWeekOf(format(addWeeks(parseISO(weekOf), 1), 'yyyy-MM-dd'));
   }, [autoAdvanced, calendarDays, weekOf]);
 
-  // --- Giá trị dẫn xuất --------------------------------------------------------------
   const selectedBranch = branches?.find((b) => b.id === branchId);
   const selectedDoctor = doctors?.find((d) => d.id === doctorId);
   const selectedService = services.find((s) => s.id === serviceId);
@@ -211,11 +167,6 @@ export function useBookingForm() {
   const nameIsReadOnly = lookupState === 'found' && nameLocked;
   const serviceDuration = selectedService?.durationMinutes ?? 30;
 
-  /**
-   * Sớm nhất đặt được là 00:00 NGÀY MAI - cùng luật với `earliestSelfBookableStart()`
-   * phía backend. Tính ở đây để tuần hiện tại không mở được nút "Tuần trước" và để nhãn
-   * ngày tự làm mờ.
-   */
   const earliestBookable = startOfDay(new Date(Date.now() + 24 * 60 * 60 * 1000));
   const canGoPrevWeek = subWeeks(parseISO(weekOf), 1) >= startOfDay(new Date());
 
@@ -238,7 +189,6 @@ export function useBookingForm() {
     }
   })();
 
-  // --- Thao tác ----------------------------------------------------------------------
   function selectBranch(id: string) {
     setBranchId(id);
     setDoctorId(null);
@@ -252,8 +202,7 @@ export function useBookingForm() {
 
   function selectService(id: string) {
     setServiceId(id);
-    // Đổi dịch vụ là đổi thời lượng - khung giờ đã chọn có thể không còn đủ chỗ, nên
-    // bỏ chọn để khách chọn lại trên lưới mới.
+
     setSelectedSlot(null);
   }
 
@@ -298,7 +247,7 @@ export function useBookingForm() {
   function goToWeek(direction: 'prev' | 'next') {
     const base = parseISO(weekOf);
     const next = direction === 'prev' ? subWeeks(base, 1) : addWeeks(base, 1);
-    // Khách đã tự chọn tuần thì thôi tự nhảy - xem `autoAdvanced` ở trên.
+    
     setAutoAdvanced(true);
     setWeekOf(format(next, 'yyyy-MM-dd'));
   }
@@ -316,7 +265,7 @@ export function useBookingForm() {
       ownerFullName: ownerFullName.trim(),
       email: email.trim() || undefined,
       branchId,
-      // Chuỗi rỗng = "để phòng khám sắp xếp" - gửi `undefined` để backend tự chọn.
+      
       doctorId: doctorId || undefined,
       serviceId,
       startAt: selectedSlot.startAt,
@@ -343,7 +292,7 @@ export function useBookingForm() {
       onError: (error) => {
         setSubmitError(getErrorMessage(error, 'Đặt lịch thất bại. Vui lòng thử lại.'));
         if (isConflictError(error)) {
-          // Khung giờ vừa bị người khác chiếm - kéo khách về bước chọn giờ với lưới mới.
+          
           void queryClient.invalidateQueries({ queryKey: calendarQueryKey });
           setSelectedSlot(null);
           setStep(4);

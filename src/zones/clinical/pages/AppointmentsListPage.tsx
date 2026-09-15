@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { appointmentsApi } from '@/api/appointments.api';
 import { branchesApi } from '@/api/branches.api';
 import { doctorsApi } from '@/api/doctors.api';
+import { queueApi } from '@/api/queue.api';
 import {
   Badge,
   Button,
@@ -13,18 +14,19 @@ import {
   PageHeader,
   Select,
   TriageBadge,
+  useToast,
 } from '@/components/basic';
 import { useAuth } from '@/context/AuthContext';
 import { AppointmentStatus } from '@/types/enums';
 import { Appointment } from '@/types/models';
 import { APPOINTMENT_STATUS_TONE } from '@/utils/appointment-status';
+import { getErrorMessage } from '@/utils/errors';
 import { formatDate, formatTime } from '@/utils/format';
 import { APPOINTMENT_STATUS_LABEL_VI } from '@/utils/labels';
 import { MarkNoShowDialog } from '../appointments/MarkNoShowDialog';
 
 const LIMIT = 20;
 
-/** Chỉ lịch CHƯA tiếp nhận mới đánh vắng được - backend chặn các trạng thái còn lại. */
 function canMarkNoShow(appointment: Appointment): boolean {
   return (
     appointment.status === AppointmentStatus.PENDING ||
@@ -32,23 +34,11 @@ function canMarkNoShow(appointment: Appointment): boolean {
   );
 }
 
-/**
- * Danh sách lịch hẹn của lễ tân và bác sĩ.
- *
- * Dùng `DataTable` thay cho bảng viết tay: bảng cũ không có sắp xếp, không có trạng
- * thái tải/rỗng đúng chuẩn, và pager của nó là bản chép tay thứ tư trong dự án.
- *
- * **Bấm vào hàng là mở chi tiết**, không phải chỉ bấm vào tên thú cưng. Ở nhịp làm việc
- * của quầy lễ tân, buộc trúng một liên kết rộng 60px là chỗ mất thời gian thật - trong
- * khi cả hàng cao 36px và rộng cả màn hình.
- *
- * Cột "SĐT chủ nuôi" giữ lại dù dài: đó là thứ lễ tân gọi khi khách trễ giờ, và bắt họ
- * mở chi tiết để lấy số là thêm hai lần điều hướng cho một việc làm hàng chục lần mỗi
- * ngày.
- */
 export function AppointmentsListPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const toast = useToast();
   const [branchId, setBranchId] = useState(user?.branchId ?? '');
   const [doctorId, setDoctorId] = useState('');
   const [status, setStatus] = useState<AppointmentStatus | ''>('');
@@ -71,8 +61,19 @@ export function AppointmentsListPage() {
         doctorId: doctorId || undefined,
         status: status || undefined,
       }),
-    // Giữ trang cũ trong lúc tải trang mới - bảng không nháy trắng giữa hai lần lật.
+    
     placeholderData: (prev) => prev,
+  });
+
+  const checkInMutation = useMutation({
+    mutationFn: (appointmentId: string) => queueApi.checkIn({ appointmentId }),
+    onSuccess: (entry) => {
+      toast.show(`Đã tiếp nhận — số thứ tự ${entry.ticketNumber}.`, 'success');
+      void queryClient.invalidateQueries({ queryKey: ['appointments-list'] });
+      void queryClient.invalidateQueries({ queryKey: ['staff-appointments'] });
+      void queryClient.invalidateQueries({ queryKey: ['queue'] });
+    },
+    onError: (error) => toast.show(getErrorMessage(error), 'error'),
   });
 
   const columns: DataColumn<Appointment>[] = [
@@ -223,9 +224,26 @@ export function AppointmentsListPage() {
         }
         rowActions={(appointment) =>
           canMarkNoShow(appointment) ? (
-            <Button variant="ghost" size="sm" onClick={() => setNoShowTarget(appointment)}>
-              Không đến
-            </Button>
+            <div className="flex flex-nowrap items-center justify-end gap-1.5">
+              <Button
+                size="sm"
+                className="whitespace-nowrap"
+                loading={
+                  checkInMutation.isPending && checkInMutation.variables === appointment.id
+                }
+                onClick={() => checkInMutation.mutate(appointment.id)}
+              >
+                Check-in
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="whitespace-nowrap"
+                onClick={() => setNoShowTarget(appointment)}
+              >
+                Không đến
+              </Button>
+            </div>
           ) : null
         }
       />

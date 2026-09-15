@@ -22,29 +22,10 @@ import { formatTime } from '@/utils/format';
 import { TodaySchedule } from '../dashboard/TodaySchedule';
 import { WaitingList } from '../dashboard/WaitingList';
 
-/** Nhịp làm mới hàng chờ. 30s: hàng chờ đổi từng phút, và trang này luôn mở. */
 const QUEUE_POLL_MS = 30_000;
 
-/** Cửa sổ nhắc tiêm hiển thị trên trang tổng quan. */
 const VACCINATION_DUE_DAYS = 7;
 
-/**
- * Tổng quan LÂM SÀNG - trang chủ của bác sĩ và lễ tân.
- *
- * Trả lời đúng một câu hỏi: **hôm nay phải làm gì**. Không có doanh thu, không có biểu
- * đồ 30 ngày, không có tồn kho - bác sĩ không ra quyết định nào dựa trên những con số
- * đó, và mỗi thứ thừa trên trang này là một thứ phải nhìn qua mỗi sáng.
- *
- * Bốn khối, xếp theo mức độ khẩn:
- *
- *     Đang chờ  ->  ai đang ngồi ngoài kia, ai được ưu tiên
- *     Lịch hôm nay -> phần còn lại của ngày
- *     Nhắc tiêm ->  việc gọi điện của lễ tân
- *     Lối tắt  ->   các thao tác mở đầu (tiếp nhận khách vãng lai, tìm hồ sơ)
- *
- * Xem `docs/01-thong-tin-kien-truc.md` mục 2.4 để biết vì sao `/staff` là một URL nhưng
- * hai nội dung.
- */
 export function ClinicalDashboardPage() {
   const { user } = useAuth();
   const branchId = user?.branchId ?? undefined;
@@ -62,7 +43,7 @@ export function ClinicalDashboardPage() {
     queryFn: () =>
       appointmentsApi.list({
         branchId,
-        // Bác sĩ chỉ quan tâm ca của chính mình; lễ tân cần thấy cả chi nhánh.
+        
         doctorId: isDoctor ? user?.sub : undefined,
         date: today,
         limit: 50,

@@ -2,16 +2,6 @@ import { PetTimelineEntry } from '@/api/pets.api';
 import { EmptyState, Icon, SkeletonText } from '@/components/basic';
 import { formatDate } from '@/utils/format';
 
-/**
- * Ảnh và tệp đính kèm của các buổi khám.
- *
- * Nguồn dữ liệu là `examination.attachmentUrls` trong dòng thời gian - không có API
- * riêng cho "tài liệu của thú cưng", và dựng một cái chỉ để gom lại thứ đã có sẵn thì
- * thừa.
- *
- * Nhóm theo buổi khám chứ không đổ thành một lưới ảnh phẳng: một tấm ảnh tổn thương da
- * chỉ có nghĩa khi biết nó chụp ngày nào, trong lần khám nào.
- */
 export function DocumentsTab({
   entries,
   isLoading,

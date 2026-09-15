@@ -20,13 +20,6 @@ import type { DoctorShift } from '@/api/doctors.api';
 import { getErrorMessage } from '@/utils/errors';
 import { WEEKDAYS, weekdayLabel } from './weekdays';
 
-/**
- * Ca làm việc lặp theo tuần của một bác sĩ.
- *
- * Xoá ca là thao tác không hoàn tác được và ảnh hưởng tới khung giờ khách đặt được, nên
- * đi qua `ConfirmDialog` - trước đây nó là một chữ "Xóa" nhỏ xíu, bấm nhầm là mất ca mà
- * không có cách nào lấy lại.
- */
 export function ShiftsPanel({ doctorId }: { doctorId: string }) {
   const queryClient = useQueryClient();
   const toast = useToast();

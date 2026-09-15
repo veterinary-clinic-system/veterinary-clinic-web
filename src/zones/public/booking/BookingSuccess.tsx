@@ -4,12 +4,6 @@ import { vi } from 'date-fns/locale';
 import { Appointment } from '@/types/models';
 import { SummaryRow } from './SummaryRow';
 
-/**
- * Màn hình sau khi đặt lịch thành công.
- *
- * Thay cả biểu mẫu chứ không phải hiện một hộp thông báo: lịch đã đặt xong rồi, để lại
- * bảy bước phía sau chỉ mời khách bấm nhầm lần nữa.
- */
 export function BookingSuccess({
   appointment,
   branchName,
@@ -32,10 +26,7 @@ export function BookingSuccess({
         ✓
       </span>
 
-      {/*
-        `role="status"` để trình đọc màn hình báo ngay - với người không nhìn thấy dấu ✓
-        thì đây là tín hiệu duy nhất cho biết việc đặt lịch đã xong.
-      */}
+      {}
       <h1 role="status" className="mt-4 text-2xl font-semibold text-foreground">
         Đặt lịch thành công
       </h1>

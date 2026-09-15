@@ -12,19 +12,6 @@ import { vaccinationDueClasses } from '@/utils/labels';
 const DAY_OPTIONS = [7, 14, 30, 60, 90];
 const PAGE_SIZE = 20;
 
-/**
- * Danh sách gọi nhắc tiêm — SRS FR-12 (P9-T3).
- *
- * GỒM CẢ MŨI ĐÃ QUÁ HẠN, không chỉ mũi sắp tới: một mũi quá hạn ba ngày là cái lễ tân
- * cần gọi gấp nhất, cắt nó ra khỏi danh sách thì không còn ai gọi nữa. Backend sắp theo
- * `daysUntilDue` tăng dần nên các mũi quá hạn (số âm) tự nằm trên cùng.
- *
- * Khác cron nhắc tự động (P9-T4) ở đúng chỗ đó: tin nhắn tự động chỉ gửi MỘT LẦN đúng
- * dịp, còn danh sách này là việc của NGƯỜI và phải giữ nguyên cho tới khi có ai xử lý.
- *
- * Chỉ hiện mũi GẦN NHẤT của mỗi cặp (thú cưng, vaccine) — backend lọc sẵn. Không lọc thì
- * mỗi mũi cũ đều báo quá hạn vĩnh viễn và danh sách dài thêm sau mỗi lần tiêm.
- */
 export function VaccinationDuePage() {
   const [days, setDays] = useState('30');
   const [branchId, setBranchId] = useState('');
@@ -37,8 +24,6 @@ export function VaccinationDuePage() {
       vaccinationsApi.due({ days: Number(days), branchId: branchId || undefined }),
   });
 
-  // Backend trả trọn danh sách trong một lần (đã sắp theo `daysUntilDue`) - cắt trang ở
-  // client giữ nguyên thứ tự đó mà không phải thêm một cửa API có phân trang.
   const rows = dueQuery.data ?? [];
   const { page, setPage, pageItems } = usePagination(rows, PAGE_SIZE, [days, branchId]);
 

@@ -1,9 +1,4 @@
-/**
- * Thứ trong tuần dùng chung cho lịch làm việc bác sĩ.
- *
- * Chỉ có thứ 2 đến thứ 6: `dayOfWeek` khớp với quy ước của backend (0 là chủ nhật). Nếu
- * phòng khám mở cửa cuối tuần thì thêm ở ĐÂY - một chỗ, không phải ba.
- */
+
 export const WEEKDAYS = [
   { dayOfWeek: 1, label: 'Thứ 2' },
   { dayOfWeek: 2, label: 'Thứ 3' },

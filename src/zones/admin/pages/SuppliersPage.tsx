@@ -33,7 +33,6 @@ const EMPTY_FORM: SupplierFormState = {
   note: '',
 };
 
-/** SRS FR-17 — quản lý nhà cung cấp. */
 export function SuppliersPage() {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -353,7 +352,7 @@ export function SuppliersPage() {
 
             <section>
               <h3 className="mb-2 font-medium">Đơn đặt hàng gần đây</h3>
-              {/* Chỗ trống của P5 đã được thay bằng dữ liệu thật — `purchase_orders` ra đời ở P6. */}
+              {}
               <Table
                 columns={[
                   {

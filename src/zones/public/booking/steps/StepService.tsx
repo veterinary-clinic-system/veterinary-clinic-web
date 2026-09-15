@@ -2,12 +2,6 @@ import { EmptyState, Skeleton } from '@/components/basic';
 import { formatCurrency } from '@/utils/format';
 import { BookingForm } from '../use-booking-form';
 
-/**
- * Bước 2 - chọn dịch vụ.
- *
- * Đứng TRƯỚC bước chọn bác sĩ vì thời lượng của dịch vụ quyết định khung giờ nào còn
- * đủ chỗ ở bước 4 (xem `slotFitsService`).
- */
 export function StepService({ service }: { service: BookingForm['service'] }) {
   return (
     <section aria-labelledby="buoc-dich-vu">

@@ -8,7 +8,6 @@ import {
   validateWeekSchedule,
 } from './week-schedule';
 
-/** Lịch thật của dữ liệu seed: hai ca mỗi ngày, Thứ Hai đến Thứ Sáu. */
 function seedHours(): OperatingHour[] {
   return [1, 2, 3, 4, 5].flatMap((dayOfWeek) => [
     { id: `${dayOfWeek}-am`, dayOfWeek, openTime: '07:00', closeTime: '11:00' },
@@ -18,11 +17,7 @@ function seedHours(): OperatingHour[] {
 
 describe('week-schedule', () => {
   it('giữ đủ hai ca mỗi ngày qua một vòng đọc - ghi', () => {
-    /*
-      Đây là bài kiểm cho lỗi mất dữ liệu của bản trước: nó chỉ đọc ca ĐẦU TIÊN của mỗi
-      ngày rồi gửi lại năm dòng, mà `PUT /branches/:id/opening-hours` thay cả tuần - nên
-      mở hộp thoại lên bấm Lưu là ca chiều biến mất khỏi mọi chi nhánh.
-    */
+    
     const payload = toOpeningHoursPayload(toWeekSchedule(seedHours()));
 
     expect(payload).toHaveLength(10);

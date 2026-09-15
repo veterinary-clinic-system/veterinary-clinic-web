@@ -4,7 +4,7 @@ import { cn } from './utils';
 export interface TabItem<T extends string = string> {
   id: T;
   label: string;
-  /** Con số bên phải nhãn (số bản ghi, số việc cần làm). Bỏ trống thì không hiện. */
+  
   count?: number;
   disabled?: boolean;
 }
@@ -13,20 +13,11 @@ export interface TabsProps<T extends string = string> {
   items: TabItem<T>[];
   value: T;
   onChange: (id: T) => void;
-  /** `line` cho tab trong trang, `pill` cho bộ lọc trạng thái trong một thẻ. */
+  
   variant?: 'line' | 'pill';
   className?: string;
 }
 
-/**
- * Thanh tab theo đúng mẫu tương tác của WAI-ARIA: mũi tên trái/phải đổi tab, Home/End
- * nhảy về đầu/cuối, và CHỈ tab đang chọn nằm trong thứ tự Tab của trang
- * (`tabIndex={-1}` cho các tab còn lại).
- *
- * Đây là điểm hay bị làm sai nhất: nếu mọi tab đều nhận Tab, người dùng bàn phím phải
- * nhấn qua sáu tab mới tới được nội dung - trong khi mẫu chuẩn là nhấn Tab một lần để
- * vào thanh, dùng mũi tên để chọn, nhấn Tab lần nữa để vào nội dung.
- */
 export function Tabs<T extends string = string>({
   items,
   value,
@@ -138,10 +129,6 @@ export function Tabs<T extends string = string>({
   );
 }
 
-/**
- * Vùng nội dung của một tab. `id`/`aria-labelledby` phải khớp với `Tabs` cùng cấp, nên
- * hai component nhận chung một `baseId` do người dùng truyền vào khi cần nối chúng lại.
- */
 export function TabPanel({
   id,
   labelledBy,

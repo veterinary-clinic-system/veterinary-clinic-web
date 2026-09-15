@@ -6,15 +6,6 @@ import { APPOINTMENT_STATUS_LABEL_VI } from '@/utils/labels';
 import { APPOINTMENT_STATUS_TONE } from '@/utils/appointment-status';
 import { formatDateTime } from '@/utils/format';
 
-/**
- * Lịch sử khám của một bé, dưới dạng dòng thời gian.
- *
- * Trình bày cho CHỦ NUÔI đọc, không phải cho bác sĩ: chẩn đoán và ghi chú hiện nguyên
- * văn của bác sĩ, nhưng các chỉ số sinh hiệu (nhiệt độ, nhịp tim, nhịp thở) thì không
- * đưa lên đây - một con số 38.5°C không nói gì với người không biết ngưỡng bình thường
- * của loài, và dễ gây lo lắng nhầm. Chúng nằm ở hồ sơ phía lâm sàng, nơi có người đọc
- * được chúng.
- */
 export function MedicalHistoryTab({
   entries,
   isLoading,

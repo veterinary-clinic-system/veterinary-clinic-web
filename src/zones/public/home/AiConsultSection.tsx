@@ -7,20 +7,10 @@ const EXAMPLES = [
   'Bé nhà tôi 3 tháng tuổi, cần tiêm những mũi gì?',
 ];
 
-/**
- * Giới thiệu trợ lý AI trên trang chủ.
- *
- * Định vị rất rõ và cố ý: **hỗ trợ tham khảo, không thay thế bác sĩ**. Câu miễn trừ
- * không giấu ở chân trang mà đặt ngay cạnh lời mời dùng thử - người đọc phải gặp nó
- * cùng lúc với ý định bấm vào.
- *
- * Không dùng gradient tím, không icon robot, không gọi nó là "bác sĩ AI". Đây là công
- * cụ sàng lọc triệu chứng của một phòng khám, và giao diện phải nói đúng điều đó.
- */
 export function AiConsultSection() {
   return (
     <section className="mx-auto max-w-6xl px-4 py-12">
-      <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
+      <div className="pet-ai-panel grid gap-8 lg:grid-cols-2 lg:items-start">
         <div>
           <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
             Chưa chắc có cần đi khám không?

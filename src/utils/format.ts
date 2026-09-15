@@ -1,7 +1,6 @@
 import { format, parseISO } from 'date-fns';
 import { vi } from 'date-fns/locale';
 
-/** Shared VND currency formatter - used across billing/reports staff pages. */
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 }

@@ -6,10 +6,10 @@ import { cn } from './utils';
 export interface StatTileProps {
   label: string;
   value: ReactNode;
-  /** Một câu ngắn nói con số này nghĩa là gì hoặc so với cái gì. */
+  
   hint?: string;
   icon?: IconName;
-  /** Biến ô thành liên kết tới danh sách đứng sau con số. */
+  
   to?: string;
   tone?: 'default' | 'success' | 'warning' | 'danger';
   className?: string;
@@ -22,17 +22,6 @@ const TONE: Record<NonNullable<StatTileProps['tone']>, string> = {
   danger: 'text-danger',
 };
 
-/**
- * Một con số của trang tổng quan.
- *
- * Quy tắc: con số nào cũng phải **bấm được để xem danh sách đứng sau nó**. Một ô hiện
- * "7 ca đang chờ" mà không đi tới đâu chỉ tạo thêm một bước - người dùng đọc xong vẫn
- * phải tự tìm đường tới hàng chờ. Ô nào không có danh sách tương ứng thì thường là ô
- * không đáng có trên trang.
- *
- * Không đặt biểu đồ sparkline vào đây: đường kẻ 40px không đọc được xu hướng gì, nó chỉ
- * là trang trí.
- */
 export function StatTile({
   label,
   value,

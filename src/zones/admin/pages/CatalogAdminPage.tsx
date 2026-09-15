@@ -15,14 +15,6 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'inventory', label: 'Tồn kho' },
 ];
 
-/**
- * Admin-only tabbed catalog management: services, medications, diseases, inventory.
- *
- * Trang này chỉ LẮP RÁP: mỗi tab là một component độc lập trong `../catalog/tabs/` - tự
- * có state, truy vấn và mutation riêng, không đọc trạng thái của tab khác. `PAGE_SIZE`,
- * `TabPagination`, `CategorySelect` dùng chung giữa nhiều tab nằm ở `../catalog/shared`.
- * Trước đây tất cả nằm chung một file 1109 dòng.
- */
 export function CatalogAdminPage() {
   const [tab, setTab] = useState<Tab>('services');
 

@@ -7,7 +7,6 @@ import { formatDate } from '@/utils/format';
 import { extractApiMessage } from '../api-utils';
 import { Section } from '../Section';
 
-/** Khối điều trị (FR-10) — `endDate` bỏ trống nghĩa là điều trị đang tiếp diễn. */
 export function TreatmentsSection({
   record,
   readOnly,

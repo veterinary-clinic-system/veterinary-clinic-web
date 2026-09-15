@@ -10,23 +10,11 @@ export interface CancelAppointmentDialogProps {
   open: boolean;
   onClose: () => void;
   appointmentId: string;
-  /** Mô tả lịch hẹn sắp huỷ, để người dùng biết chắc mình đang huỷ cái nào. */
+  
   summary: string;
   onCancelled?: () => void;
 }
 
-/**
- * Hộp thoại huỷ lịch hẹn.
- *
- * Thay cho `window.prompt` + `window.alert` dùng trước đây. Hộp thoại của trình duyệt
- * có ba vấn đề thật, không phải chuyện thẩm mỹ: nó **chặn cả tab**, nó **không định
- * dạng được** nên không nói rõ đang huỷ lịch hẹn nào, và nó **không kiểm tra được đầu
- * vào trước khi đóng** - người dùng gõ một ký tự, bấm OK, rồi nhận một `alert` thứ hai
- * và phải gõ lại từ đầu.
- *
- * FR-05-04: lý do huỷ là bắt buộc kể cả khi chính chủ nuôi tự huỷ - phòng khám cần biết
- * vì sao để xếp lại lịch bác sĩ. `cancelledByUserId` khi đó chính là họ.
- */
 export function CancelAppointmentDialog({
   open,
   onClose,

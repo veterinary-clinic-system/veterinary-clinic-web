@@ -5,7 +5,6 @@ import type { PetPrescription } from '@/types/models';
 import { formatDateTime } from '@/utils/format';
 import { EmptyState } from '../shared';
 
-/** Khối 6 - Prescription. */
 export function PrescriptionsTab({ petId }: { petId: string }) {
   const query = useQuery({
     queryKey: ['pet-prescriptions', petId],

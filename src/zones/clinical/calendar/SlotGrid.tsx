@@ -6,7 +6,6 @@ import { DayAvailability, SlotInfo } from '@/types/models';
 import { SLOT_STATUS_LABEL_VI, triageColorClasses, triagePriorityBar } from '@/utils/labels';
 import { CELL_CLASSES } from './shared';
 
-/** Lưới slot dùng chung cho chế độ ngày (1 cột) và chế độ tuần (7 cột). */
 export function SlotGrid({
   days,
   onOpenAppointment,
@@ -70,11 +69,7 @@ export function SlotGrid({
                   const detail = slot.appointmentDetail;
                   return (
                     <td key={day.date} className="border-b border-border px-1 py-1 align-top">
-                      {/*
-                        Ô lịch phải đọc được mà không cần mở chi tiết: chủ nuôi, thú
-                        cưng + (loài, giống), dịch vụ và nhãn màu ưu tiên. Dải màu bên
-                        trái cho phép quét nhanh cả tuần bằng mắt.
-                      */}
+                      {}
                       <button
                         type="button"
                         onClick={() => onOpenAppointment(detail.id)}

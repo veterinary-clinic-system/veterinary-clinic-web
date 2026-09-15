@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { Pet } from '@/types/models';
 import { EmptyState, Row } from '../shared';
 
-/** Khối 2 - Owner. */
 export function OwnerTab({ pet }: { pet: Pet }) {
   if (!pet.owner) {
     return <EmptyState title="Chưa có thông tin chủ nuôi" />;

@@ -6,17 +6,10 @@ export interface AuthCardProps {
   title: string;
   description: string;
   children: ReactNode;
-  /** Dòng cuối: câu hỏi + liên kết sang biểu mẫu còn lại. */
+  
   footer: ReactNode;
 }
 
-/**
- * Khung chung cho các biểu mẫu xác thực.
- *
- * Cố ý hẹp (`max-w-md`) và ngắn: biểu mẫu đăng nhập dài là biểu mẫu bị bỏ dở. Đăng ký
- * chỉ hỏi những trường backend thật sự cần để tạo tài khoản; phần còn lại của hồ sơ
- * được điền dần trong lúc đặt lịch, khi người dùng đã thấy lý do phải nhập.
- */
 export function AuthCard({ title, description, children, footer }: AuthCardProps) {
   return (
     <div className="mx-auto w-full max-w-md px-4 py-12 sm:py-16">

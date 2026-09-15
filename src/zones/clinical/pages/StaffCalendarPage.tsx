@@ -15,7 +15,6 @@ import { MonthGrid } from '../calendar/MonthGrid';
 import { CELL_CLASSES } from '../calendar/shared';
 import { SlotGrid } from '../calendar/SlotGrid';
 
-/** FR-05-03 đòi bốn cách xem: ngày / tuần / tháng / theo bác sĩ. */
 type ViewMode = 'day' | 'week' | 'month';
 
 const VIEW_LABELS: Record<ViewMode, string> = {
@@ -24,15 +23,6 @@ const VIEW_LABELS: Record<ViewMode, string> = {
   month: 'Tháng',
 };
 
-/**
- * Lịch làm việc của nhân viên: chọn chi nhánh + bác sĩ, xem theo ngày / tuần / tháng.
- *
- * Ba chế độ dùng chung một `anchor` (ngày đang xem) nên chuyển qua lại không mất chỗ:
- * đang ở tháng 9, bấm vào ngày 12 thì sang chế độ ngày của đúng 12/9.
- *
- * `SlotGrid`, `MonthGrid`, `DoctorAbsenceModal` là ba component độc lập trong
- * `../calendar/` - trang này chỉ còn bộ lọc, chuyển chế độ xem và lắp ráp.
- */
 export function StaffCalendarPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -65,13 +55,11 @@ export function StaffCalendarPage() {
     } else if (doctorsQuery.data && doctorsQuery.data.length === 0) {
       setDoctorId('');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [doctorsQuery.data]);
 
   const anchorStr = format(anchor, 'yyyy-MM-dd');
 
-  // Ba truy vấn tách rời, mỗi cái chỉ chạy ở chế độ của nó - React Query giữ cache nên
-  // chuyển qua lại giữa các chế độ không phải tải lại trang (và thường không phải gọi lại API).
   const weekQuery = useQuery({
     queryKey: ['staff-calendar-week', branchId, doctorId, anchorStr],
     queryFn: () => appointmentsApi.staffCalendar(branchId, doctorId, anchorStr),
@@ -98,7 +86,6 @@ export function StaffCalendarPage() {
     });
   }
 
-  /** Bấm vào một ô ngày ở chế độ tháng → mở đúng ngày đó ở chế độ ngày. */
   function openDay(date: string) {
     setAnchor(parseISO(date));
     setView('day');
@@ -112,10 +99,7 @@ export function StaffCalendarPage() {
         : `Tuần chứa ${format(anchor, 'dd/MM/yyyy')}`;
 
   const needsDoctor = view !== 'month';
-  /*
-    Ba truy vấn nhưng mỗi lúc chỉ một cái đang chạy - gom lại một chỗ để trạng thái
-    tải, trạng thái lỗi và nút "Thử lại" cùng đọc từ đúng cái của chế độ hiện tại.
-  */
+  
   const activeQuery = view === 'week' ? weekQuery : view === 'day' ? dayQuery : monthQuery;
 
   return (
@@ -145,8 +129,7 @@ export function StaffCalendarPage() {
             onChange={(e) => setDoctorId(e.target.value)}
             className="rounded border border-border bg-surface px-3 py-2 text-sm"
           >
-            {/* Chỉ chế độ tháng chạy được khi không chọn bác sĩ - hai chế độ kia cần
-                lưới slot của một bác sĩ cụ thể. */}
+            {}
             {view === 'month' && <option value="">Tất cả bác sĩ</option>}
             {(doctorsQuery.data ?? []).map((d) => (
               <option key={d.id} value={d.id}>
@@ -210,7 +193,7 @@ export function StaffCalendarPage() {
           />
         </label>
 
-        {/* Bác sĩ nghỉ đột xuất — đóng lịch ngày đang xem và dồn ca sang người khác. */}
+        {}
         <button
           type="button"
           disabled={!doctorId}
@@ -223,7 +206,7 @@ export function StaffCalendarPage() {
 
       {view !== 'month' && (
         <div className="flex flex-wrap gap-3 text-xs">
-          {/* `PAST` chỉ tồn tại ở lịch công khai — không đưa vào chú giải của nhân viên. */}
+          {}
           {Object.values(SlotStatus)
             .filter((status) => status !== SlotStatus.PAST)
             .map((status) => (
@@ -235,7 +218,7 @@ export function StaffCalendarPage() {
       )}
 
       {activeQuery.isLoading ? (
-        /* Khối lưới cao bằng lịch thật - trang không nhảy một đoạn khi dữ liệu về. */
+        
         <Skeleton className="h-[28rem] w-full rounded-xl" />
       ) : !branchId ? (
         <EmptyState
@@ -248,12 +231,7 @@ export function StaffCalendarPage() {
           description="Chế độ xem này hiển thị khung giờ của một bác sĩ."
         />
       ) : activeQuery.isError ? (
-        /*
-          Lịch rỗng và lịch KHÔNG TẢI ĐƯỢC là hai câu khác nhau. Bác sĩ mở trang này
-          lúc 7h sáng: "hôm nay chưa có lịch hẹn nào" là tin được, và nếu đó thật ra
-          là một lời gọi API hỏng thì người ta đi pha cà phê trong khi phòng chờ đầy
-          người.
-        */
+        
         <ErrorState
           title="Không tải được lịch làm việc"
           description="Máy chủ không trả lời. Đây KHÔNG có nghĩa là lịch trống."

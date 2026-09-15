@@ -15,7 +15,6 @@ import { ServiceCard } from '../components/ServiceCard';
 
 const PAGE_SIZE = 9;
 
-/** Ba khoảng giá đủ để trả lời "có gì trong tầm tiền của tôi không". */
 const PRICE_BANDS = [
   { value: '', label: 'Mọi mức giá' },
   { value: 'lt300', label: 'Dưới 300.000 đ' },
@@ -30,16 +29,6 @@ function inPriceBand(price: number, band: string): boolean {
   return true;
 }
 
-/**
- * Bảng giá dịch vụ công khai.
- *
- * Hai bộ lọc, không nhiều hơn: **từ khoá** cho người biết mình cần gì ("tiêm phòng"),
- * và **khoảng giá** cho người đang cân nhắc chi phí. Lọc theo chuyên khoa hay theo chi
- * nhánh nghe hợp lý nhưng thực tế không ai dùng - dịch vụ giống nhau ở mọi chi nhánh.
- *
- * Danh sách vẫn là lưới thẻ chứ không phải bảng: mỗi mục có mô tả dài ngắn khác nhau
- * và kết thúc bằng một nút hành động, hai thứ mà bảng xử lý rất tệ.
- */
 export function ServicesPage() {
   const [search, setSearch] = useState('');
   const [priceBand, setPriceBand] = useState('');

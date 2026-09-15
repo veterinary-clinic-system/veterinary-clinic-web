@@ -27,7 +27,6 @@ import { EXPIRY_BADGE_VARIANT, expiryLabel, expiryLevel } from '@/utils/inventor
 
 const LIMIT = 20;
 
-/** Một dòng đang nhập trên form nhận hàng, khớp với một dòng của đơn đặt. */
 interface ReceivingLine {
   purchaseOrderItemId: string;
   itemId: string;
@@ -35,13 +34,12 @@ interface ReceivingLine {
   ordered: number;
   alreadyReceived: number;
   unitCost: number;
-  /** Chuỗi vì người dùng đang gõ — "" nghĩa là không nhận dòng này lần này. */
+  
   quantity: string;
   batchNo: string;
   expiryDate: string;
 }
 
-/** SRS UC-05, BR-13 — nhận hàng theo đơn đặt, một lần xác nhận là hàng vào kho. */
 export function GoodsReceiptPage() {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -67,7 +65,6 @@ export function GoodsReceiptPage() {
     }
   }, [branchId, branchesQuery.data]);
 
-  // Chỉ đơn đã gửi NCC mới nhận hàng được — đơn nháp phải chuyển ORDERED trước.
   const openOrdersQuery = useQuery({
     queryKey: ['purchase-orders', 'receivable', branchId],
     queryFn: async () => {
@@ -90,7 +87,6 @@ export function GoodsReceiptPage() {
     enabled: selectedPoId !== null,
   });
 
-  // Đơn được chọn -> dựng sẵn một dòng nhập cho mỗi dòng còn thiếu của đơn.
   useEffect(() => {
     const order = selectedPoQuery.data;
     if (!order) {
@@ -181,14 +177,12 @@ export function GoodsReceiptPage() {
     setSearchParams({});
   }
 
-  // Mở thẳng từ trang đơn đặt hàng (`?po=`) thì bật form luôn.
   useEffect(() => {
     if (searchParams.get('po') && !formOpen) {
       setSelectedPoId(searchParams.get('po'));
       setFormOpen(true);
     }
-    // Chỉ chạy khi query string đổi — không phụ thuộc `formOpen` để tránh mở lại sau khi đóng.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [searchParams]);
 
   function updateLine(index: number, patch: Partial<ReceivingLine>) {

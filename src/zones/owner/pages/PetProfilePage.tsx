@@ -22,19 +22,6 @@ import { PetHeader } from '../pet-profile/PetHeader';
 
 type TabId = 'overview' | 'history' | 'appointments' | 'documents';
 
-/**
- * Hồ sơ một thú cưng, phía chủ nuôi.
- *
- * **Bốn tab, không phải sáu.** Đặc tả ban đầu có thêm "Tiêm phòng" và "Đơn thuốc",
- * nhưng backend không mở hai khối đó cho PET_OWNER: `/pets/:id/prescriptions` và các
- * route cùng nhóm đều yêu cầu `MEDICAL_RECORD_VIEW`, mà ma trận `role_permissions`
- * không cấp cho chủ nuôi (xem `pets.controller.ts`). Dựng tab rồi để nó nhận 403 thì
- * tệ hơn hẳn là không dựng - người dùng gặp một lỗi thay vì một thông tin.
- *
- * Cả bốn tab đọc từ HAI truy vấn (`pets/:id` và `pets/:id/timeline`) cộng danh sách
- * lịch hẹn, tải sẵn một lần: đổi tab không gọi thêm mạng, nên nó nhanh như đổi trang
- * giấy chứ không phải như tải trang mới.
- */
 export function PetProfilePage() {
   const { id } = useParams<{ id: string }>();
   const [tab, setTab] = useState<TabId>('overview');

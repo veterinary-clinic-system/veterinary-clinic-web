@@ -8,7 +8,6 @@ import { doctorsApi } from '@/api/doctors.api';
 import { Button, Select } from '@/components/basic';
 import { Section } from '../Section';
 
-/** Đặt lịch tái khám - chỉ hiện sau khi hồ sơ đã chốt, đúng thứ tự của UC-03. */
 export function FollowUpSection({
   appointmentId,
   appt,

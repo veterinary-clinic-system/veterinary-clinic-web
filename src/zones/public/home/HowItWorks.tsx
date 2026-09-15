@@ -25,19 +25,9 @@ const STEPS: { icon: IconName; title: string; body: string }[] = [
   },
 ];
 
-/**
- * Quy trình bốn bước.
- *
- * Mục này trả lời một lo lắng cụ thể của người chưa từng đặt lịch trực tuyến: "đặt xong
- * rồi thì sao, tôi phải làm gì tiếp?". Đó là lý do bước 3 và 4 nói về việc xảy ra TẠI
- * phòng khám chứ không chỉ về thao tác trên web.
- *
- * Số thứ tự là `<ol>` thật - thứ tự ở đây mang nghĩa, và trình đọc màn hình đọc ra
- * "mục 1 trên 4".
- */
 export function HowItWorks() {
   return (
-    <section className="border-y border-border bg-surface">
+    <section className="pet-how-section border-y border-border bg-surface">
       <div className="mx-auto max-w-6xl px-4 py-12">
         <SectionHeader
           title="Đặt lịch khám thế nào?"
@@ -46,7 +36,7 @@ export function HowItWorks() {
 
         <ol className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map((step, index) => (
-            <li key={step.title} className="relative">
+            <li key={step.title} className="pet-step relative">
               <div className="flex items-center gap-3">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Icon name={step.icon} />

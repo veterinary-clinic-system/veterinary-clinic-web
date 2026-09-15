@@ -7,12 +7,6 @@ import type { VaccinationRecordView } from '@/types/models';
 
 import { VaccinationTab } from './VaccinationTab';
 
-/**
- * Sổ tiêm chủng là tab dễ gây hại nhất khi nhầm lỗi thành rỗng: "chưa có mũi nào" đọc
- * ra là **cần tiêm**, và bác sĩ tiêm lại một mũi bé đã có. Bài này giữ hai câu đó tách
- * bạch. Xem thêm `MedicalHistoryTab.test.tsx`.
- */
-
 afterEach(cleanup);
 
 vi.mock('@/api/vaccinations.api', () => ({

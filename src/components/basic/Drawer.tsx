@@ -8,15 +8,15 @@ export interface DrawerProps {
   open: boolean;
   onClose: () => void;
   title: string;
-  /** Một câu mô tả dưới tiêu đề - thường là tên bản ghi đang xem. */
+  
   description?: string;
   children: ReactNode;
   footer?: ReactNode;
-  /** Bên nào của màn hình. `left` dùng cho điều hướng, `right` cho chi tiết bản ghi. */
+  
   side?: 'left' | 'right';
   width?: 'sm' | 'md' | 'lg';
   className?: string;
-  /** Ghi đè khoảng đệm của vùng nội dung - dùng khi bên trong là một danh sách tràn viền. */
+  
   bodyClassName?: string;
 }
 
@@ -38,16 +38,6 @@ function drawerRoot(): HTMLElement {
   return root;
 }
 
-/**
- * Ngăn kéo trượt từ cạnh màn hình.
- *
- * Dùng thay `Modal` khi người dùng cần **xem chi tiết một hàng mà không rời khỏi danh
- * sách**: mở hồ sơ, đóng lại, mở hàng tiếp theo - ba lần điều hướng trang biến thành ba
- * lần trượt, và vị trí cuộn của danh sách phía sau được giữ nguyên.
- *
- * Cũng là dạng điều hướng trên màn hình hẹp (`side="left"`), nơi sidebar cố định không
- * còn chỗ.
- */
 export function Drawer({
   open,
   onClose,

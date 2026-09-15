@@ -3,13 +3,8 @@ import { PRIORITY_COLOR_LABEL_VI } from '@/types/enums';
 import { MonthDaySummary } from '@/types/models';
 import { triageColorClasses } from '@/utils/labels';
 
-/** Thứ Hai đầu tuần, khớp với `startOfWeek(..., { weekStartsOn: 1 })` của backend. */
 const WEEKDAY_HEADERS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 
-/**
- * Lưới tháng: mỗi ô là một ngày với số ca và màu ưu tiên nặng nhất. Cố tình KHÔNG vẽ
- * lưới slot 30 phút cho cả tháng — xem ghi chú trong `AvailabilityService.getMonthOverview`.
- */
 export function MonthGrid({
   days,
   anchor,
@@ -25,7 +20,6 @@ export function MonthGrid({
     return <p className="text-muted">{emptyMessage}</p>;
   }
 
-  // getDay(): 0 = Chủ Nhật. Lưới bắt đầu từ Thứ Hai nên Chủ Nhật là cột thứ 7.
   const firstDayOfWeek = getDay(startOfMonth(anchor));
   const leadingBlanks = (firstDayOfWeek + 6) % 7;
   const todayStr = format(new Date(), 'yyyy-MM-dd');

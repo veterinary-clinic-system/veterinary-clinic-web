@@ -18,7 +18,6 @@ import {
 import { formatDateTime } from '@/utils/format';
 import { APPOINTMENT_STATUS_LABEL_VI, triageColorClasses } from '@/utils/labels';
 
-/** Intake/triage detail + hub for one appointment: AI prescreening, overrides, actions, invoice. */
 export function AppointmentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -67,7 +66,6 @@ export function AppointmentDetailPage() {
     onSuccess: (updated) => queryClient.setQueryData(['appointment', id], updated),
   });
 
-  /** null = hộp thoại đóng. FR-05-04 bắt buộc có lý do nên phải hỏi, không confirm() suông. */
   const [endDialog, setEndDialog] = useState<'cancel' | 'no-show' | null>(null);
   const [endReason, setEndReason] = useState('');
 
@@ -122,6 +120,8 @@ export function AppointmentDetailPage() {
     appt.status === AppointmentStatus.NO_SHOW;
   const isCheckedIn =
     appt.status === AppointmentStatus.CHECKED_IN || appt.status === AppointmentStatus.IN_PROGRESS;
+  const suspectedDiseaseGroups = prescreeningQuery.data?.aiSuspectedDiseaseGroups ?? [];
+  const extractedSymptomKeywords = prescreeningQuery.data?.extractedSymptomKeywords ?? [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -133,11 +133,7 @@ export function AppointmentDetailPage() {
           <p className="text-muted">{formatDateTime(appt.startAt)}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {/*
-            BR-06: phiếu khám chỉ ghi được sau khi thú cưng đã được tiếp nhận. Backend
-            chặn ở `ExaminationsService.create`; ở đây nói trước cho bác sĩ biết thay vì
-            để họ gõ xong cả phiếu rồi mới nhận lỗi.
-          */}
+          {}
           {user?.role === Role.DOCTOR && !isFinished && (
             isCheckedIn ? (
               <Link
@@ -167,11 +163,7 @@ export function AppointmentDetailPage() {
               Hủy lịch hẹn
             </button>
           )}
-          {/*
-            FR-06-03: "khách không đến" là thao tác riêng, chỉ có nghĩa khi khách CHƯA
-            được tiếp nhận. Khách đã check-in rồi bỏ về là chuyện khác - hủy lượt chờ ở
-            màn hình hàng chờ. Backend chặn luôn trường hợp này nên nút ẩn cho khớp.
-          */}
+          {}
           {!isFinished && !isCheckedIn && (
             <button
               type="button"
@@ -187,7 +179,7 @@ export function AppointmentDetailPage() {
         </div>
       </div>
 
-      {/* Khối lưu vết kết thúc bất thường - FR-05-04. */}
+      {}
       {appt.cancelledAt && (
         <section className="rounded border border-destructive/40 bg-destructive/5 p-4 text-sm">
           <p className="font-medium text-destructive">
@@ -274,7 +266,7 @@ export function AppointmentDetailPage() {
             ))}
           </div>
           <p className="text-sm">
-            {/* FR-05-01 `Reason` - xem ghi chú ánh xạ trong appointment.entity.ts. */}
+            {}
             <span className="text-muted">Lý do khám / triệu chứng: </span>
             {appt.otherSymptoms ?? '—'}
           </p>
@@ -314,8 +306,8 @@ export function AppointmentDetailPage() {
               <div>
                 <p className="text-sm text-muted">Nhóm bệnh nghi ngờ (AI)</p>
                 <p>
-                  {prescreeningQuery.data.aiSuspectedDiseaseGroups.length > 0
-                    ? prescreeningQuery.data.aiSuspectedDiseaseGroups.map((g) => g.diseaseName).join(', ')
+                  {suspectedDiseaseGroups.length > 0
+                    ? suspectedDiseaseGroups.map((g) => g.diseaseName).join(', ')
                     : '—'}
                 </p>
               </div>
@@ -329,7 +321,7 @@ export function AppointmentDetailPage() {
               </div>
               <div>
                 <p className="text-sm text-muted">Từ khóa triệu chứng</p>
-                <p>{prescreeningQuery.data.extractedSymptomKeywords.join(', ') || '—'}</p>
+                <p>{extractedSymptomKeywords.join(', ') || '—'}</p>
               </div>
               <div>
                 <p className="text-sm text-muted">Độ tin cậy (NLP / CV / Tổng thể)</p>
@@ -386,11 +378,7 @@ export function AppointmentDetailPage() {
                 onChange={(e) => setFormStatus(e.target.value as AppointmentStatus)}
                 className="rounded border border-border bg-surface px-3 py-2 text-sm"
               >
-                {/*
-                  Hủy và "không đến" cố tình KHÔNG có trong danh sách này: hai việc đó
-                  phải ghi lý do (FR-05-04) nên đi qua nút riêng ở đầu trang, và backend
-                  từ chối thẳng nếu PATCH cố đặt hai trạng thái này.
-                */}
+                {}
                 {Object.values(AppointmentStatus)
                   .filter(
                     (s) => s !== AppointmentStatus.CANCELLED && s !== AppointmentStatus.NO_SHOW,
@@ -403,7 +391,7 @@ export function AppointmentDetailPage() {
               </select>
             </label>
             <label className="flex min-w-[220px] flex-1 flex-col gap-1 text-sm">
-              {/* FR-05-01 `Note` - ghi chú nội bộ, khách không đọc. */}
+              {}
               <span className="text-muted">Ghi chú nội bộ</span>
               <input
                 type="text"
@@ -449,13 +437,6 @@ export function AppointmentDetailPage() {
   );
 }
 
-/**
- * Hộp thoại kết thúc bất thường một lịch hẹn.
- *
- * Hai chế độ khác nhau ở chỗ lý do có bắt buộc hay không: hủy lịch là quyết định phải
- * giải trình được (FR-05-04 → backend trả 400 nếu thiếu), còn "khách không đến" chỉ là
- * ghi nhận một sự việc nên để trống được, backend tự điền "Khách không đến".
- */
 function EndAppointmentDialog({
   mode,
   reason,

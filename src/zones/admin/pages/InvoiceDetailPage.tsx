@@ -2,11 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { billingApi, sepayApi, SepayQrTicket } from '@/api/billing.api';
-import {
-  Badge,
-  Skeleton,
-  SkeletonText,
-} from '@/components/basic';
+import { Badge, Button, Icon, Skeleton, SkeletonText } from '@/components/basic';
 import { QueryErrorState } from '@/components/QueryErrorState';
 import { InvoiceStatus, PaymentMethod, PaymentStatus } from '@/types/enums';
 import { formatCurrency, formatDateTime } from '@/utils/format';
@@ -19,13 +15,24 @@ import {
   PAYMENT_STATUS_LABEL_VI,
 } from '@/utils/labels';
 
-/**
- * Một hoá đơn: các dòng, ba dòng tổng, lịch sử thanh toán và form thu tiền.
- *
- * Từ P8-T2 một hoá đơn trả được **nhiều lần**: ô "Số tiền" để trống nghĩa là trả hết
- * phần còn lại, điền số nhỏ hơn là trả một phần. Số còn phải thu tính từ lịch sử thanh
- * toán chứ không từ `totalAmount` — hoá đơn trả một phần thì hai số đó khác nhau.
- */
+const PAYMENT_OPTIONS = [
+  { value: PaymentMethod.CASH, icon: '💵', title: 'Tiền mặt', detail: 'Thu trực tiếp tại quầy' },
+  {
+    value: PaymentMethod.BANK_TRANSFER,
+    icon: '🏦',
+    title: 'Chuyển khoản',
+    detail: 'VietQR · xác nhận tự động',
+  },
+  {
+    value: PaymentMethod.QR,
+    icon: '▦',
+    title: 'Quét mã QR',
+    detail: 'Quét bằng ứng dụng ngân hàng',
+  },
+  { value: PaymentMethod.CREDIT_CARD, icon: '💳', title: 'Thẻ', detail: 'Ghi nhận tại quầy' },
+  { value: PaymentMethod.E_WALLET, icon: '📱', title: 'Ví điện tử', detail: 'Ghi nhận tại quầy' },
+] as const;
+
 export function InvoiceDetailPage() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
@@ -60,8 +67,11 @@ export function InvoiceDetailPage() {
     },
   });
 
+  const receiptMutation = useMutation({
+    mutationFn: () => billingApi.downloadReceipt(id!),
+  });
+
   if (invoiceQuery.isLoading) {
-    /* Skeleton theo đúng hình dạng sắp hiện: đầu trang, khối tổng tiền, bảng dòng hàng. */
     return (
       <div className="flex flex-col gap-stack">
         <Skeleton className="h-10 w-64" />
@@ -83,8 +93,6 @@ export function InvoiceDetailPage() {
     );
   }
 
-  // Số đã thu cộng từ lịch sử thanh toán (dòng hoàn tiền mang số âm nên tự trừ ra) —
-  // cùng cách backend tính, để hai bên không bao giờ hiện hai con số khác nhau.
   const paidAmount = (paymentsQuery.data ?? [])
     .filter((p) => p.status === PaymentStatus.SUCCESS || p.status === PaymentStatus.REFUNDED)
     .reduce((sum, p) => sum + p.amount, 0);
@@ -93,25 +101,43 @@ export function InvoiceDetailPage() {
     outstanding > 0 &&
     invoice.status !== InvoiceStatus.CANCELLED &&
     invoice.status !== InvoiceStatus.REFUNDED;
+  const usesSepay =
+    paymentMethod === PaymentMethod.BANK_TRANSFER || paymentMethod === PaymentMethod.QR;
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Hóa đơn {invoice.invoiceCode}</h1>
-          <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-medium text-muted">
-            {INVOICE_SOURCE_LABEL_VI[invoice.source]}
-          </span>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+              Hóa đơn {invoice.invoiceCode}
+            </h1>
+            <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-medium text-muted">
+              {INVOICE_SOURCE_LABEL_VI[invoice.source]}
+            </span>
+          </div>
+          {}
+          {invoice.appointmentId ? (
+            <Link
+              to={`/staff/appointments/${invoice.appointmentId}`}
+              className="text-sm text-primary hover:underline"
+            >
+              Xem lịch hẹn liên quan
+            </Link>
+          ) : (
+            <p className="text-sm text-muted">
+              Bán lẻ tại quầy — {invoice.customer ? invoice.customer.fullName : 'khách vãng lai'}
+            </p>
+          )}
         </div>
-        {/* Hoá đơn POS không có lịch hẹn (P8-T1) - hiện khách hàng thay cho liên kết. */}
-        {invoice.appointmentId ? (
-          <Link to={`/staff/appointments/${invoice.appointmentId}`} className="text-sm text-primary hover:underline">
-            Xem lịch hẹn liên quan
-          </Link>
-        ) : (
-          <p className="text-sm text-muted">
-            Bán lẻ tại quầy — {invoice.customer ? invoice.customer.fullName : 'khách vãng lai'}
-          </p>
+        {invoice.status === InvoiceStatus.PAID && (
+          <Button
+            variant="secondary"
+            loading={receiptMutation.isPending}
+            onClick={() => receiptMutation.mutate()}
+          >
+            Xuất biên lai PDF
+          </Button>
         )}
       </div>
 
@@ -138,12 +164,14 @@ export function InvoiceDetailPage() {
                   <td className="px-3 py-2">{item.item.itemName}</td>
                   <td className="px-3 py-2 text-right">{formatCurrency(item.price)}</td>
                   <td className="px-3 py-2 text-right">{item.quantity}</td>
-                  <td className="px-3 py-2 text-right">{formatCurrency(item.price * item.quantity)}</td>
+                  <td className="px-3 py-2 text-right">
+                    {formatCurrency(item.price * item.quantity)}
+                  </td>
                 </tr>
               ))
             )}
           </tbody>
-          {/* Ba dòng tổng đọc thẳng số backend đã chốt, không cộng lại từ `items`. */}
+          {}
           <tfoot>
             <tr className="border-t border-border">
               <td colSpan={3} className="px-3 py-2 text-right text-muted">
@@ -222,7 +250,9 @@ export function InvoiceDetailPage() {
                     <span className="text-xs text-muted">
                       {formatDateTime(payment.paidAt ?? payment.createdAt)}
                     </span>
-                    <span className="tabular-nums font-medium">{formatCurrency(payment.amount)}</span>
+                    <span className="font-medium tabular-nums">
+                      {formatCurrency(payment.amount)}
+                    </span>
                   </span>
                 </li>
               ))}
@@ -231,27 +261,38 @@ export function InvoiceDetailPage() {
         )}
 
         {canPay && (
+          <div className="payment-method-grid">
+            {PAYMENT_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={paymentMethod === option.value}
+                onClick={() => setPaymentMethod(option.value)}
+                className={paymentMethod === option.value ? 'is-selected' : ''}
+              >
+                <span className="payment-method-icon" aria-hidden="true">
+                  {option.icon}
+                </span>
+                <span>
+                  <strong>{option.title}</strong>
+                  <small>{option.detail}</small>
+                </span>
+                <span className="payment-method-check" aria-hidden="true">
+                  ✓
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {canPay && !usesSepay && (
           <form
             onSubmit={(e) => {
               e.preventDefault();
               payMutation.mutate();
             }}
-            className="mt-4 flex flex-wrap items-end gap-3"
+            className="manual-payment-form mt-4 flex flex-wrap items-end gap-3"
           >
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-muted">Phương thức thanh toán</span>
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-                className="rounded border border-border bg-surface px-3 py-2 text-sm"
-              >
-                {Object.values(PaymentMethod).map((m) => (
-                  <option key={m} value={m}>
-                    {PAYMENT_METHOD_LABEL_VI[m]}
-                  </option>
-                ))}
-              </select>
-            </label>
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-muted">Số tiền (bỏ trống = trả hết)</span>
               <input
@@ -273,32 +314,22 @@ export function InvoiceDetailPage() {
                 className="w-48 rounded border border-border bg-surface px-3 py-2 text-sm"
               />
             </label>
-            <button
-              type="submit"
-              disabled={payMutation.isPending}
-              className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-            >
-              {payMutation.isPending ? 'Đang xử lý…' : 'Xác nhận thanh toán'}
-            </button>
+            <Button type="submit" loading={payMutation.isPending}>
+              <Icon name="check" className="h-4 w-4" />
+              Xác nhận đã thu {PAYMENT_METHOD_LABEL_VI[paymentMethod].toLowerCase()}
+            </Button>
             {payMutation.isError && (
               <span className="text-sm text-destructive">{getErrorMessage(payMutation.error)}</span>
             )}
           </form>
         )}
 
-        {canPay && <SepayPanel invoiceId={invoice.id} outstanding={outstanding} />}
+        {canPay && usesSepay && <SepayPanel invoiceId={invoice.id} outstanding={outstanding} />}
       </div>
     </div>
   );
 }
 
-/**
- * Thanh toán chuyển khoản qua SePay.
- *
- * Không có trang chuyển hướng như VNPay: hiện mã VietQR đã nhúng sẵn số tiền và nội
- * dung chuyển khoản, rồi hỏi trạng thái mỗi 5 giây cho tới khi webhook của SePay báo
- * tiền đã về tài khoản phòng khám.
- */
 function SepayPanel({ invoiceId, outstanding }: { invoiceId: string; outstanding: number }) {
   const queryClient = useQueryClient();
   const [ticket, setTicket] = useState<SepayQrTicket | null>(null);
@@ -308,17 +339,40 @@ function SepayPanel({ invoiceId, outstanding }: { invoiceId: string; outstanding
     onSuccess: setTicket,
   });
 
+  const cancelMutation = useMutation({
+    mutationFn: () => sepayApi.cancelTicket(ticket!.paymentId),
+    onSuccess: () => setTicket(null),
+  });
+
+  const receiptMutation = useMutation({
+    mutationFn: () => billingApi.downloadReceipt(invoiceId),
+  });
+
   const statusQuery = useQuery({
     queryKey: ['sepay-ticket', ticket?.paymentId],
     queryFn: () => sepayApi.ticket(ticket!.paymentId),
     enabled: !!ticket,
-    // Tiền về qua webhook chứ không qua request nào của màn hình này — hỏi định kỳ là
-    // cách duy nhất để biết, và dừng ngay khi đã chốt.
+
     refetchInterval: (query) =>
       query.state.data?.status === PaymentStatus.PENDING ? 5_000 : false,
   });
 
   const settled = statusQuery.data?.status === PaymentStatus.SUCCESS;
+  const failed = statusQuery.data?.status === PaymentStatus.FAILED;
+  const currentStep = !ticket ? 2 : settled ? 4 : 3;
+
+  useEffect(() => {
+    if (!ticket || settled) return;
+    const controller = new AbortController();
+    void sepayApi
+      .subscribeTicket(
+        ticket.paymentId,
+        (status) => queryClient.setQueryData(['sepay-ticket', ticket.paymentId], status),
+        controller.signal,
+      )
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, [ticket, settled, queryClient]);
 
   useEffect(() => {
     if (!settled) return;
@@ -327,10 +381,25 @@ function SepayPanel({ invoiceId, outstanding }: { invoiceId: string; outstanding
   }, [settled, invoiceId, queryClient]);
 
   return (
-    <div className="mt-6 rounded-xl border border-border bg-surface-muted p-4">
+    <div className="sepay-checkout mt-6">
+      <ol className="payment-progress" aria-label="Tiến trình chuyển khoản">
+        {['Chọn phương thức', 'Tạo mã VietQR', 'Quét và chuyển khoản', 'Hoàn tất'].map(
+          (label, index) => (
+            <li
+              key={label}
+              className={
+                index + 1 < currentStep ? 'is-done' : index + 1 === currentStep ? 'is-current' : ''
+              }
+            >
+              <span>{index + 1 < currentStep ? '✓' : index + 1}</span>
+              <small>{label}</small>
+            </li>
+          ),
+        )}
+      </ol>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="font-medium text-foreground">Chuyển khoản qua SePay</p>
+          <p className="font-medium text-foreground">Thanh toán an toàn qua VietQR</p>
           <p className="text-sm text-muted">
             Khách quét mã bằng ứng dụng ngân hàng; hệ thống tự ghi nhận khi tiền về.
           </p>
@@ -342,7 +411,9 @@ function SepayPanel({ invoiceId, outstanding }: { invoiceId: string; outstanding
             disabled={createMutation.isPending}
             className="rounded-lg border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-primary/5 disabled:opacity-50"
           >
-            {createMutation.isPending ? 'Đang tạo mã…' : `Tạo mã QR ${formatCurrency(outstanding)}`}
+            {createMutation.isPending
+              ? 'Đang tạo mã…'
+              : `Tiếp tục · ${formatCurrency(outstanding)} →`}
           </button>
         )}
       </div>
@@ -352,7 +423,7 @@ function SepayPanel({ invoiceId, outstanding }: { invoiceId: string; outstanding
       )}
 
       {ticket && (
-        <div className="mt-4 flex flex-wrap items-start gap-5">
+        <div className="sepay-ticket mt-4 flex flex-wrap items-start gap-5">
           <img
             src={ticket.qrImageUrl}
             alt="Mã QR chuyển khoản SePay"
@@ -377,17 +448,56 @@ function SepayPanel({ invoiceId, outstanding }: { invoiceId: string; outstanding
               <dt className="text-muted">Nội dung</dt>
               <dd className="font-mono text-foreground">{ticket.transferContent}</dd>
             </div>
+            <button
+              type="button"
+              className="sepay-copy"
+              onClick={() => void navigator.clipboard.writeText(ticket.transferContent)}
+            >
+              Sao chép nội dung chuyển khoản
+            </button>
             <p className="pt-2 text-xs text-muted">
               Giữ nguyên nội dung chuyển khoản — hệ thống đối chiếu hóa đơn bằng đúng chuỗi này.
             </p>
 
             <div className="pt-3">
               {settled ? (
-                <Badge variant="success">Đã nhận được tiền</Badge>
+                <div className="sepay-success">
+                  <span className="sepay-success-icon">✓</span>
+                  <div>
+                    <strong>Thanh toán thành công</strong>
+                    <p>Hóa đơn đã được đối soát tự động.</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    loading={receiptMutation.isPending}
+                    onClick={() => receiptMutation.mutate()}
+                  >
+                    Xuất biên lai
+                  </Button>
+                </div>
+              ) : failed ? (
+                <Badge variant="destructive">Phiên thanh toán đã kết thúc</Badge>
               ) : (
-                <span className="text-sm text-muted">Đang chờ chuyển khoản…</span>
+                <div className="sepay-waiting">
+                  <span />
+                  <div>
+                    <strong>Đang chờ ngân hàng xác nhận</strong>
+                    <p>Giữ nguyên màn hình này. Trạng thái sẽ tự cập nhật khi tiền về.</p>
+                  </div>
+                </div>
               )}
             </div>
+            {!settled && !failed && (
+              <Button
+                size="sm"
+                variant="ghost"
+                loading={cancelMutation.isPending}
+                onClick={() => cancelMutation.mutate()}
+              >
+                Hủy mã QR này
+              </Button>
+            )}
           </dl>
         </div>
       )}

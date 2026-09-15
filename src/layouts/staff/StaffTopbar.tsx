@@ -11,27 +11,10 @@ export interface StaffTopbarProps {
   onOpenMobileNav: () => void;
 }
 
-/**
- * Thanh trên của khu nhân viên.
- *
- * Ba thứ được thêm so với bản cũ (vốn chỉ có số điện thoại và nút đăng xuất trần):
- *
- * - **Breadcrumb** suy ra từ URL, nên trang chi tiết nào cũng biết đường về danh sách
- *   của nó. Trước đây từ `/staff/appointments/:id` chỉ còn nút Back của trình duyệt.
- * - **Ngữ cảnh chi nhánh.** Hệ thống nhiều chi nhánh mà không hiện đang làm việc tại
- *   chi nhánh nào thì mọi con số trên màn hình đều mơ hồ.
- * - **Vai trò trong menu tài khoản.** Ở phòng khám, nhiều người dùng chung một máy;
- *   biết đang đăng nhập bằng tài khoản nào là chuyện an toàn dữ liệu, không phải trang
- *   trí.
- */
 export function StaffTopbar({ onOpenMobileNav }: StaffTopbarProps) {
   const { user, logout } = useAuth();
   const crumbs = useBreadcrumbs();
 
-  /*
-    Chỉ hỏi danh sách chi nhánh khi tài khoản CÓ gắn chi nhánh. ADMIN không gắn chi
-    nhánh nào thì không cần gọi API chỉ để hiện chữ "Toàn hệ thống".
-  */
   const branchesQuery = useQuery({
     queryKey: ['branches'],
     queryFn: branchesApi.list,
@@ -39,11 +22,6 @@ export function StaffTopbar({ onOpenMobileNav }: StaffTopbarProps) {
     staleTime: 10 * 60_000,
   });
 
-  /*
-    Ba trạng thái, không phải hai. Bản trước hiện "Đang tải..." cho cả trường hợp lời
-    gọi đã hỏng - tức là một dòng chữ đứng yên vĩnh viễn, trong khi ngữ cảnh chi nhánh
-    là thứ quyết định người dùng đang thao tác trên kho và hàng chờ của ai.
-  */
   const branches = branchesQuery.data;
 
   const branchName = !user?.branchId
@@ -69,11 +47,7 @@ export function StaffTopbar({ onOpenMobileNav }: StaffTopbarProps) {
       <Breadcrumb items={crumbs} className="flex-1" />
 
       <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-        {/*
-          Ngữ cảnh chi nhánh là THÔNG TIN, không phải bộ chọn: tài khoản nhân viên gắn
-          cứng với một chi nhánh ở backend, đổi chi nhánh là việc của quản trị viên.
-          Làm nó trông giống một dropdown sẽ hứa một thao tác không tồn tại.
-        */}
+        {}
         <span
           className="hidden items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs text-muted md:inline-flex"
           title="Chi nhánh đang làm việc"

@@ -11,18 +11,6 @@ import { LAB_TEST_STATUS_LABEL_VI } from '@/utils/labels';
 
 const PAGE_SIZE = 20;
 
-/**
- * Hàng chờ xét nghiệm — acceptance P9-T7: "chỉ định xét nghiệm từ màn hình khám →
- * xuất hiện ở hàng chờ xét nghiệm".
- *
- * Cũ nhất lên trước (backend sắp sẵn), cùng quy ước với hàng chờ quầy thuốc ở P7: việc
- * chờ lâu nhất phải được làm trước. Mặc định **không** hiện việc đã xong — hàng chờ là
- * những việc còn phải làm; muốn xem lại thì lọc `Đã có kết quả` một cách tường minh.
- *
- * Cột "Vào hồ sơ" dẫn thẳng tới phiếu khám: kỹ thuật viên nhập kết quả ngay tại đó, nên
- * màn hình này cố ý **không** dựng thêm một form nhập kết quả thứ hai. Hai form cùng ghi
- * một bảng là hai chỗ phải sửa mỗi lần đổi quy tắc, và sớm muộn sẽ lệch nhau.
- */
 export function LaboratoryQueuePage() {
   const [branchId, setBranchId] = useState('');
   const [status, setStatus] = useState<string>('');
@@ -124,10 +112,7 @@ export function LaboratoryQueuePage() {
         />
       </div>
 
-      {/*
-        Hàng chờ xét nghiệm trả về trọn vẹn trong một lần gọi, nên cắt trang ở client
-        là đủ - `<Table>` chỉ vẽ đúng `data` được truyền vào.
-      */}
+      {}
       <Table
         columns={columns}
         data={pageItems}

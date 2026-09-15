@@ -9,32 +9,6 @@ import {
   WAREHOUSE_ROLES,
 } from '@/types/permission-groups';
 
-/**
- * Cây điều hướng của khu nhân viên - MỘT nguồn sự thật cho sidebar, breadcrumb và
- * tiêu đề trang.
- *
- * Trước đây sidebar là một mảng phẳng 25 mục và breadcrumb thì chưa có. Kết quả: người
- * dùng phải đọc hết danh sách mới tìm được thứ cần, và không có mục nào tự nói cho biết
- * nó thuộc về đâu. Gom thành 6 nhóm không làm ngắn đi danh sách - nó làm cho việc TÌM
- * trở thành hai bước ngắn thay vì một bước dài.
- *
- * `roles` bỏ trống nghĩa là mọi vai trò nhân viên đều thấy. Danh sách vai trò ở đây bám
- * theo ma trận `role_permissions` phía backend; backend vẫn là hàng rào thật, lọc ở đây
- * chỉ để không đưa người dùng tới một trang họ chắc chắn nhận 403.
- * Xem `docs/01-thong-tin-kien-truc.md` mục 3.
- */
-
-/**
- * Các nhóm vai trò dùng chung với router nằm ở `@/types/permission-groups` - sidebar và
- * `RequireAuth` phải đọc CÙNG một danh sách, nếu không sẽ có mục bị giấu khỏi sidebar
- * mà gõ thẳng URL vẫn vào được.
- *
- * `NON_DOCTOR_ROLES` thì ngược lại, cố ý chỉ dùng ở đây: ma trận quyền cho MỌI vai trò
- * nhân viên `INVENTORY_VIEW`, kể cả bác sĩ, nên router không chặn ai cả. Việc bỏ hai
- * mục kho khỏi sidebar của bác sĩ là quyết định về KIẾN TRÚC THÔNG TIN (bác sĩ không
- * làm việc kho), không phải về quyền - bác sĩ theo một liên kết từ phiếu khám tới trang
- * tồn kho vẫn phải vào được.
- */
 const NON_DOCTOR_ROLES = STAFF_ROLES.filter((role) => role !== Role.DOCTOR);
 
 export interface NavItem {
@@ -42,12 +16,12 @@ export interface NavItem {
   label: string;
   icon: IconName;
   roles?: Role[];
-  /** Khớp chính xác đường dẫn thay vì khớp tiền tố. Chỉ "/staff" cần. */
+  
   end?: boolean;
 }
 
 export interface NavGroup {
-  /** Nhãn nhóm. Nhóm "Tổng quan" không cần nhãn - một mục thì không phải một nhóm. */
+  
   label?: string;
   items: NavItem[];
 }
@@ -108,7 +82,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: '/staff/pos', label: 'Bán hàng', icon: 'cart', roles: COUNTER_ROLES },
       { to: '/staff/billing', label: 'Hoá đơn', icon: 'receipt', roles: COUNTER_ROLES },
-      // BR-15: chỉ Manager/Admin được xem báo cáo doanh thu.
+      
       { to: '/staff/reports', label: 'Báo cáo', icon: 'chart', roles: MANAGEMENT_ROLES },
     ],
   },
@@ -123,20 +97,14 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Hệ thống',
     items: [
-      // BR-16: chỉ Admin được quản lý role và permission.
+      
       { to: '/staff/permissions', label: 'Phân quyền', icon: 'shield', roles: SYSTEM_ROLES },
-      // FR-26/BR-17: `AUDIT_VIEW` trong ma trận mặc định chỉ thuộc về Admin.
+      
       { to: '/staff/audit-logs', label: 'Nhật ký kiểm toán', icon: 'history', roles: SYSTEM_ROLES },
     ],
   },
 ];
 
-/**
- * Lọc cây theo vai trò và bỏ luôn những nhóm rỗng.
- *
- * Bỏ nhóm rỗng là phần dễ quên nhất: một bác sĩ đăng nhập mà vẫn thấy nhãn "HỆ THỐNG"
- * treo lơ lửng không có mục nào dưới nó thì tệ hơn là không có nhóm.
- */
 export function navGroupsFor(role: Role | undefined): NavGroup[] {
   return NAV_GROUPS.map((group) => ({
     ...group,
@@ -144,23 +112,10 @@ export function navGroupsFor(role: Role | undefined): NavGroup[] {
   })).filter((group) => group.items.length > 0);
 }
 
-/** Mọi mục của cây, phẳng - dùng để dò breadcrumb và tiêu đề trang. */
 export const ALL_NAV_ITEMS: NavItem[] = NAV_GROUPS.flatMap((group) => group.items);
 
-/**
- * Hai vai trò mà `/staff` là màn hình LÂM SÀNG (xem `StaffHomePage`) - với họ, trang
- * chủ cũng là một màn hình làm việc chứ không phải một bản báo cáo.
- */
 export const CLINICAL_HOME_ROLES = [Role.DOCTOR, Role.RECEPTIONIST];
 
-/**
- * Các màn hình lâm sàng - dùng để bật mật độ `compact`.
- *
- * Bác sĩ và lễ tân ở trong những màn hình này cả ngày và đọc theo kiểu quét; hàng bảng
- * thấp hơn nghĩa là nhiều bệnh nhân hơn trong một màn hình. Màn hình quản trị thì đọc
- * kỹ, ít lần, nên giữ nguyên mật độ thoáng.
- * Xem `docs/01-thong-tin-kien-truc.md` mục 5.2.
- */
 const CLINICAL_PATH_PREFIXES = [
   '/staff/queue',
   '/staff/calendar',

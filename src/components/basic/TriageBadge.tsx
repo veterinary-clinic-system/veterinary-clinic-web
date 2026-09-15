@@ -22,7 +22,6 @@ const DOT_CLASSES: Record<PriorityColor, string> = {
   [PriorityColor.BLUE]: 'bg-triage-blue',
 };
 
-/** The 5-color AI pre-screening priority scale. Label text is sourced from PRIORITY_COLOR_LABEL_VI (src/types/enums.ts), not redefined here. */
 export function TriageBadge({ color, className }: TriageBadgeProps) {
   return (
     <span

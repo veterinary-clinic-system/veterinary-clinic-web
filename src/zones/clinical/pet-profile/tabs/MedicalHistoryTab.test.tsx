@@ -9,15 +9,6 @@ import type { PetMedicalHistory } from '@/types/models';
 
 import { MedicalHistoryTab } from './MedicalHistoryTab';
 
-/**
- * Hồ sơ thú cưng có năm tab, mỗi tab một lời gọi API RIÊNG. Không tab nào được phép
- * biến một lời gọi hỏng thành "bé chưa có lần khám nào" - với bác sĩ đang đứng trước
- * con vật, hai câu đó dẫn tới hai quyết định khác nhau.
- *
- * `PrescriptionsTab` và `LaboratoryTab` cạnh đây đã có nhánh lỗi từ đầu; bốn tab dựng
- * trên `ClientPagedTable` thì không, và đó là thứ UI-12 vá.
- */
-
 afterEach(cleanup);
 
 vi.mock('@/api/pets.api', () => ({
@@ -27,7 +18,7 @@ vi.mock('@/api/pets.api', () => ({
 const medicalHistory = vi.mocked(petsApi.medicalHistory);
 
 function renderTab() {
-  /* `retry: false` để một lần hỏng là vào ngay `isError`, không chờ ba lần thử lại. */
+  
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>

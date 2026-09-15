@@ -81,8 +81,6 @@ export function WalkInModal({
     enabled: open && Boolean(form.speciesId),
   });
 
-  // Gõ số điện thoại là tra ngay hồ sơ thú cưng đã có - phần lớn "khách vãng lai" là
-  // khách cũ chỉ không đặt lịch, chứ không phải khách mới hoàn toàn.
   const existingPetsQuery = useQuery({
     queryKey: ['walk-in-pets', debouncedPhone],
     queryFn: () => petsApi.search({ search: debouncedPhone, limit: 20 }),
@@ -116,8 +114,7 @@ export function WalkInModal({
       return queueApi.walkIn(payload);
     },
     onSuccess: (entry) => {
-      // Backend đã cố xếp luôn một bác sĩ + khung giờ; chỉ khi hết chỗ lượt mới nằm
-      // lại ở hàng chờ. Thông báo phải nói rõ khách được xếp giờ hay phải chờ.
+
       const scheduled = entry.doctor && entry.appointment;
       toast.show(
         scheduled
@@ -139,7 +136,6 @@ export function WalkInModal({
     walkInMutation.mutate();
   }
 
-  /** Tải ảnh lên ngay khi chọn - biểu mẫu chỉ giữ URL, giống trang đặt lịch. */
   async function onPhotosSelected(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
     event.target.value = '';
@@ -271,10 +267,7 @@ export function WalkInModal({
             }))}
           placeholder="— Chọn dịch vụ —"
           required
-          /*
-            Ô bắt buộc: danh mục hỏng thì lễ tân nhìn thấy một ô trống không chọn được
-            gì và một biểu mẫu không gửi được, mà không có chỗ nào nói vì sao.
-          */
+          
           error={servicesQuery.isError ? 'Không tải được danh mục dịch vụ.' : undefined}
         />
 
@@ -304,11 +297,7 @@ export function WalkInModal({
           hint="Chọn “Đỏ — Cấp cứu” khi hết chỗ: hệ thống sẽ dời một ca nhẹ hơn để lấy khung giờ."
         />
 
-        {/*
-          Phần khai triệu chứng dựng GIỐNG biểu mẫu đặt lịch công khai (phản hồi
-          nghiệm thu: "Cách điền triệu chứng giống với khi điền form gửi") - cùng danh
-          sách triệu chứng thường gặp, cùng ô mô tả, cùng chỗ đính kèm ảnh.
-        */}
+        {}
         <CheckboxGroup
           label="Triệu chứng thường gặp"
           value={form.commonSymptoms}

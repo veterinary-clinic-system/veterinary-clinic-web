@@ -23,13 +23,6 @@ const STATUS_VARIANT: Record<PrescriptionStatus, BadgeVariant> = {
   [PrescriptionStatus.CANCELLED]: 'destructive',
 };
 
-/**
- * Quầy thuốc — SRS FR-11, BR-10.
- *
- * Bố cục hai cột: trái là hàng chờ, phải là đơn đang chọn. Cột phải hiện tồn kho **từng
- * dòng**, tô đỏ dòng thiếu và khoá nút cấp phát kèm giải thích — backend cũng chặn
- * (`dispense` trả 409), nút khoá chỉ để dược sĩ khỏi bấm rồi mới biết.
- */
 export function PharmacyPage() {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -61,7 +54,7 @@ export function PharmacyPage() {
     queryFn: () => prescriptionsApi.list(params),
     enabled: Boolean(branchId),
     placeholderData: (prev) => prev,
-    // Nhiều dược sĩ có thể cùng đứng ở quầy - làm mới định kỳ để không cùng soạn một đơn.
+    
     refetchInterval: 30_000,
   });
 
@@ -91,7 +84,7 @@ export function PharmacyPage() {
     mutationFn: () => prescriptionsApi.dispense(selectedId!),
     onSuccess: () => {
       toast.show('Đã cấp phát và trừ kho.', 'success');
-      // Đơn rời hàng chờ - bỏ chọn để dược sĩ nhặt đơn tiếp theo.
+      
       setSelectedId(null);
       refresh();
     },

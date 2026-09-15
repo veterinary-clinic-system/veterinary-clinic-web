@@ -21,14 +21,6 @@ const EMPTY_FORM: FormState = {
   active: true,
 };
 
-/**
- * Số điện thoại Việt Nam, đã bỏ hết dấu cách và gạch nối trước khi so.
- *
- * Phải nhận cả số cố định lẫn di động: dữ liệu thật của chi nhánh là "028 3822 1111" -
- * số bàn có mã vùng, viết cách nhóm. Một biểu thức chỉ khớp 10 chữ số liền nhau sẽ chặn
- * người dùng lưu lại chính cái số đang có trên màn hình, trong khi máy chủ
- * (`IsPhoneNumber('VN')`) chấp nhận nó.
- */
 const VN_PHONE = /^(0|\+84)\d{9,10}$/;
 
 function normalizePhone(phone: string): string {
@@ -52,23 +44,10 @@ function validate(form: FormState): Partial<Record<keyof FormState, string>> {
 export interface BranchModalProps {
   open: boolean;
   onClose: () => void;
-  /** `null` là tạo mới; có giá trị là sửa chi nhánh đó. */
+  
   editing: Branch | null;
 }
 
-/**
- * Tạo và sửa chi nhánh.
- *
- * Trước đây biểu mẫu tạo nằm THƯỜNG TRỰC trên đầu trang và việc sửa diễn ra ngay trên
- * thẻ của chi nhánh - cùng một vấn đề đã sửa ở màn hình Tài khoản (UI-10): bốn ô nhập
- * chiếm chỗ của danh sách trên một trang mà phần lớn thời gian người ta mở ra để TRA
- * CỨU, còn ô nhập thì chỉ có `placeholder` nên nhãn biến mất ngay khi gõ chữ đầu tiên và
- * trình đọc màn hình không có gì để đọc.
- *
- * Ràng buộc kiểm ở đây trùng với `CreateBranchDto`: tên ≥ 2 ký tự, địa chỉ ≥ 5 ký tự, số
- * điện thoại Việt Nam. Nói ra tại ô nhập trước khi gửi, thay vì để máy chủ trả về một
- * câu tiếng Anh cho cả biểu mẫu.
- */
 export function BranchModal({ open, onClose, editing }: BranchModalProps) {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -101,7 +80,7 @@ export function BranchModal({ open, onClose, editing }: BranchModalProps) {
       if (editing) {
         return branchesApi.update(editing.id, {
           ...payload,
-          /* `null` chứ không phải chuỗi rỗng - cột này nullable, xoá mô tả là trả về null. */
+          
           description: form.description.trim() || null,
           active: form.active,
         });
@@ -111,7 +90,7 @@ export function BranchModal({ open, onClose, editing }: BranchModalProps) {
     onSuccess: () => {
       toast.show(editing ? 'Đã cập nhật chi nhánh.' : 'Đã thêm chi nhánh mới.', 'success');
       void queryClient.invalidateQueries({ queryKey: ['branches-admin'] });
-      /* Danh sách công khai (trang chủ, bước chọn chi nhánh khi đặt lịch) dùng khoá khác. */
+      
       void queryClient.invalidateQueries({ queryKey: ['branches'] });
       onClose();
     },
@@ -176,10 +155,7 @@ export function BranchModal({ open, onClose, editing }: BranchModalProps) {
           onChange={(event) => setForm({ ...form, description: event.target.value })}
         />
 
-        {/*
-          Chỉ hiện khi sửa: `POST /branches` không nhận `active`, chi nhánh mới luôn ở
-          trạng thái hoạt động. Một ô nhập không có tác dụng còn tệ hơn là không có.
-        */}
+        {}
         {editing && (
           <div className="flex flex-col gap-1">
             <Checkbox

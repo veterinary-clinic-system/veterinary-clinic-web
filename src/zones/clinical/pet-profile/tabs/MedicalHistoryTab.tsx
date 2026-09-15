@@ -8,7 +8,6 @@ import type { PetMedicalHistory } from '@/types/models';
 import { formatDateTime } from '@/utils/format';
 import { MEDICAL_RECORD_STATUS_LABEL_VI } from '@/utils/labels';
 
-/** Khối 3 - Medical History. */
 export function MedicalHistoryTab({ petId }: { petId: string }) {
   const query = useQuery({
     queryKey: ['pet-medical-history', petId],
@@ -22,7 +21,7 @@ export function MedicalHistoryTab({ petId }: { petId: string }) {
     {
       key: 'diagnoses',
       header: 'Chẩn đoán',
-      // Từ P4, một hồ sơ có nhiều chẩn đoán; backend đã xếp chẩn đoán chính lên đầu.
+      
       render: (row) =>
         row.diagnoses.length > 0 ? (
           <div className="flex flex-wrap gap-1">

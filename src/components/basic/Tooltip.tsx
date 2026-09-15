@@ -2,25 +2,13 @@ import { ReactElement, cloneElement, useId, useState } from 'react';
 import { cn } from './utils';
 
 export interface TooltipProps {
-  /** Nội dung giải thích. Một câu ngắn - dài hơn thì thuộc về `hint` của trường nhập. */
+  
   label: string;
   children: ReactElement;
   side?: 'top' | 'bottom' | 'right';
   className?: string;
 }
 
-/**
- * Chú giải ngắn khi rê chuột hoặc khi phần tử nhận focus.
- *
- * Hiện cả khi **focus bằng bàn phím**, không chỉ khi rê chuột: tooltip chỉ hiện lúc
- * hover là một trong những lỗi tiếp cận phổ biến nhất - người đi bằng bàn phím và người
- * dùng màn hình cảm ứng không bao giờ đọc được nó.
- *
- * Nối vào phần tử con bằng `aria-describedby` chứ không phải `aria-label`: `label` sẽ
- * THAY THẾ tên của nút, còn `describedby` thì bổ sung. Tooltip là phần bổ sung.
- *
- * Không dùng tooltip để chứa thông tin bắt buộc phải đọc mới thao tác được.
- */
 export function Tooltip({ label, children, side = 'top', className }: TooltipProps) {
   const [open, setOpen] = useState(false);
   const id = useId();

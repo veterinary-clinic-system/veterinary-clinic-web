@@ -3,7 +3,6 @@ import { Gender } from '@/types/enums';
 import { GENDER_LABEL_VI } from '@/utils/display';
 import { BookingForm } from '../use-booking-form';
 
-/** Bước 5 - thông tin chủ nuôi và thú cưng. */
 export function StepOwnerPet({
   owner,
   pet,
@@ -27,10 +26,7 @@ export function StepOwnerPet({
             onChange={(e) => owner.changePhone(e.target.value)}
             className="w-full read-only:bg-surface-muted"
           />
-          {/*
-            `aria-live` để trình đọc màn hình báo kết quả tra cứu - nếu không, người
-            dùng bàn phím gõ xong số điện thoại và không hề biết ô họ tên vừa tự điền.
-          */}
+          {}
           <p aria-live="polite" className="mt-1 text-xs">
             {owner.lookupState === 'loading' && (
               <span className="text-muted">Đang tra cứu trong hệ thống...</span>
@@ -163,7 +159,7 @@ function NewPetFields({ pet }: { pet: BookingForm['pet'] }) {
       <Select
         label="Loài"
         value={newPet.speciesId}
-        /* Đổi loài thì giống cũ chắc chắn không còn đúng - xoá luôn. */
+        
         onChange={(value) => updateNewPet({ speciesId: value, breedId: '' })}
         options={[
           { value: '', label: '-- Chọn loài --' },

@@ -16,7 +16,6 @@ const STATUS_VARIANT: Record<StockTakeStatus, BadgeVariant> = {
   [StockTakeStatus.CANCELLED]: 'destructive',
 };
 
-/** SRS FR-18-03 — kiểm kê: chụp số hệ thống, nhập số đếm, xác nhận sinh điều chỉnh. */
 export function StockTakePage() {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -28,7 +27,7 @@ export function StockTakePage() {
   const [sortOrder, setSortOrder] = useState<SortOrder>('DESC');
 
   const [detailId, setDetailId] = useState<string | null>(null);
-  /** Số đếm đang gõ, khoá theo id dòng. Chỉ giữ ở client tới khi bấm "Lưu số đếm". */
+  
   const [counts, setCounts] = useState<Record<string, string>>({});
   const [confirmNote, setConfirmNote] = useState('');
 
@@ -62,7 +61,6 @@ export function StockTakePage() {
     enabled: detailId !== null,
   });
 
-  // Mở phiếu -> nạp số đếm đã lưu vào ô nhập để nhân viên đếm tiếp chỗ bỏ dở.
   useEffect(() => {
     const stockTake = detailQuery.data;
     if (!stockTake) return;
@@ -127,7 +125,6 @@ export function StockTakePage() {
     onError: (error) => toast.show(getErrorMessage(error), 'error'),
   });
 
-  /** Chênh lệch = số đếm đang gõ − số hệ thống. `null` khi chưa đếm dòng này. */
   function discrepancyOf(line: StockTakeItem): number | null {
     const raw = counts[line.id];
     if (raw === undefined || raw === '') return null;

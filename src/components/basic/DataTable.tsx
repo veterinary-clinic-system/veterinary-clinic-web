@@ -10,9 +10,9 @@ export interface DataColumn<T> {
   header: string;
   render?: (row: T) => ReactNode;
   sortable?: boolean;
-  /** Căn phải cho cột số tiền và số lượng - mắt so sánh chữ số theo hàng đơn vị. */
+  
   align?: 'left' | 'right';
-  /** Ẩn ở màn hình hẹp. Dùng cho cột phụ, không bao giờ cho cột định danh. */
+  
   hideBelow?: 'sm' | 'md' | 'lg';
   width?: string;
 }
@@ -22,9 +22,8 @@ export interface DataTableProps<T> {
   data: T[];
   getRowId: (row: T) => string;
 
-  /** Thanh công cụ: ô tìm kiếm, bộ lọc. Đặt bên trái. */
   toolbar?: ReactNode;
-  /** Hành động của cả trang (Thêm mới, Xuất file). Đặt bên phải thanh công cụ. */
+  
   actions?: ReactNode;
 
   sortBy?: string;
@@ -36,14 +35,13 @@ export interface DataTableProps<T> {
   total?: number;
   onPageChange?: (page: number) => void;
 
-  /** Bật chọn nhiều hàng. Không truyền thì không có cột checkbox. */
   selectedIds?: string[];
   onSelectionChange?: (ids: string[]) => void;
-  /** Thanh hành động hiện lên khi có hàng được chọn. */
+  
   bulkActions?: (selectedIds: string[]) => ReactNode;
 
   onRowClick?: (row: T) => void;
-  /** Nút/menu ở cuối mỗi hàng. Bấm vào đây KHÔNG kích hoạt `onRowClick`. */
+  
   rowActions?: (row: T) => ReactNode;
 
   loading?: boolean;
@@ -55,21 +53,6 @@ export interface DataTableProps<T> {
   className?: string;
 }
 
-/**
- * Bảng dữ liệu đầy đủ của zone quản trị: thanh công cụ, sắp xếp, chọn nhiều, hành động
- * hàng loạt, hành động từng hàng, phân trang, và cả ba trạng thái tải/rỗng/lỗi.
- *
- * Khác `Table` (bảng trần, dùng cho danh sách nhúng nhỏ trong một thẻ) ở chỗ nó sở hữu
- * cả khung xung quanh dữ liệu. Trang admin nào cũng cần đúng bộ đồ này; viết lại ở 19
- * chỗ là 19 cơ hội để chúng lệch nhau.
- *
- * Sắp xếp và phân trang đều **do máy chủ quyết định**: bấm vào tiêu đề cột không bao
- * giờ sắp xếp lại `data` tại chỗ, nó chỉ gọi `onSortChange` để nơi gọi nạp lại từ API.
- * `data` luôn được vẽ đúng thứ tự nhận được.
- *
- * Ở màn hình hẹp, bảng cuộn ngang TRONG khung của nó (`overflow-x-auto`) - trang không
- * bao giờ cuộn ngang. Các cột phụ có `hideBelow` thì biến mất trước khi phải cuộn.
- */
 export function DataTable<T>({
   columns,
   data,
@@ -104,10 +87,6 @@ export function DataTable<T>({
   const allSelected = pageIds.length > 0 && pageIds.every((id) => selected.includes(id));
   const someSelected = pageIds.some((id) => selected.includes(id));
 
-  /*
-    Trạng thái "một phần" của checkbox đầu bảng chỉ đặt được bằng JavaScript - HTML
-    không có thuộc tính cho nó. Thiếu dòng này, chọn 3/10 hàng trông y hệt chọn 0 hàng.
-  */
   useEffect(() => {
     if (headerCheckboxRef.current) {
       headerCheckboxRef.current.indeterminate = someSelected && !allSelected;
@@ -155,10 +134,7 @@ export function DataTable<T>({
         </div>
       )}
 
-      {/*
-        Thanh hành động hàng loạt thay chỗ thanh công cụ chứ không chồng lên trên: một
-        thanh nổi che mất hàng đầu tiên là kiểu hay gặp và luôn phiền.
-      */}
+      {}
       {selectable && selected.length > 0 && bulkActions && (
         <div
           role="status"

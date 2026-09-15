@@ -2,12 +2,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { appointmentsApi } from '@/api/appointments.api';
 import { petsApi } from '@/api/pets.api';
-import {
-  EmptyState,
-  Pagination,
-  SkeletonCards,
-  usePagination,
-} from '@/components/basic';
+import { EmptyState, Pagination, SkeletonCards, usePagination } from '@/components/basic';
 import { QueryErrorState } from '@/components/QueryErrorState';
 import { AppointmentStatus } from '@/types/enums';
 import { Appointment } from '@/types/models';
@@ -15,20 +10,12 @@ import { PetCard } from '../components/PetCard';
 
 const PAGE_SIZE = 12;
 
-/** Trạng thái còn "sắp diễn ra" - đã xong hoặc đã huỷ thì không phải lịch hẹn tới. */
 const UPCOMING_STATUSES = [
   AppointmentStatus.PENDING,
   AppointmentStatus.CONFIRMED,
   AppointmentStatus.CHECKED_IN,
 ];
 
-/**
- * Với mỗi thú cưng, tìm lịch hẹn sắp tới GẦN NHẤT.
- *
- * Tính ở client từ `/appointments/mine` thay vì gọi thêm một API cho từng bé: chủ nuôi
- * có vài con, danh sách lịch hẹn của họ về trọn trong một lần, và N+1 request chỉ để
- * hiện một dòng trên mỗi thẻ là cái giá không đáng.
- */
 function nextAppointmentByPet(appointments: Appointment[]): Map<string, Appointment> {
   const now = Date.now();
   const map = new Map<string, Appointment>();
@@ -47,14 +34,6 @@ function nextAppointmentByPet(appointments: Appointment[]): Map<string, Appointm
   return map;
 }
 
-/**
- * "Thú cưng của tôi" - trang chủ thật sự của chủ nuôi.
- *
- * Đây là màn hình họ mở đầu tiên, nên nó phải trả lời ngay: các bé nhà tôi thế nào, có
- * gì cần lưu ý, sắp tới có hẹn nào không. Không có bảng dữ liệu, không có biểu đồ -
- * đây là trải nghiệm khách hàng, không phải bảng điều khiển (xem
- * `docs/01-thong-tin-kien-truc.md` mục 2.2).
- */
 export function MyPetsPage() {
   const {
     data: pets,
@@ -71,18 +50,57 @@ export function MyPetsPage() {
 
   const nextByPet = nextAppointmentByPet(appointments ?? []);
 
-  // `GET /pets/mine` trả toàn bộ thú cưng của chủ nuôi trong một lần - cắt trang ở
-  // client là đủ và không cần thêm một cửa API có phân trang.
   const { page, setPage, pageItems, totalPages } = usePagination(pets ?? [], PAGE_SIZE);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
+      <section className="owner-welcome">
+        <div>
+          <span className="care-eyebrow">MỘT GÓC NHỎ, TRỌN YÊU THƯƠNG</span>
+          <h2>
+            Hôm nay bé nhà bạn
+            <br />
+            thế nào?
+          </h2>
+          <p>
+            Lưu giữ từng cột mốc, theo dõi từng lần khám.
+            <br />
+            Chăm sóc bé bắt đầu từ những điều nhỏ nhất.
+          </p>
+          <Link to="/my/appointments" className="care-text-link">
+            Xem lịch hẹn của các bé →
+          </Link>
+        </div>
+        <img
+          src="/images/pets-photoreal-v1.png"
+          alt="Chó và mèo đồng hành cùng chủ nuôi"
+          width="1254"
+          height="1254"
+        />
+      </section>
+      <div className="owner-overview">
+        <div>
+          <small>THÀNH VIÊN NHỎ</small>
+          <strong>{isLoading || isError ? '—' : (pets?.length ?? 0)}</strong>
+          <span>Hồ sơ thú cưng của bạn</span>
+        </div>
+        <div>
+          <small>LỊCH HẸN GẦN NHẤT</small>
+          <strong>{appointments ? nextByPet.size : '—'}</strong>
+          <span>Số bé có lịch hẹn sắp tới</span>
+        </div>
+        <Link to="/booking">
+          <small>DÀNH THỜI GIAN CHO BÉ</small>
+          <strong>Đặt lịch ↗</strong>
+          <span>Chọn bác sĩ và giờ khám phù hợp</span>
+        </Link>
+      </div>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Thú cưng của tôi</h1>
-          <p className="mt-1 text-muted">
-            Hồ sơ sức khoẻ, lịch sử khám và lịch hẹn của từng bé.
-          </p>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            Thú cưng của tôi
+          </h1>
+          <p className="mt-1 text-muted">Hồ sơ sức khoẻ, lịch sử khám và lịch hẹn của từng bé.</p>
         </div>
         <Link
           to="/booking"

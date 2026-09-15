@@ -6,7 +6,7 @@ export interface ProductListParams {
   limit?: number;
   sortBy?: string;
   sortOrder?: 'ASC' | 'DESC';
-  /** Đối chiếu với tên sản phẩm, SKU và mã nội bộ cùng lúc. */
+  
   search?: string;
   categoryId?: string;
   active?: boolean;
@@ -14,6 +14,7 @@ export interface ProductListParams {
 
 export interface ProductPayload {
   itemName: string;
+  imageUrl?: string;
   describe?: string;
   unitPrice: number;
   categoryId?: string | null;
@@ -47,10 +48,7 @@ export interface CategoryPayload {
 }
 
 export const categoriesApi = {
-  /**
-   * Trả về **dạng cây** (mỗi nút có `children`), không phải danh sách phẳng —
-   * xem `CategoriesService.findTree` phía backend.
-   */
+  
   tree: (params: { itemType?: string; includeInactive?: boolean } = {}) =>
     apiClient.get<Category[]>('/catalog/categories', { params }).then((r) => r.data),
   create: (payload: CategoryPayload) =>

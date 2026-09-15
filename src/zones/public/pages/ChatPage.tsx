@@ -19,29 +19,12 @@ const WELCOME_MESSAGE: DisplayMessage = {
     'Xin chào! Tôi là trợ lý AI hỗ trợ thông tin ban đầu về sức khoẻ thú cưng. Bạn hãy mô tả các triệu chứng bé đang gặp phải - kèm giống loài, tuổi và thời gian xuất hiện triệu chứng nếu biết - tôi sẽ giúp bạn hiểu rõ hơn và gợi ý bước tiếp theo.',
 };
 
-/**
- * Câu hỏi gợi ý.
- *
- * Không phải trang trí: màn hình trò chuyện trống là một trong những giao diện khó bắt
- * đầu nhất - người dùng không biết hỏi ở mức chi tiết nào. Ba ví dụ cụ thể (có giống
- * loài, có thời gian, có triệu chứng) dạy cách mô tả nhanh hơn mọi lời hướng dẫn.
- */
 const SUGGESTED_QUESTIONS = [
   'Chó Poodle 2 tuổi của tôi bị nôn và bỏ ăn hai ngày nay, có nghiêm trọng không?',
   'Mèo nhà tôi rụng lông nhiều và gãi liên tục, tôi nên làm gì trước khi đưa đi khám?',
   'Chó con 3 tháng tuổi cần tiêm những mũi vắc-xin nào?',
 ];
 
-/**
- * Trang tư vấn cùng trợ lý AI.
- *
- * Định vị xuyên suốt: **hỗ trợ tham khảo, không thay thế bác sĩ**. Điều đó thể hiện
- * bằng ba quyết định giao diện, không chỉ bằng một dòng miễn trừ:
- *
- * - Câu miễn trừ nằm TRÊN khung trò chuyện, đọc trước khi gõ chữ đầu tiên.
- * - Lời mời đặt lịch với bác sĩ thật luôn hiện, không chỉ khi AI gợi ý.
- * - Bong bóng của trợ lý không có avatar hình người và không gọi nó là "bác sĩ".
- */
 export function ChatPage() {
   const [messages, setMessages] = useState<DisplayMessage[]>([WELCOME_MESSAGE]);
   const [input, setInput] = useState('');
@@ -75,14 +58,14 @@ export function ChatPage() {
       { message: trimmed, history },
       {
         onSuccess: (response) => {
-          setSessionId(response.session_id);
+          setSessionId(response.sessionId);
           setMessages((prev) => [
             ...prev,
             {
               id: crypto.randomUUID(),
               role: 'assistant',
               content: response.reply,
-              suggestBooking: response.suggest_booking,
+              suggestBooking: response.suggestBooking,
             },
           ]);
         },
@@ -98,7 +81,6 @@ export function ChatPage() {
     send(input);
   }
 
-  /* Chỉ gợi ý khi hội thoại chưa bắt đầu - giữa cuộc trò chuyện thì chúng thành nhiễu. */
   const showSuggestions = messages.length === 1;
 
   return (
@@ -116,10 +98,7 @@ export function ChatPage() {
         đưa tới phòng khám ngay.
       </Alert>
 
-      {/*
-        `role="log"` + `aria-live="polite"`: trình đọc màn hình đọc câu trả lời mới khi
-        nó xuất hiện mà không cắt ngang thứ người dùng đang nghe.
-      */}
+      {}
       <div
         role="log"
         aria-live="polite"

@@ -9,15 +9,6 @@ import { AppointmentList } from '../components/AppointmentList';
 
 const PAGE_SIZE = 10;
 
-/**
- * Ba nhóm, không phải năm.
- *
- * Bản trước chia theo `AppointmentStatus` gần như một-một ("Chuẩn bị khám", "Đang tại
- * phòng khám", "Đã khám", "Đã huỷ / không đến"). Chủ nuôi không phân biệt "đã check-in"
- * với "đang khám" - với họ, một lịch hẹn chỉ ở một trong ba trạng thái: **sắp tới**,
- * **đã xong**, **không diễn ra**. Gộp lại còn ba tab giảm số lựa chọn mà không giấu đi
- * thông tin nào: trạng thái chi tiết vẫn hiện trên từng thẻ.
- */
 const GROUP_LABELS: Record<AppointmentGroup, string> = {
   upcoming: 'Sắp tới',
   completed: 'Đã khám',
@@ -39,13 +30,6 @@ const EMPTY_TEXT: Record<AppointmentGroup, { title: string; description: string 
   },
 };
 
-/**
- * "Lịch hẹn của tôi".
- *
- * Sắp xếp khác nhau theo nhóm, và đó là chủ ý: nhóm **sắp tới** xếp gần nhất lên đầu
- * (việc phải làm sớm nhất), hai nhóm còn lại xếp mới nhất lên đầu (thứ vừa xảy ra).
- * Dùng chung một chiều sắp xếp cho cả ba thì một trong hai luôn sai.
- */
 export function MyAppointmentsPage() {
   const [group, setGroup] = useState<AppointmentGroup>('upcoming');
 
@@ -88,10 +72,15 @@ export function MyAppointmentsPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="owner-appointment-heading flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Lịch hẹn của tôi</h1>
-          <p className="mt-1 text-muted">Theo dõi các buổi khám đã đặt và lịch sử khám của các bé.</p>
+          <span className="care-eyebrow">LỊCH CHĂM SÓC CỦA BÉ</span>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            Lịch hẹn của tôi
+          </h1>
+          <p className="mt-1 text-muted">
+            Theo dõi các buổi khám đã đặt và lịch sử khám của các bé.
+          </p>
         </div>
         <Link
           to="/booking"

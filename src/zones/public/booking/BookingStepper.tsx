@@ -3,25 +3,10 @@ import { STEP_LABELS, Step } from './types';
 
 export interface BookingStepperProps {
   current: Step;
-  /** Cho phép quay lại một bước đã hoàn thành. Bỏ trống thì dải chỉ để đọc. */
+  
   onGoToStep?: (step: Step) => void;
 }
 
-/**
- * Dải bảy bước ở đầu biểu mẫu đặt lịch.
- *
- * `<ol>` chứ không phải các `<div>` rời: đây là một chuỗi CÓ THỨ TỰ, và trình đọc màn
- * hình cần đọc ra "mục 3 trên 7". Bước đang mở gắn `aria-current="step"`; bước đã qua
- * có dấu tích để không chỉ dựa vào màu mà phân biệt.
- *
- * Bước đã hoàn thành **bấm được để quay lại**. Đây không phải tiện nghi: khách hay nhớ
- * ra mình chọn nhầm chi nhánh khi đã tới bước nhập thông tin, và không có lối quay lại
- * thì họ phải bấm "Quay lại" bốn lần hoặc tải lại trang và mất sạch dữ liệu đã nhập.
- *
- * Trên màn hình hẹp chỉ hiện số thứ tự; nhãn chữ giữ trong `aria-label` nên trình đọc
- * màn hình không mất gì. Bảy nhãn tiếng Việt ở 375px xuống ba hàng và đẩy biểu mẫu ra
- * khỏi tầm nhìn.
- */
 export function BookingStepper({ current, onGoToStep }: BookingStepperProps) {
   return (
     <ol

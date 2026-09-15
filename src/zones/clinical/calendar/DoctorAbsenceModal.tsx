@@ -5,13 +5,6 @@ import { Button, Input, Modal, useToast } from '@/components/basic';
 import { getErrorMessage } from '@/utils/errors';
 import { formatTime } from '@/utils/format';
 
-/**
- * Báo bác sĩ nghỉ đột xuất trong một ngày.
- *
- * Backend đóng lịch của họ ngày đó rồi chuyển từng ca CHƯA tiếp nhận sang một bác sĩ
- * khác đang trống cùng khung giờ. Ca không tìm được người thay KHÔNG bị hủy — chúng
- * hiện ra ở đây kèm số điện thoại để lễ tân gọi dời lịch.
- */
 export function DoctorAbsenceModal({
   open,
   doctorId,

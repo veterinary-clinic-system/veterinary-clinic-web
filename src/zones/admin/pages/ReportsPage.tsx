@@ -22,7 +22,6 @@ type Preset = 'week' | 'month' | 'quarter' | 'year' | 'last30';
 const TODAY = new Date();
 const ISO = 'yyyy-MM-dd';
 
-/** Mốc bắt đầu của từng kỳ dựng sẵn — acceptance P10-T4 đòi lọc theo tuần/tháng/quý/năm. */
 const PRESET_START: Record<Preset, () => Date> = {
   last30: () => subDays(TODAY, 30),
   week: () => startOfWeek(TODAY, { weekStartsOn: 1 }),
@@ -39,17 +38,6 @@ const PRESET_LABEL: Record<Preset, string> = {
   year: 'Năm nay',
 };
 
-/**
- * Bốn nhóm báo cáo của SRS mục 19 — P10-T4.
- *
- * BR-15: cả trang nằm sau `REPORT_VIEW`; trong ma trận mặc định chỉ ADMIN và MANAGER có
- * quyền đó, lễ tân vào sẽ nhận 403 từ backend (router cũng đã chặn trước).
- *
- * Doanh thu ở đây có HAI con số khác nhau và đó là chủ ý, không phải lỗi: bảng "theo
- * thời gian" cộng giá trị hàng đã bán trên hoá đơn, còn thẻ tổng hợp cộng tiền thực thu
- * từ bảng `payments`. Một hoá đơn trả làm hai lần hoặc hoàn một phần sẽ làm hai con số
- * lệch nhau — xem ghi chú đầu `OperationalReportsService` phía backend.
- */
 export function ReportsPage() {
   const toast = useToast();
   const [preset, setPreset] = useState<Preset>('last30');
@@ -73,7 +61,6 @@ export function ReportsPage() {
     setTo(format(TODAY, ISO));
   }
 
-  // Sửa tay ngày bắt đầu/kết thúc thì kỳ dựng sẵn không còn mô tả đúng khoảng đang xem.
   function setCustomFrom(value: string | null) {
     setFrom(value);
     setPreset('last30');
@@ -122,11 +109,6 @@ export function ReportsPage() {
     queryFn: () => reportsApi.aiAccuracy({ ...range, branchId: branchId || undefined }),
   });
 
-  /**
-   * Tải CSV bằng blob + link tạm chứ không mở thẳng URL: endpoint nằm sau `Authorization`
-   * header, mà một thẻ `<a href>` hay `window.open` không mang được header nào — nó sẽ
-   * nhận đúng 401.
-   */
   async function exportSales() {
     setExporting(true);
     try {
@@ -237,7 +219,7 @@ export function ReportsPage() {
         </div>
       </div>
 
-      {/* -------------------------------------------------- Báo cáo doanh thu */}
+      {}
       <Section
         title="Tổng hợp doanh thu"
         hint="Tiền thực thu, đọc từ các giao dịch thanh toán trong kỳ."
@@ -268,7 +250,7 @@ export function ReportsPage() {
         />
       </Section>
 
-      {/* ----------------------------------------------------- Báo cáo kho */}
+      {}
       <Section
         title="Báo cáo kho"
         hint={
@@ -291,7 +273,7 @@ export function ReportsPage() {
         {inventoryQuery.isLoading && <Skeleton className="h-24 w-full rounded-xl" />}
       </Section>
 
-      {/* ------------------------------------------------ Báo cáo bán hàng */}
+      {}
       <Section
         title="Báo cáo bán hàng"
         hint="Mặt hàng bán chạy nhất trong kỳ, nhiều nhất trước."
@@ -317,7 +299,7 @@ export function ReportsPage() {
         />
       </Section>
 
-      {/* ---------------------------------------------------- Báo cáo khám */}
+      {}
       <Section title="Báo cáo khám" hint="Tỉ lệ vắng mặt tính trên các lịch hẹn đã đến hạn trong kỳ.">
         {examsQuery.data && (
           <div className="flex flex-col gap-4">
@@ -442,7 +424,7 @@ function Stat({
 }: {
   label: string;
   value: string | number;
-  /** Tô màu chỉ khi con số là một tín hiệu cần xử lý — không tô cho vui. */
+  
   tone?: 'warn' | 'bad';
 }) {
   const toneClass =
@@ -489,8 +471,7 @@ function SimpleTable<T>({
         </thead>
         <tbody>
           {loading &&
-            /* Skeleton theo hình hàng thật: bảng giữ chiều cao, khối báo cáo bên dưới
-               không nhảy lên rồi tụt xuống mỗi lần đổi khoảng thời gian. */
+            
             Array.from({ length: 4 }).map((_, index) => (
               <tr key={`skeleton-${index}`} className="border-t border-border">
                 <td colSpan={columns.length} className="px-3">

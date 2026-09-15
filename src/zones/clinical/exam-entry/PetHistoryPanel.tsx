@@ -19,12 +19,10 @@ export function PetHistoryPanel({
     queryFn: () => medicalRecordsApi.getTimelineForPet(petId),
   });
 
-  // Lần khám ĐANG diễn ra đã nằm ở cột giữa - để lại ở đây là nhìn thấy hai lần.
   const previous = (historyQuery.data ?? []).filter((r) => r.id !== currentRecordId);
 
   return (
-    /* `top-20` chứ không phải `top-4`: thanh trên của StaffLayout cao 4rem và cũng
-       sticky, nên neo cao hơn sẽ làm tiêu đề cột chui xuống dưới nó. */
+    
     <aside className="flex flex-col gap-3 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto">
       <h2 className="font-medium">Bệnh sử ({previous.length})</h2>
       {historyQuery.isLoading && <SkeletonText lines={4} />}

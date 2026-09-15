@@ -32,7 +32,7 @@ export function DiseasesTab() {
     | DiseaseGroupLite[]
     | undefined;
   const diseases: DiseaseGroupLite[] = Array.isArray(raw) ? raw : (raw?.data ?? []);
-  // Cửa này từng trả về mảng trần ở một số bản; khi đó không có `total` để chia trang.
+  
   const total = Array.isArray(raw) ? raw.length : (raw?.total ?? diseases.length);
 
   return (
@@ -42,11 +42,7 @@ export function DiseasesTab() {
         phạm vi đợt này).
       </p>
 
-      {/*
-        `Table` thay cho bảng tự dựng: nó mang theo skeleton, dòng rỗng và trạng thái lỗi.
-        Bản trước hiện chữ "Đang tải…" giữa bảng, và khi API hỏng thì hiện "Không có dữ
-        liệu." - tức là nói với người dùng rằng phòng khám không có nhóm bệnh nào.
-      */}
+      {}
       <Table
         columns={COLUMNS}
         data={diseases}

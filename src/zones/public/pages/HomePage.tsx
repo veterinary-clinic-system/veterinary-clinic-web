@@ -11,38 +11,36 @@ import { ServiceCard } from '../components/ServiceCard';
 import { AiConsultSection } from '../home/AiConsultSection';
 import { HomeHero } from '../home/HomeHero';
 import { HowItWorks } from '../home/HowItWorks';
+import { useHomeReveal } from '../home/useHomeReveal';
 
-/**
- * Trang chủ.
- *
- * Thứ tự các mục bám theo thứ tự câu hỏi trong đầu người đang tìm phòng khám:
- *
- *     Đây là chỗ nào, có tin được không   -> Hero + điểm tin cậy
- *     Có dịch vụ tôi cần không, giá bao nhiêu -> Dịch vụ nổi bật
- *     Đặt lịch xong thì sao               -> Quy trình 4 bước
- *     Ai sẽ khám cho bé nhà tôi           -> Đội ngũ bác sĩ
- *     Chỗ nào gần tôi                     -> Chi nhánh
- *     Chưa chắc có cần đi khám không      -> Trợ lý AI
- *
- * Không có mục "cảm nhận khách hàng": hệ thống chưa thu thập đánh giá, và một mục
- * chứng thực bịa ra thì tệ hơn là không có.
- *
- * Mỗi mục dữ liệu chỉ hiện khi có dữ liệu. Danh sách rỗng thì bỏ hẳn mục đó thay vì
- * hiện một khối trống với dòng "sẽ sớm cập nhật" - trang chủ không phải chỗ báo cáo
- * tình trạng nhập liệu.
- */
 export function HomePage() {
-  const { data: branches, isLoading: branchesLoading, isError: branchesError, refetch: refetchBranches } = useQuery({
+  const homeRef = useHomeReveal();
+  const {
+    data: branches,
+    isLoading: branchesLoading,
+    isError: branchesError,
+    refetch: refetchBranches,
+  } = useQuery({
     queryKey: ['branches'],
     queryFn: branchesApi.list,
   });
 
-  const { data: doctors, isLoading: doctorsLoading, isError: doctorsError, refetch: refetchDoctors } = useQuery({
+  const {
+    data: doctors,
+    isLoading: doctorsLoading,
+    isError: doctorsError,
+    refetch: refetchDoctors,
+  } = useQuery({
     queryKey: ['doctors', 'public', ''],
     queryFn: () => doctorsApi.listPublic(),
   });
 
-  const { data: servicesResult, isLoading: servicesLoading, isError: servicesError, refetch: refetchServices } = useQuery({
+  const {
+    data: servicesResult,
+    isLoading: servicesLoading,
+    isError: servicesError,
+    refetch: refetchServices,
+  } = useQuery({
     queryKey: ['catalog', 'services', 'public'],
     queryFn: () => catalogApi.services({ limit: 100 }),
   });
@@ -54,7 +52,7 @@ export function HomePage() {
   const featuredBranches = (branches ?? []).slice(0, 3);
 
   return (
-    <>
+    <div ref={homeRef} className="pet-home">
       <HomeHero />
 
       {(servicesLoading || servicesError || featuredServices.length > 0) && (
@@ -92,7 +90,11 @@ export function HomePage() {
           />
 
           {doctorsLoading ? (
-            <SkeletonCards count={4} label="Đang tải danh sách bác sĩ" className="mt-8 lg:grid-cols-2" />
+            <SkeletonCards
+              count={4}
+              label="Đang tải danh sách bác sĩ"
+              className="mt-8 lg:grid-cols-2"
+            />
           ) : doctorsError ? (
             <SectionLoadError what="danh sách bác sĩ" onRetry={() => void refetchDoctors()} />
           ) : (
@@ -132,7 +134,7 @@ export function HomePage() {
 
       <AiConsultSection />
 
-      <section className="border-t border-border bg-primary-soft">
+      <section className="pet-booking-banner border-t border-border bg-primary-soft">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-6 px-4 py-12">
           <div className="max-w-xl">
             <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
@@ -150,26 +152,19 @@ export function HomePage() {
           </Link>
         </div>
       </section>
-    </>
+    </div>
   );
 }
 
-/**
- * Một khối nội dung của trang chủ không tải được.
- *
- * Không dùng `ErrorState` như trong khu nhân viên: ở đây người đọc là khách chưa quen
- * phòng khám, và một hộp viền đỏ giữa trang giới thiệu đọc ra "phần mềm này hỏng" chứ
- * không phải "khối này chưa tải xong". Nhưng cũng không giấu luôn cả khối - bản trước
- * làm vậy, nghĩa là mục "Đội ngũ bác sĩ" biến mất không dấu vết và khách kết luận
- * phòng khám không công bố bác sĩ nào.
- */
 function SectionLoadError({ what, onRetry }: { what: string; onRetry: () => void }) {
   return (
     <div
       role="status"
       className="mt-8 flex flex-col items-start gap-3 rounded-xl border border-border bg-surface-muted px-5 py-6 sm:flex-row sm:items-center sm:justify-between"
     >
-      <p className="text-sm text-muted">Chưa tải được {what}. Đường truyền có thể đang gián đoạn.</p>
+      <p className="text-sm text-muted">
+        Chưa tải được {what}. Đường truyền có thể đang gián đoạn.
+      </p>
       <Button variant="secondary" size="sm" onClick={onRetry}>
         Thử lại
       </Button>

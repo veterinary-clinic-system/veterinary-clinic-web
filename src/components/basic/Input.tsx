@@ -1,11 +1,6 @@
 import { InputHTMLAttributes, forwardRef, useId } from 'react';
 import { FieldWrapper, cn, describedBy } from './utils';
 
-/*
-  `time` có mặt vì phần mềm phòng khám nhập giờ ở nhiều chỗ: ca làm việc, giờ nghỉ, khung
-  giờ hẹn. Trước đây những chỗ đó dùng ô chữ với gợi ý "HH:mm", tức là không có bộ chọn,
-  không có kiểm tra, và trên điện thoại thì bàn phím hiện ra là bàn phím chữ.
-*/
 export type InputType = 'text' | 'number' | 'date' | 'time' | 'email' | 'tel' | 'password';
 
 export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
@@ -33,7 +28,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(errorId, hintId)}
         className={cn(
-          'h-10 rounded border border-border bg-surface px-3 text-sm text-foreground placeholder:text-muted',
+          'h-10 w-full min-w-0 rounded border border-border bg-surface px-3 text-sm text-foreground placeholder:text-muted',
           'focus:outline-none focus:ring-2 focus:ring-primary',
           'disabled:cursor-not-allowed disabled:opacity-60',
           error && 'border-destructive focus:ring-destructive',

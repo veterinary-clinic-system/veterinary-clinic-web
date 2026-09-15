@@ -4,21 +4,10 @@ import { cn } from './utils';
 export interface DescriptionItem {
   label: string;
   value: ReactNode;
-  /** Chiếm cả hàng - dùng cho ghi chú dài, địa chỉ, danh sách dị ứng. */
+  
   wide?: boolean;
 }
 
-/**
- * Bảng nhãn - giá trị.
- *
- * Dùng `<dl>/<dt>/<dd>` chứ không phải hai cột `<div>`: trình đọc màn hình đọc ra đúng
- * quan hệ "nhãn này thuộc về giá trị kia", còn hai div cạnh nhau thì thành hai mẩu chữ
- * rời rạc. Trong hồ sơ bệnh án - nơi mỗi giá trị chỉ có nghĩa khi biết nó là gì - khác
- * biệt này không nhỏ.
- *
- * Giá trị rỗng hiện dấu gạch, không để trống: ô trống không phân biệt được với "chưa
- * tải xong".
- */
 export function DescriptionList({
   items,
   columns = 2,

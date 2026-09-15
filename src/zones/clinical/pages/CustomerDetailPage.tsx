@@ -29,17 +29,6 @@ import {
 import { GENDER_LABEL_VI } from '@/utils/display';
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/format';
 
-/**
- * Hồ sơ một khách hàng - sáu khối theo sơ đồ FR-03-04 của SRS:
- * Thông tin → Thú cưng → Lịch hẹn → Lịch sử khám → Hóa đơn → Lịch sử mua hàng.
- *
- * "Hóa đơn" là lịch sử giao dịch **khám** (mỗi hóa đơn = một lần khám đã lập hóa đơn);
- * "Lịch sử mua hàng" là bán lẻ tại quầy (hoá đơn POS, có từ P8). Hai tab tách riêng vì
- * hai loại giao dịch trả lời hai câu hỏi khác nhau — xem `CustomersService.findPurchases`.
- *
- * Khối thống kê đầu trang cộng **cả hai loại**: "Đã chi tiêu" là tiền khách thực trả cho
- * cả khám lẫn mua hàng.
- */
 type Tab = 'info' | 'pets' | 'appointments' | 'medical' | 'invoices' | 'purchases';
 
 export function CustomerDetailPage() {
@@ -81,6 +70,7 @@ export function CustomerDetailPage() {
           ← Danh sách khách hàng
         </Link>
         <div className="mt-2 flex flex-wrap items-center gap-3">
+          <img src={customer.avatarUrl} alt="" className="h-14 w-14 rounded-full object-cover" />
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">{customer.fullName}</h1>
           {customer.customerCode && (
             <span className="rounded bg-surface-muted px-2 py-0.5 font-mono text-sm text-muted">
@@ -126,7 +116,7 @@ export function CustomerDetailPage() {
         </TabButton>
       </div>
 
-      {/* Khối 1 - Thông tin khách hàng (FR-03-01) */}
+      {}
       {tab === 'info' && (
         <section className="grid grid-cols-1 gap-4 rounded border border-border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-3">
           <Field label="Mã khách hàng" value={customer.customerCode ?? '—'} />
@@ -171,7 +161,7 @@ function PetsTab({ customerId }: { customerId: string }) {
       header: 'Tên',
       render: (row) => (
         <Link to={`/staff/patients/${row.id}`} className="font-medium text-primary hover:underline">
-          {row.name}
+          <span className="flex items-center gap-2"><img src={row.avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />{row.name}</span>
         </Link>
       ),
     },
@@ -224,7 +214,6 @@ function PetsTab({ customerId }: { customerId: string }) {
   );
 }
 
-/** Khối 3 - Lịch hẹn (FR-03-04). Mới nhất trước, kèm trạng thái + bác sĩ + chi nhánh. */
 function AppointmentsTab({ customerId }: { customerId: string }) {
   const query = useQuery({
     queryKey: ['customer-appointments', customerId],
@@ -292,10 +281,6 @@ function AppointmentsTab({ customerId }: { customerId: string }) {
   );
 }
 
-/**
- * Khối 4 - Lịch sử khám. Liên kết sang phiếu khám qua trang lịch hẹn; sau Phase 4 chỗ
- * này trỏ thẳng vào `MedicalRecord`.
- */
 function MedicalHistoryTab({ customerId }: { customerId: string }) {
   const query = useQuery({
     queryKey: ['customer-medical-history', customerId],
@@ -319,7 +304,7 @@ function MedicalHistoryTab({ customerId }: { customerId: string }) {
     {
       key: 'diagnoses',
       header: 'Chẩn đoán',
-      // Từ P4, một hồ sơ có nhiều chẩn đoán; backend đã xếp chẩn đoán chính lên đầu.
+      
       render: (row) =>
         row.diagnoses.length > 0 ? (
           <div className="flex flex-wrap gap-1">
@@ -450,13 +435,6 @@ function TransactionsTab({ customerId }: { customerId: string }) {
   );
 }
 
-/**
- * Khối 6 - Lịch sử mua hàng: hoá đơn bán lẻ tại quầy (P8-T9).
- *
- * Không có cột thú cưng / bác sĩ như tab "Hóa đơn": bán lẻ không gắn với lần khám nào.
- * Thay vào đó là danh sách mặt hàng — thứ nhân viên cần khi khách hỏi "lần trước tôi mua
- * loại nào".
- */
 function PurchasesTab({ customerId }: { customerId: string }) {
   const query = useQuery({
     queryKey: ['customer-purchases', customerId],

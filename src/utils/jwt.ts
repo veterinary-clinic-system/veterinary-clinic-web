@@ -8,12 +8,6 @@ export interface AccessTokenPayload {
   exp: number;
 }
 
-/**
- * Client-side JWT decode with NO signature verification - only used to read role/phone
- * for UI routing/display. The real access-control boundary is the backend's
- * JwtAuthGuard/RolesGuard (prompt.md Section 7.2: "frontend guards are UX, never the
- * security boundary").
- */
 export function decodeAccessToken(token: string): AccessTokenPayload | null {
   try {
     const [, payload] = token.split('.');
