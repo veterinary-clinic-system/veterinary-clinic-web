@@ -75,7 +75,7 @@ export interface Breed {
 
 export interface Pet {
   id: string;
-  
+
   petCode: string;
   name: string;
   breedId: string;
@@ -101,7 +101,7 @@ export interface Item {
   itemType: ItemType;
   unitPrice: number;
   active: boolean;
-  
+
   code: string;
   categoryId: string | null;
   category?: Category | null;
@@ -158,7 +158,7 @@ export interface Medication {
   item: Item;
   unit: string;
   activeIngredient: string | null;
-  
+
   genericName: string | null;
   manufacturer: string | null;
   supplierId: string | null;
@@ -183,12 +183,13 @@ export interface Appointment {
   status: AppointmentStatus;
   priorityColor: PriorityColor | null;
   photoUrls: string[];
+  videoUrls: string[];
   commonSymptoms: CommonSymptom[];
   otherSymptoms: string | null;
   address: string | null;
   notes: string | null;
   parentAppointmentId: string | null;
-  
+
   cancelledByUserId: string | null;
   cancelledBy?: { id: string; fullName: string } | null;
   cancelledAt: string | null;
@@ -205,7 +206,7 @@ export interface SlotInfo {
   appointmentDetail?: {
     id: string;
     petName: string;
-    
+
     petBreedName: string | null;
     petSpeciesName: string | null;
     ownerName: string;
@@ -229,14 +230,13 @@ export interface MonthDaySummary {
   date: string;
   dayOfWeek: number;
   isBranchOpen: boolean;
-  
+
   appointmentCount: number;
   closedCount: number;
   topPriorityColor: PriorityColor | null;
 }
 
 export interface MonthOverview {
-  
   month: string;
   days: MonthDaySummary[];
 }
@@ -251,6 +251,13 @@ export interface PreScreeningResult {
   nlpConfidence: number | null;
   cvConfidence: number | null;
   overallConfidence: number;
+  modelVersion: string;
+  rawAiResponse: {
+    triage_result?: {
+      color_code?: string;
+      reasoning?: string;
+    };
+  } | null;
 }
 
 export interface Examination {
@@ -287,7 +294,7 @@ export interface MedicalRecord {
   treatments?: Treatment[];
   prescriptions?: Prescription[];
   labTestOrders?: LabTestOrder[];
-  
+
   vaccinations?: Vaccination[];
 }
 
@@ -319,7 +326,7 @@ export interface Prescription {
   id: string;
   medicalRecordId: string;
   notes: string | null;
-  
+
   status: PrescriptionStatus;
   dispensedByUserId: string | null;
   dispensedAt: string | null;
@@ -331,7 +338,7 @@ export interface PrescriptionItem {
   id: string;
   medicationId: string;
   medication?: Medication;
-  
+
   quantity: number;
   dosage: string;
   frequency: string | null;
@@ -345,7 +352,7 @@ export interface PrescriptionItemStock {
   medicationId: string;
   medicationName: string;
   requested: number;
-  
+
   availableQuantity: number;
   insufficientStock: boolean;
 }
@@ -360,16 +367,16 @@ export interface PrescriptionView {
 export interface LabTestOrder {
   id: string;
   medicalRecordId: string;
-  
+
   createdAt: string;
   testName: string;
   status: LabTestStatus;
   resultText: string | null;
   resultFileUrls: string[];
-  
+
   technicianUserId?: string | null;
   technician?: { id: string; fullName: string } | null;
-  
+
   resultDate?: string | null;
   results?: LaboratoryResult[];
 }
@@ -377,14 +384,14 @@ export interface LabTestOrder {
 export interface LaboratoryResult {
   id: string;
   labTestOrderId: string;
-  
+
   parameter: string;
   value: number;
   unit: string | null;
   referenceMin: number | null;
   referenceMax: number | null;
   flag: LabResultFlag;
-  
+
   flagOverridden: boolean;
   note: string | null;
 }
@@ -392,7 +399,7 @@ export interface LaboratoryResult {
 export interface LabTrendPoint {
   labTestOrderId: string;
   testName: string;
-  
+
   measuredAt: string;
   value: number;
   unit: string | null;
@@ -426,7 +433,7 @@ export interface Vaccine {
   itemId: string;
   item: Item;
   diseasePrevented: string;
-  
+
   speciesApplicable?: Species[];
   doseCount: number;
   intervalDays: number | null;
@@ -444,7 +451,7 @@ export interface Vaccination {
   petId: string;
   vaccineId: string;
   vaccine?: Vaccine;
-  
+
   medicalRecordId: string | null;
   doctorId: string;
   doctor?: DoctorSummary;
@@ -476,19 +483,19 @@ export interface VaccinationDueRow {
   doseNumber: number;
   vaccinatedAt: string;
   nextDueDate: string;
-  
+
   daysUntilDue: number;
   branchId: string;
 }
 
 export interface Invoice {
   id: string;
-  
+
   invoiceCode: string;
   source: InvoiceSource;
-  
+
   appointmentId: string | null;
-  
+
   customerId: string | null;
   customer?: { id: string; fullName: string; phone: string } | null;
   branchId: string;
@@ -496,11 +503,11 @@ export interface Invoice {
   subtotal: number;
   discountAmount: number;
   taxAmount: number;
-  
+
   totalAmount: number;
-  
+
   status: InvoiceStatus;
-  
+
   paymentMethod: PaymentMethod | null;
   paid: boolean;
   paidAt: string | null;
@@ -546,7 +553,7 @@ export interface CartItem {
   itemId: string;
   item: Item;
   quantity: number;
-  
+
   unitPrice: number;
 }
 
@@ -588,7 +595,7 @@ export interface CartView {
 
 export interface Customer {
   id: string;
-  
+
   customerCode: string | null;
   phone: string;
   fullName: string;
@@ -606,11 +613,11 @@ export interface Customer {
 export interface CustomerDetail extends Customer {
   appointmentCount: number;
   completedAppointmentCount: number;
-  
+
   invoiceCount: number;
-  
+
   purchaseCount: number;
-  
+
   totalPaid: number;
   totalUnpaid: number;
 }
@@ -621,7 +628,7 @@ export interface CustomerPurchase {
   purchasedAt: string;
   branchName: string | null;
   status: InvoiceStatus;
-  
+
   itemSummary: string;
   itemCount: number;
   totalAmount: number;
@@ -760,8 +767,9 @@ export interface QueueEntry {
   commonSymptoms: CommonSymptom[];
   reason: string | null;
   note: string | null;
-  
+
   photoUrls: string[];
+  videoUrls: string[];
   checkedInAt: string;
   calledAt: string | null;
   finishedAt: string | null;
@@ -878,9 +886,9 @@ export interface StockTakeItem {
   inventoryItemId: string;
   itemId: string;
   item: Item;
-  
+
   systemQuantity: number;
-  
+
   countedQuantity: number | null;
   note: string | null;
 }

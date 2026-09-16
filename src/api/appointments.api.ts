@@ -31,6 +31,7 @@ export interface CreateBookingPayload {
   commonSymptoms?: CommonSymptom[];
   otherSymptoms?: string;
   photoUrls?: string[];
+  videoUrls?: string[];
   address?: string;
 }
 

@@ -7,6 +7,7 @@ export type FileCategory =
   | 'employee-avatars'
   | 'catalog-images'
   | 'symptom-photos'
+  | 'symptom-videos'
   | 'exam-attachments'
   | 'lab-results';
 

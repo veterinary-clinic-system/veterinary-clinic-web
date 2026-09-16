@@ -37,8 +37,7 @@ export function AppointmentDetailPage() {
     retry: false,
   });
   const prescreeningNotFound =
-    prescreeningQuery.isError &&
-    (prescreeningQuery.error as AxiosError)?.response?.status === 404;
+    prescreeningQuery.isError && (prescreeningQuery.error as AxiosError)?.response?.status === 404;
 
   const rerunMutation = useMutation({
     mutationFn: () => prescreeningApi.rerun(id!),
@@ -111,7 +110,8 @@ export function AppointmentDetailPage() {
     );
   }
 
-  const canOverride = user?.role === Role.RECEPTIONIST || user?.role === Role.DOCTOR || user?.role === Role.ADMIN;
+  const canOverride =
+    user?.role === Role.RECEPTIONIST || user?.role === Role.DOCTOR || user?.role === Role.ADMIN;
   const canManageBilling = user?.role === Role.RECEPTIONIST || user?.role === Role.ADMIN;
 
   const isFinished =
@@ -134,8 +134,9 @@ export function AppointmentDetailPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           {}
-          {user?.role === Role.DOCTOR && !isFinished && (
-            isCheckedIn ? (
+          {user?.role === Role.DOCTOR &&
+            !isFinished &&
+            (isCheckedIn ? (
               <Link
                 to={`/staff/appointments/${appt.id}/exam`}
                 className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
@@ -149,8 +150,7 @@ export function AppointmentDetailPage() {
               >
                 Chờ lễ tân check-in
               </span>
-            )
-          )}
+            ))}
           {!isFinished && (
             <button
               type="button"
@@ -183,9 +183,7 @@ export function AppointmentDetailPage() {
       {appt.cancelledAt && (
         <section className="rounded border border-destructive/40 bg-destructive/5 p-4 text-sm">
           <p className="font-medium text-destructive">
-            {appt.status === AppointmentStatus.NO_SHOW
-              ? 'Khách không đến'
-              : 'Lịch hẹn đã bị hủy'}
+            {appt.status === AppointmentStatus.NO_SHOW ? 'Khách không đến' : 'Lịch hẹn đã bị hủy'}
           </p>
           <p className="mt-1">
             Bởi <strong>{appt.cancelledBy?.fullName ?? 'không rõ'}</strong> lúc{' '}
@@ -243,7 +241,9 @@ export function AppointmentDetailPage() {
             <dt className="text-muted">Mức độ ưu tiên</dt>
             <dd>
               {appt.priorityColor ? (
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${triageColorClasses(appt.priorityColor)}`}>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${triageColorClasses(appt.priorityColor)}`}
+                >
                   {PRIORITY_COLOR_LABEL_VI[appt.priorityColor]}
                 </span>
               ) : (
@@ -258,7 +258,9 @@ export function AppointmentDetailPage() {
         <section className="rounded border border-border bg-surface p-4">
           <h2 className="mb-3 font-medium">Triệu chứng</h2>
           <div className="mb-2 flex flex-wrap gap-1.5">
-            {appt.commonSymptoms.length === 0 && <span className="text-sm text-muted">Không có triệu chứng phổ biến được chọn.</span>}
+            {appt.commonSymptoms.length === 0 && (
+              <span className="text-sm text-muted">Không có triệu chứng phổ biến được chọn.</span>
+            )}
             {appt.commonSymptoms.map((s) => (
               <span key={s} className="rounded-full bg-surface-muted px-2 py-0.5 text-xs">
                 {COMMON_SYMPTOM_LABEL_VI[s]}
@@ -274,8 +276,25 @@ export function AppointmentDetailPage() {
             <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
               {appt.photoUrls.map((url) => (
                 <a key={url} href={url} target="_blank" rel="noreferrer">
-                  <img src={url} alt="Ảnh triệu chứng" className="h-20 w-full rounded object-cover" />
+                  <img
+                    src={url}
+                    alt="Ảnh triệu chứng"
+                    className="h-20 w-full rounded object-cover"
+                  />
                 </a>
+              ))}
+            </div>
+          )}
+          {appt.videoUrls.length > 0 && (
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {appt.videoUrls.map((url) => (
+                <video
+                  key={url}
+                  src={url}
+                  controls
+                  preload="metadata"
+                  className="w-full rounded border border-border"
+                />
               ))}
             </div>
           )}
@@ -324,12 +343,20 @@ export function AppointmentDetailPage() {
                 <p>{extractedSymptomKeywords.join(', ') || '—'}</p>
               </div>
               <div>
-                <p className="text-sm text-muted">Độ tin cậy (NLP / CV / Tổng thể)</p>
+                <p className="text-sm text-muted">Điểm dự đoán cao nhất / Tổng thể</p>
                 <p>
-                  {prescreeningQuery.data.nlpConfidence != null ? `${Math.round(prescreeningQuery.data.nlpConfidence * 100)}%` : '—'} /{' '}
-                  {prescreeningQuery.data.cvConfidence != null ? `${Math.round(prescreeningQuery.data.cvConfidence * 100)}%` : '—'} /{' '}
-                  {Math.round(prescreeningQuery.data.overallConfidence * 100)}%
+                  {prescreeningQuery.data.nlpConfidence != null
+                    ? `${Math.round(prescreeningQuery.data.nlpConfidence * 100)}%`
+                    : '—'}{' '}
+                  / {Math.round(prescreeningQuery.data.overallConfidence * 100)}%
                 </p>
+              </div>
+              <div className="sm:col-span-2">
+                <p className="text-sm text-muted">Lý do phân loại AI</p>
+                <p>{prescreeningQuery.data.rawAiResponse?.triage_result?.reasoning || '—'}</p>
+              </div>
+              <div className="sm:col-span-2">
+                <p className="text-xs text-muted">Mô hình: {prescreeningQuery.data.modelVersion}</p>
               </div>
             </div>
             <div>
@@ -417,7 +444,10 @@ export function AppointmentDetailPage() {
         {invoiceQuery.isLoading ? (
           <SkeletonText lines={1} />
         ) : invoiceQuery.data ? (
-          <Link to={`/staff/billing/${invoiceQuery.data.id}`} className="text-primary hover:underline">
+          <Link
+            to={`/staff/billing/${invoiceQuery.data.id}`}
+            className="text-primary hover:underline"
+          >
             Xem hóa đơn ({invoiceQuery.data.paid ? 'đã thanh toán' : 'chưa thanh toán'})
           </Link>
         ) : canManageBilling ? (
@@ -476,7 +506,9 @@ function EndAppointmentDialog({
             rows={3}
             value={reason}
             onChange={(e) => onReasonChange(e.target.value)}
-            placeholder={isCancel ? 'Ví dụ: khách báo bận, xin dời sang tuần sau' : 'Khách không đến'}
+            placeholder={
+              isCancel ? 'Ví dụ: khách báo bận, xin dời sang tuần sau' : 'Khách không đến'
+            }
             className="rounded border border-border bg-surface px-3 py-2 text-sm"
           />
         </label>

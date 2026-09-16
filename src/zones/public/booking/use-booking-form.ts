@@ -58,6 +58,7 @@ export function useBookingForm() {
   const [commonSymptoms, setCommonSymptoms] = useState<CommonSymptom[]>([]);
   const [otherSymptoms, setOtherSymptoms] = useState('');
   const [photoItems, setPhotoItems] = useState<PhotoItem[]>([]);
+  const [videoItems, setVideoItems] = useState<PhotoItem[]>([]);
 
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [bookingResult, setBookingResult] = useState<Appointment | null>(null);
@@ -187,6 +188,8 @@ export function useBookingForm() {
         if (!phone.trim() || !ownerFullName.trim()) return false;
         if (effectivePetMode === 'existing') return !!petId;
         return newPet.name.trim().length > 0 && !!newPet.breedId;
+      case 6:
+        return ![...photoItems, ...videoItems].some((item) => item.status === 'uploading');
       default:
         return true;
     }
@@ -225,7 +228,7 @@ export function useBookingForm() {
   }
 
   function onFilesSelected(e: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []);
+    const files = Array.from(e.target.files ?? []).slice(0, Math.max(0, 5 - photoItems.length));
     e.target.value = '';
     files.forEach((file) => {
       const id = crypto.randomUUID();
@@ -245,6 +248,31 @@ export function useBookingForm() {
 
   function removePhoto(id: string) {
     setPhotoItems((prev) => prev.filter((p) => p.id !== id));
+  }
+
+  function onVideosSelected(e: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []).slice(0, Math.max(0, 2 - videoItems.length));
+    e.target.value = '';
+    files.forEach((file) => {
+      const id = crypto.randomUUID();
+      setVideoItems((prev) => [...prev, { id, name: file.name, status: 'uploading' }]);
+      filesApi
+        .upload('symptom-videos', file)
+        .then((res) => {
+          setVideoItems((prev) =>
+            prev.map((item) => (item.id === id ? { ...item, status: 'done', url: res.url } : item)),
+          );
+        })
+        .catch(() => {
+          setVideoItems((prev) =>
+            prev.map((item) => (item.id === id ? { ...item, status: 'error' } : item)),
+          );
+        });
+    });
+  }
+
+  function removeVideo(id: string) {
+    setVideoItems((prev) => prev.filter((item) => item.id !== id));
   }
 
   function goToWeek(direction: 'prev' | 'next') {
@@ -302,6 +330,9 @@ export function useBookingForm() {
       commonSymptoms: commonSymptoms.length > 0 ? commonSymptoms : undefined,
       otherSymptoms: otherSymptoms.trim() || undefined,
       photoUrls: photoItems.filter((p) => p.status === 'done' && p.url).map((p) => p.url as string),
+      videoUrls: videoItems
+        .filter((item) => item.status === 'done' && item.url)
+        .map((item) => item.url as string),
     };
 
     if (effectivePetMode === 'existing') {
@@ -404,6 +435,9 @@ export function useBookingForm() {
       photos: photoItems,
       onFilesSelected,
       removePhoto,
+      videos: videoItems,
+      onVideosSelected,
+      removeVideo,
     },
     payment: {
       option: paymentOption,

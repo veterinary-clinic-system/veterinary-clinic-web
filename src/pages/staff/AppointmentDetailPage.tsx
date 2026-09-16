@@ -36,8 +36,7 @@ export function AppointmentDetailPage() {
     retry: false,
   });
   const prescreeningNotFound =
-    prescreeningQuery.isError &&
-    (prescreeningQuery.error as AxiosError)?.response?.status === 404;
+    prescreeningQuery.isError && (prescreeningQuery.error as AxiosError)?.response?.status === 404;
 
   const rerunMutation = useMutation({
     mutationFn: () => prescreeningApi.rerun(id!),
@@ -89,16 +88,15 @@ export function AppointmentDetailPage() {
     return <p className="text-destructive">Không tìm thấy lịch hẹn.</p>;
   }
 
-  const canOverride = user?.role === Role.RECEPTIONIST || user?.role === Role.DOCTOR || user?.role === Role.ADMIN;
+  const canOverride =
+    user?.role === Role.RECEPTIONIST || user?.role === Role.DOCTOR || user?.role === Role.ADMIN;
   const canManageBilling = user?.role === Role.RECEPTIONIST || user?.role === Role.ADMIN;
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">
-            Lịch hẹn — {appt.pet?.name ?? 'Thú cưng'}
-          </h1>
+          <h1 className="text-2xl font-semibold">Lịch hẹn — {appt.pet?.name ?? 'Thú cưng'}</h1>
           <p className="text-muted">{formatDateTime(appt.startAt)}</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -110,20 +108,21 @@ export function AppointmentDetailPage() {
               Bắt đầu khám
             </Link>
           )}
-          {appt.status !== AppointmentStatus.CANCELLED && appt.status !== AppointmentStatus.COMPLETED && (
-            <button
-              type="button"
-              disabled={cancelMutation.isPending}
-              onClick={() => {
-                if (window.confirm('Xác nhận hủy lịch hẹn này?')) {
-                  cancelMutation.mutate();
-                }
-              }}
-              className="rounded border border-destructive px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
-            >
-              Hủy lịch hẹn
-            </button>
-          )}
+          {appt.status !== AppointmentStatus.CANCELLED &&
+            appt.status !== AppointmentStatus.COMPLETED && (
+              <button
+                type="button"
+                disabled={cancelMutation.isPending}
+                onClick={() => {
+                  if (window.confirm('Xác nhận hủy lịch hẹn này?')) {
+                    cancelMutation.mutate();
+                  }
+                }}
+                className="rounded border border-destructive px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
+              >
+                Hủy lịch hẹn
+              </button>
+            )}
         </div>
       </div>
 
@@ -152,7 +151,9 @@ export function AppointmentDetailPage() {
             <dt className="text-muted">Mức độ ưu tiên</dt>
             <dd>
               {appt.priorityColor ? (
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${triageColorClasses(appt.priorityColor)}`}>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${triageColorClasses(appt.priorityColor)}`}
+                >
                   {PRIORITY_COLOR_LABEL_VI[appt.priorityColor]}
                 </span>
               ) : (
@@ -167,7 +168,9 @@ export function AppointmentDetailPage() {
         <section className="rounded border border-border bg-surface p-4">
           <h2 className="mb-3 font-medium">Triệu chứng</h2>
           <div className="mb-2 flex flex-wrap gap-1.5">
-            {appt.commonSymptoms.length === 0 && <span className="text-sm text-muted">Không có triệu chứng phổ biến được chọn.</span>}
+            {appt.commonSymptoms.length === 0 && (
+              <span className="text-sm text-muted">Không có triệu chứng phổ biến được chọn.</span>
+            )}
             {appt.commonSymptoms.map((s) => (
               <span key={s} className="rounded-full bg-surface-muted px-2 py-0.5 text-xs">
                 {COMMON_SYMPTOM_LABEL_VI[s]}
@@ -182,7 +185,11 @@ export function AppointmentDetailPage() {
             <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
               {appt.photoUrls.map((url) => (
                 <a key={url} href={url} target="_blank" rel="noreferrer">
-                  <img src={url} alt="Ảnh triệu chứng" className="h-20 w-full rounded object-cover" />
+                  <img
+                    src={url}
+                    alt="Ảnh triệu chứng"
+                    className="h-20 w-full rounded object-cover"
+                  />
                 </a>
               ))}
             </div>
@@ -215,7 +222,9 @@ export function AppointmentDetailPage() {
                 <p className="text-sm text-muted">Nhóm bệnh nghi ngờ (AI)</p>
                 <p>
                   {prescreeningQuery.data.aiSuspectedDiseaseGroups.length > 0
-                    ? prescreeningQuery.data.aiSuspectedDiseaseGroups.map((g) => g.diseaseName).join(', ')
+                    ? prescreeningQuery.data.aiSuspectedDiseaseGroups
+                        .map((g) => g.diseaseName)
+                        .join(', ')
                     : '—'}
                 </p>
               </div>
@@ -232,12 +241,20 @@ export function AppointmentDetailPage() {
                 <p>{prescreeningQuery.data.extractedSymptomKeywords.join(', ') || '—'}</p>
               </div>
               <div>
-                <p className="text-sm text-muted">Độ tin cậy (NLP / CV / Tổng thể)</p>
+                <p className="text-sm text-muted">Điểm dự đoán cao nhất / Tổng thể</p>
                 <p>
-                  {prescreeningQuery.data.nlpConfidence != null ? `${Math.round(prescreeningQuery.data.nlpConfidence * 100)}%` : '—'} /{' '}
-                  {prescreeningQuery.data.cvConfidence != null ? `${Math.round(prescreeningQuery.data.cvConfidence * 100)}%` : '—'} /{' '}
-                  {Math.round(prescreeningQuery.data.overallConfidence * 100)}%
+                  {prescreeningQuery.data.nlpConfidence != null
+                    ? `${Math.round(prescreeningQuery.data.nlpConfidence * 100)}%`
+                    : '—'}{' '}
+                  / {Math.round(prescreeningQuery.data.overallConfidence * 100)}%
                 </p>
+              </div>
+              <div className="sm:col-span-2">
+                <p className="text-sm text-muted">Lý do phân loại AI</p>
+                <p>{prescreeningQuery.data.rawAiResponse?.triage_result?.reasoning || '—'}</p>
+              </div>
+              <div className="sm:col-span-2">
+                <p className="text-xs text-muted">Mô hình: {prescreeningQuery.data.modelVersion}</p>
               </div>
             </div>
             <div>
@@ -319,7 +336,10 @@ export function AppointmentDetailPage() {
         {invoiceQuery.isLoading ? (
           <p className="text-muted">Đang tải…</p>
         ) : invoiceQuery.data ? (
-          <Link to={`/staff/billing/${invoiceQuery.data.id}`} className="text-primary hover:underline">
+          <Link
+            to={`/staff/billing/${invoiceQuery.data.id}`}
+            className="text-primary hover:underline"
+          >
             Xem hóa đơn ({invoiceQuery.data.paid ? 'đã thanh toán' : 'chưa thanh toán'})
           </Link>
         ) : canManageBilling ? (

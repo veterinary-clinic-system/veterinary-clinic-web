@@ -4,9 +4,9 @@ import { CommonSymptom, PriorityColor, QueueEntry, QueueStatus } from '@/types/m
 export interface QueueListParams {
   branchId?: string;
   doctorId?: string;
-  
+
   date?: string;
-  
+
   status?: QueueStatus[];
 }
 
@@ -25,7 +25,7 @@ export interface WalkInPayload {
   petId?: string;
   newPet?: {
     name: string;
-    
+
     speciesId?: string;
     breedId: string;
     gender: string;
@@ -36,8 +36,9 @@ export interface WalkInPayload {
   commonSymptoms?: CommonSymptom[];
   reason?: string;
   note?: string;
-  
+
   photoUrls?: string[];
+  videoUrls?: string[];
 }
 
 export const queueApi = {
@@ -62,7 +63,7 @@ export const queueApi = {
       status?: QueueStatus;
       priorityColor?: PriorityColor;
       note?: string;
-      
+
       reason?: string;
     },
   ) => apiClient.patch<QueueEntry>(`/queue/${id}`, payload).then((r) => r.data),

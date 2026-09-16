@@ -5,9 +5,23 @@ import { doctorsApi } from '@/api/doctors.api';
 import { filesApi } from '@/api/files.api';
 import { petsApi, speciesApi } from '@/api/pets.api';
 import { queueApi, WalkInPayload } from '@/api/queue.api';
-import { Button, CheckboxGroup, Input, Modal, Select, Textarea, useToast } from '@/components/basic';
+import {
+  Button,
+  CheckboxGroup,
+  Input,
+  Modal,
+  Select,
+  Textarea,
+  useToast,
+} from '@/components/basic';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { CommonSymptom, COMMON_SYMPTOM_LABEL_VI, Gender, PriorityColor, PRIORITY_COLOR_LABEL_VI } from '@/types/models';
+import {
+  CommonSymptom,
+  COMMON_SYMPTOM_LABEL_VI,
+  Gender,
+  PriorityColor,
+  PRIORITY_COLOR_LABEL_VI,
+} from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';
 import { GENDER_LABEL_VI } from '@/utils/display';
 import { formatTime } from '@/utils/format';
@@ -26,6 +40,7 @@ interface WalkInFormState {
   commonSymptoms: CommonSymptom[];
   reason: string;
   photoUrls: string[];
+  videoUrls: string[];
 }
 
 const EMPTY_WALK_IN: WalkInFormState = {
@@ -42,6 +57,7 @@ const EMPTY_WALK_IN: WalkInFormState = {
   commonSymptoms: [],
   reason: '',
   photoUrls: [],
+  videoUrls: [],
 };
 
 export function WalkInModal({
@@ -99,6 +115,7 @@ export function WalkInModal({
         commonSymptoms: form.commonSymptoms.length > 0 ? form.commonSymptoms : undefined,
         reason: form.reason || undefined,
         photoUrls: form.photoUrls.length > 0 ? form.photoUrls : undefined,
+        videoUrls: form.videoUrls.length > 0 ? form.videoUrls : undefined,
       };
       if (form.petId) {
         payload.petId = form.petId;
@@ -114,7 +131,6 @@ export function WalkInModal({
       return queueApi.walkIn(payload);
     },
     onSuccess: (entry) => {
-
       const scheduled = entry.doctor && entry.appointment;
       toast.show(
         scheduled
@@ -155,7 +171,33 @@ export function WalkInModal({
       if (urls.length < files.length) {
         toast.show('Một số ảnh tải lên không thành công.', 'error');
       }
-      setForm((prev) => ({ ...prev, photoUrls: [...prev.photoUrls, ...urls].slice(0, 6) }));
+      setForm((prev) => ({ ...prev, photoUrls: [...prev.photoUrls, ...urls].slice(0, 5) }));
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function onVideosSelected(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []).slice(
+      0,
+      Math.max(0, 2 - form.videoUrls.length),
+    );
+    event.target.value = '';
+    if (files.length === 0) return;
+
+    setUploading(true);
+    try {
+      const uploaded = await Promise.all(
+        files.map((file) =>
+          filesApi
+            .upload('symptom-videos', file)
+            .then((res) => res.url)
+            .catch(() => null),
+        ),
+      );
+      const urls = uploaded.filter((url): url is string => !!url);
+      if (urls.length < files.length) toast.show('Một số video tải lên không thành công.', 'error');
+      setForm((prev) => ({ ...prev, videoUrls: [...prev.videoUrls, ...urls].slice(0, 2) }));
     } finally {
       setUploading(false);
     }
@@ -267,7 +309,7 @@ export function WalkInModal({
             }))}
           placeholder="— Chọn dịch vụ —"
           required
-          
+
           error={servicesQuery.isError ? 'Không tải được danh mục dịch vụ.' : undefined}
         />
 
@@ -319,7 +361,7 @@ export function WalkInModal({
 
         <div>
           <label className="mb-1 block text-sm font-medium text-foreground">
-            Hình ảnh đính kèm (tối đa 6)
+            Hình ảnh đính kèm (tối đa 5)
           </label>
           <input
             type="file"
@@ -334,7 +376,11 @@ export function WalkInModal({
             <div className="mt-2 flex flex-wrap gap-2">
               {form.photoUrls.map((url) => (
                 <div key={url} className="relative">
-                  <img src={url} alt="" className="h-16 w-16 rounded border border-border object-cover" />
+                  <img
+                    src={url}
+                    alt=""
+                    className="h-16 w-16 rounded border border-border object-cover"
+                  />
                   <button
                     type="button"
                     onClick={() =>
@@ -351,6 +397,51 @@ export function WalkInModal({
                 </div>
               ))}
             </div>
+          )}
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-foreground">
+            Video triệu chứng (tối đa 2 video, mỗi video 100 MB)
+          </label>
+          <input
+            type="file"
+            multiple
+            accept="video/mp4,video/webm,video/quicktime"
+            disabled={uploading || form.videoUrls.length >= 2}
+            onChange={onVideosSelected}
+            className="text-sm text-muted"
+          />
+          {form.videoUrls.length > 0 && (
+            <ul className="mt-2 space-y-1 text-sm">
+              {form.videoUrls.map((url, index) => (
+                <li
+                  key={url}
+                  className="flex items-center justify-between rounded bg-surface-muted px-3 py-2"
+                >
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Video {index + 1}
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        videoUrls: prev.videoUrls.filter((item) => item !== url),
+                      }))
+                    }
+                    className="text-destructive"
+                  >
+                    Xóa
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       </form>

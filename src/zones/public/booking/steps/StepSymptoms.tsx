@@ -44,23 +44,20 @@ export function StepSymptoms({ symptoms }: { symptoms: BookingForm['symptoms'] }
       </div>
 
       <div className="mt-4">
-        <label
-          htmlFor="anh-trieu-chung"
-          className="mb-1 block text-sm font-medium text-foreground"
-        >
-          Hình ảnh đính kèm (không bắt buộc)
+        <label htmlFor="anh-trieu-chung" className="mb-1 block text-sm font-medium text-foreground">
+          Hình ảnh đính kèm (không bắt buộc, tối đa 5 ảnh)
         </label>
         <input
           id="anh-trieu-chung"
           type="file"
           multiple
           accept="image/*"
+          disabled={symptoms.photos.length >= 5}
           onChange={symptoms.onFilesSelected}
           className="text-sm text-muted"
         />
 
         {symptoms.photos.length > 0 && (
-          
           <ul aria-live="polite" className="mt-2 space-y-1 text-sm">
             {symptoms.photos.map((item) => (
               <li
@@ -86,6 +83,60 @@ export function StepSymptoms({ symptoms }: { symptoms: BookingForm['symptoms'] }
                     type="button"
                     onClick={() => symptoms.removePhoto(item.id)}
                     aria-label={`Xóa ảnh ${item.name}`}
+                    className="text-muted underline"
+                  >
+                    Xóa
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="mt-4">
+        <label
+          htmlFor="video-trieu-chung"
+          className="mb-1 block text-sm font-medium text-foreground"
+        >
+          Video triệu chứng (không bắt buộc, tối đa 2 video, mỗi video 100 MB)
+        </label>
+        <input
+          id="video-trieu-chung"
+          type="file"
+          multiple
+          accept="video/mp4,video/webm,video/quicktime"
+          disabled={symptoms.videos.length >= 2}
+          onChange={symptoms.onVideosSelected}
+          className="text-sm text-muted"
+        />
+
+        {symptoms.videos.length > 0 && (
+          <ul aria-live="polite" className="mt-2 space-y-1 text-sm">
+            {symptoms.videos.map((item) => (
+              <li
+                key={item.id}
+                className="flex items-center justify-between gap-2 rounded-lg bg-surface-muted px-3 py-1.5"
+              >
+                <span className="truncate text-foreground">{item.name}</span>
+                <span className="flex items-center gap-2 whitespace-nowrap">
+                  <span
+                    className={
+                      item.status === 'done'
+                        ? 'text-primary'
+                        : item.status === 'error'
+                          ? 'text-destructive'
+                          : 'text-muted'
+                    }
+                  >
+                    {item.status === 'uploading' && 'Đang tải lên...'}
+                    {item.status === 'done' && '✓ Xong'}
+                    {item.status === 'error' && '⚠ Lỗi tải lên'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => symptoms.removeVideo(item.id)}
+                    aria-label={`Xóa video ${item.name}`}
                     className="text-muted underline"
                   >
                     Xóa

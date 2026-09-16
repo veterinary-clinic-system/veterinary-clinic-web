@@ -55,7 +55,9 @@ function buildTimeline(appointment: Appointment): TimelineEntry[] {
       title: status === AppointmentStatus.NO_SHOW ? 'Ghi nhận không đến' : 'Lịch hẹn đã huỷ',
       description: (
         <>
-          {appointment.cancelledBy?.fullName && <p>Thực hiện bởi: {appointment.cancelledBy.fullName}</p>}
+          {appointment.cancelledBy?.fullName && (
+            <p>Thực hiện bởi: {appointment.cancelledBy.fullName}</p>
+          )}
           {appointment.cancelReason && <p className="mt-1">Lý do: {appointment.cancelReason}</p>}
         </>
       ),
@@ -161,9 +163,7 @@ export function MyAppointmentDetailPage() {
           </Button>
         )}
         {rebookable && (
-          <Button
-            onClick={() => navigate('/booking', { state: { petId: appointment.petId } })}
-          >
+          <Button onClick={() => navigate('/booking', { state: { petId: appointment.petId } })}>
             <Icon name="calendar" className="h-4 w-4" />
             Đặt lịch mới cho bé này
           </Button>
@@ -251,7 +251,8 @@ export function MyAppointmentDetailPage() {
             <CardBody>
               {appointment.commonSymptoms.length === 0 &&
               !appointment.otherSymptoms &&
-              appointment.photoUrls.length === 0 ? (
+              appointment.photoUrls.length === 0 &&
+              appointment.videoUrls.length === 0 ? (
                 <p className="text-sm text-muted">Không có mô tả triệu chứng.</p>
               ) : (
                 <>
@@ -284,6 +285,19 @@ export function MyAppointmentDetailPage() {
                         </li>
                       ))}
                     </ul>
+                  )}
+                  {appointment.videoUrls.length > 0 && (
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      {appointment.videoUrls.map((url) => (
+                        <video
+                          key={url}
+                          src={url}
+                          controls
+                          preload="metadata"
+                          className="w-full rounded-lg border border-border"
+                        />
+                      ))}
+                    </div>
                   )}
                 </>
               )}

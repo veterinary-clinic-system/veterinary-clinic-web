@@ -167,7 +167,7 @@ export function BookingPage() {
   }
 
   function onFilesSelected(e: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []);
+    const files = Array.from(e.target.files ?? []).slice(0, Math.max(0, 5 - photoItems.length));
     e.target.value = '';
     files.forEach((file) => {
       const id = crypto.randomUUID();
@@ -732,8 +732,8 @@ export function BookingPage() {
             </div>
 
             <div className="mt-4">
-              <label className="mb-1 block text-sm font-medium text-foreground">Hình ảnh đính kèm (không bắt buộc)</label>
-              <input type="file" multiple accept="image/*" onChange={onFilesSelected} className="text-sm text-muted" />
+              <label className="mb-1 block text-sm font-medium text-foreground">Hình ảnh đính kèm (không bắt buộc, tối đa 5 ảnh)</label>
+              <input type="file" multiple accept="image/*" disabled={photoItems.length >= 5} onChange={onFilesSelected} className="text-sm text-muted" />
               {photoItems.length > 0 && (
                 <ul className="mt-2 space-y-1 text-sm">
                   {photoItems.map((item) => (
