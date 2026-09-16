@@ -297,8 +297,8 @@ function PrescriptionSection({ examinationId }: { examinationId: string }) {
             instructions: l.instructions || undefined,
           })),
       }),
-    onSuccess: (prescription) => {
-      setSaved((prev) => [...prev, prescription]);
+    onSuccess: (prescriptionView) => {
+      setSaved((prev) => [...prev, prescriptionView.prescription]);
       setLines([{ ...EMPTY_LINE }]);
       setNotes('');
     },

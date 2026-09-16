@@ -19,7 +19,7 @@ export function InvoiceDetailPage() {
   });
 
   const payMutation = useMutation({
-    mutationFn: () => billingApi.pay(id!, paymentMethod),
+    mutationFn: () => billingApi.pay(id!, { paymentMethod }),
     onSuccess: (updated) => queryClient.setQueryData(['invoice', id], updated),
   });
 
@@ -37,9 +37,11 @@ export function InvoiceDetailPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold">Hóa đơn #{invoice.id.slice(0, 8)}</h1>
-        <Link to={`/staff/appointments/${invoice.appointmentId}`} className="text-sm text-primary hover:underline">
-          Xem lịch hẹn liên quan
-        </Link>
+        {invoice.appointmentId && (
+          <Link to={`/staff/appointments/${invoice.appointmentId}`} className="text-sm text-primary hover:underline">
+            Xem lịch hẹn liên quan
+          </Link>
+        )}
       </div>
 
       <div className="overflow-x-auto rounded border border-border">

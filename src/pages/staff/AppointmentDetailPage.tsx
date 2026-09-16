@@ -56,7 +56,7 @@ export function AppointmentDetailPage() {
   });
 
   const cancelMutation = useMutation({
-    mutationFn: () => appointmentsApi.cancel(id!),
+    mutationFn: () => appointmentsApi.cancel(id!, 'Nhân viên hủy lịch hẹn'),
     onSuccess: (updated) => queryClient.setQueryData(['appointment', id], updated),
   });
 

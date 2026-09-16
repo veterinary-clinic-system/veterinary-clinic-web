@@ -114,7 +114,7 @@ export function BillingListPage() {
                     {inv.id.slice(0, 8)}
                   </Link>
                 </td>
-                <td className="px-3 py-2 font-mono text-xs text-muted">{inv.appointmentId.slice(0, 8)}</td>
+                <td className="px-3 py-2 font-mono text-xs text-muted">{inv.appointmentId?.slice(0, 8) ?? '—'}</td>
                 <td className="px-3 py-2">{inv.items?.length ?? 0}</td>
                 <td className="px-3 py-2">{inv.paymentMethod ? PAYMENT_METHOD_LABEL_VI[inv.paymentMethod] : '—'}</td>
                 <td className="px-3 py-2">

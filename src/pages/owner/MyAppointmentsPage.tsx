@@ -13,7 +13,7 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
   const queryClient = useQueryClient();
 
   const cancelMutation = useMutation({
-    mutationFn: () => appointmentsApi.cancel(appointment.id),
+    mutationFn: () => appointmentsApi.cancel(appointment.id, 'Khách hàng yêu cầu hủy lịch'),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['appointments', 'mine'] });
     },

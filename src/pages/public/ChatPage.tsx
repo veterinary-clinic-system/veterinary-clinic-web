@@ -50,14 +50,14 @@ export function ChatPage() {
       { message: trimmed, history },
       {
         onSuccess: (response) => {
-          setSessionId(response.session_id);
+          setSessionId(response.sessionId);
           setMessages((prev) => [
             ...prev,
             {
               id: crypto.randomUUID(),
               role: 'assistant',
               content: response.reply,
-              suggestBooking: response.suggest_booking,
+              suggestBooking: response.suggestBooking,
             },
           ]);
         },
