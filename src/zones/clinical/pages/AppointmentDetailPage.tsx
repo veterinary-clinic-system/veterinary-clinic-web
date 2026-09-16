@@ -121,6 +121,7 @@ export function AppointmentDetailPage() {
   const isCheckedIn =
     appt.status === AppointmentStatus.CHECKED_IN || appt.status === AppointmentStatus.IN_PROGRESS;
   const suspectedDiseaseGroups = prescreeningQuery.data?.aiSuspectedDiseaseGroups ?? [];
+  const aiDiseasePredictions = prescreeningQuery.data?.rawAiResponse?.diseases ?? [];
   const extractedSymptomKeywords = prescreeningQuery.data?.extractedSymptomKeywords ?? [];
 
   return (
@@ -324,11 +325,26 @@ export function AppointmentDetailPage() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <p className="text-sm text-muted">Nhóm bệnh nghi ngờ (AI)</p>
-                <p>
-                  {suspectedDiseaseGroups.length > 0
-                    ? suspectedDiseaseGroups.map((g) => g.diseaseName).join(', ')
-                    : '—'}
-                </p>
+                {aiDiseasePredictions.length > 0 ? (
+                  <ul className="space-y-1">
+                    {aiDiseasePredictions.map((prediction) => (
+                      <li key={prediction.disease} className="flex justify-between gap-3">
+                        <span>{prediction.disease_name?.trim() || prediction.disease}</span>
+                        <span className="font-medium text-primary">
+                          {formatPredictionRate(
+                            prediction.prevalence_rate ?? prediction.revalence_rate,
+                          )}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>
+                    {suspectedDiseaseGroups.length > 0
+                      ? suspectedDiseaseGroups.map((g) => g.diseaseName).join(', ')
+                      : '—'}
+                  </p>
+                )}
               </div>
               <div>
                 <p className="text-sm text-muted">Mức độ ưu tiên (AI)</p>
@@ -465,6 +481,12 @@ export function AppointmentDetailPage() {
       </section>
     </div>
   );
+}
+
+function formatPredictionRate(rate: number | undefined): string {
+  if (rate == null || !Number.isFinite(rate)) return '—';
+  const percentage = rate <= 1 ? rate * 100 : rate;
+  return `${Math.round(percentage * 10) / 10}%`;
 }
 
 function EndAppointmentDialog({

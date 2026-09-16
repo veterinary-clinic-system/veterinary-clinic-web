@@ -253,6 +253,12 @@ export interface PreScreeningResult {
   overallConfidence: number;
   modelVersion: string;
   rawAiResponse: {
+    diseases?: Array<{
+      disease: string;
+      disease_name?: string | null;
+      prevalence_rate?: number;
+      revalence_rate?: number;
+    }>;
     triage_result?: {
       color_code?: string;
       reasoning?: string;
