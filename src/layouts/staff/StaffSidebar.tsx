@@ -1,4 +1,5 @@
-import { Link, NavLink } from 'react-router-dom';
+import { useId, useState } from 'react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Icon, Tooltip, cn } from '@/components/basic';
 import { Role } from '@/types/enums';
 import { NavGroup, navGroupsFor } from './nav-model';
@@ -7,11 +8,16 @@ export interface StaffSidebarProps {
   role: Role | undefined;
   collapsed: boolean;
   onToggleCollapse: () => void;
-  
   onNavigate?: () => void;
-  
   bare?: boolean;
 }
+
+const normalize = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd');
 
 export function StaffSidebar({
   role,
@@ -20,62 +26,87 @@ export function StaffSidebar({
   onNavigate,
   bare = false,
 }: StaffSidebarProps) {
-  const groups = navGroupsFor(role);
+  const [search, setSearch] = useState('');
+  const query = normalize(search.trim());
+  const groups = navGroupsFor(role)
+    .map((group) => ({
+      ...group,
+      items: group.items.filter(
+        (item) => !query || normalize(`${group.label ?? ''} ${item.label}`).includes(query),
+      ),
+    }))
+    .filter((group) => group.items.length > 0);
 
   return (
-    <div className="flex h-full flex-col bg-surface">
-      {!bare && (
-        <div
-          className={cn(
-            'flex h-16 shrink-0 items-center gap-2 border-b border-border px-3',
-            collapsed && 'justify-center px-2',
-          )}
-        >
-          <Link
-            to="/staff"
-            onClick={onNavigate}
-            className="flex min-w-0 items-center gap-2.5 rounded-lg"
-            aria-label="Về trang tổng quan"
-          >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Icon name="stethoscope" className="h-5 w-5" />
+    <div className="staff-sidebar flex h-full flex-col">
+      <Link
+        to="/staff"
+        onClick={onNavigate}
+        className={cn(
+          'flex min-h-20 shrink-0 items-center gap-3 px-5 py-4',
+          collapsed && 'justify-center px-2',
+        )}
+        aria-label="VetCare — Tổng quan quản lý"
+      >
+        <span className="staff-brand-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl">
+          <Icon name="stethoscope" className="h-6 w-6" />
+        </span>
+        {!collapsed && (
+          <span>
+            <span className="block text-xl font-bold tracking-tight">
+              VetCare<span className="text-emerald-300">.</span>
             </span>
-            {!collapsed && (
-              <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold leading-tight text-foreground">
-                  Phòng khám thú y
-                </span>
-                <span className="block text-xs leading-tight text-muted">Khu vực nhân viên</span>
-              </span>
-            )}
-          </Link>
+            <span className="block text-base text-slate-300">Không gian quản lý</span>
+          </span>
+        )}
+      </Link>
+      {!collapsed && (
+        <div className="px-4 pb-4 pt-2">
+          <label className="staff-nav-search flex items-center gap-2 rounded-xl px-3">
+            <Icon name="search" className="h-5 w-5 shrink-0" />
+            <input
+              type="search"
+              aria-label="Tìm chức năng"
+              placeholder="Tìm chức năng..."
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="min-h-11 w-full min-w-0 bg-transparent text-base text-white outline-none placeholder:text-slate-300"
+            />
+          </label>
         </div>
       )}
-
-      <nav aria-label="Điều hướng chính" className="flex-1 overflow-y-auto px-2 py-3">
-        {groups.map((group, index) => (
+      <nav aria-label="Điều hướng chính" className="flex-1 overflow-y-auto px-3 pb-4">
+        {groups.map((group) => (
           <NavGroupSection
-            key={group.label ?? `group-${index}`}
+            key={group.label ?? 'overview'}
             group={group}
             collapsed={collapsed}
+            searching={Boolean(query) && !collapsed}
             onNavigate={onNavigate}
           />
         ))}
+        {groups.length === 0 && (
+          <p className="px-3 py-6 text-base text-slate-300">
+            Không tìm thấy chức năng. Thử từ khóa khác.
+          </p>
+        )}
       </nav>
-
       {!bare && (
-        <div className="shrink-0 border-t border-border p-2">
+        <div className="shrink-0 border-t border-white/10 p-3">
           <button
             type="button"
-            onClick={onToggleCollapse}
+            onClick={() => {
+              setSearch('');
+              onToggleCollapse();
+            }}
             aria-label={collapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng'}
             className={cn(
-              'flex min-h-touch w-full items-center gap-2.5 rounded-lg px-3 text-sm text-muted transition-colors hover:bg-surface-muted hover:text-foreground',
+              'flex min-h-touch w-full items-center gap-3 rounded-xl px-3 text-base text-slate-300 transition-colors hover:bg-white/10 hover:text-white',
               collapsed && 'justify-center px-0',
             )}
           >
-            <Icon name="sidebar" className="h-4 w-4" />
-            {!collapsed && 'Thu gọn'}
+            <Icon name="sidebar" className="h-5 w-5" />
+            {!collapsed && 'Thu gọn menu'}
           </button>
         </div>
       )}
@@ -86,28 +117,60 @@ export function StaffSidebar({
 function NavGroupSection({
   group,
   collapsed,
+  searching,
   onNavigate,
 }: {
   group: NavGroup;
   collapsed: boolean;
+  searching: boolean;
   onNavigate?: () => void;
 }) {
+  const { pathname } = useLocation();
+  const id = useId();
+  const active = group.items.some((item) =>
+    item.end ? pathname === item.to : pathname === item.to || pathname.startsWith(`${item.to}/`),
+  );
+  const [fold, setFold] = useState<{ path: string; closed: boolean } | null>(null);
+  const open =
+    collapsed || searching || !group.label || (fold?.path === pathname ? !fold.closed : active);
+
   return (
-    <div className="mb-4 last:mb-0">
+    <section className="mb-2 last:mb-0">
       {group.label &&
         (collapsed ? (
-          
           <>
             <span className="sr-only">{group.label}</span>
-            <hr className="mx-2 mb-2 border-border" />
+            <hr className="mx-2 my-3 border-white/10" />
           </>
         ) : (
-          <h2 className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted/80">
-            {group.label}
-          </h2>
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls={id}
+            onClick={() => setFold({ path: pathname, closed: open })}
+            className={cn(
+              'staff-group-toggle flex min-h-12 w-full items-center gap-2 rounded-xl px-3 py-3 text-left text-base font-semibold',
+              active && 'staff-group-active',
+            )}
+          >
+            <Icon name={group.icon ?? 'catalog'} className="h-5 w-5 shrink-0" />
+            <span className="flex-1">{group.label}</span>
+            <Icon
+              name="chevron-down"
+              className={cn('h-4 w-4 shrink-0 transition-transform', open && 'rotate-180')}
+            />
+          </button>
         ))}
-
-      <ul className="flex flex-col gap-0.5">
+      <ul
+        id={id}
+        hidden={!open}
+        className={cn(
+          'space-y-1',
+          group.label &&
+            !collapsed &&
+            'staff-group-items mb-3 ml-5 mt-1 border-l border-white/15 pl-2',
+        )}
+      >
         {group.items.map((item) => {
           const link = (
             <NavLink
@@ -117,19 +180,16 @@ function NavGroupSection({
               aria-label={collapsed ? item.label : undefined}
               className={({ isActive }) =>
                 cn(
-                  'flex min-h-touch items-center gap-2.5 rounded-lg px-3 text-sm transition-colors',
+                  'staff-nav-link flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 text-base transition-colors',
                   collapsed && 'justify-center px-0',
-                  isActive
-                    ? 'bg-primary/10 font-semibold text-primary'
-                    : 'text-foreground hover:bg-surface-muted',
+                  isActive && 'is-active',
                 )
               }
             >
-              <Icon name={item.icon} className="h-[18px] w-[18px]" />
-              {!collapsed && <span className="truncate">{item.label}</span>}
+              <Icon name={item.icon} className="h-5 w-5 shrink-0" />
+              {!collapsed && <span>{item.label}</span>}
             </NavLink>
           );
-
           return (
             <li key={item.to}>
               {collapsed ? (
@@ -143,6 +203,6 @@ function NavGroupSection({
           );
         })}
       </ul>
-    </div>
+    </section>
   );
 }

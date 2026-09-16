@@ -12,6 +12,7 @@ import { appointmentsApi, CreateBookingPayload } from '@/api/appointments.api';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { CommonSymptom, Role, SlotStatus } from '@/types/enums';
 import { Appointment } from '@/types/models';
+import { SepayQrTicket } from '@/api/billing.api';
 import { getErrorMessage, isConflictError } from '@/utils/errors';
 import {
   BookingHandoffState,
@@ -34,7 +35,7 @@ export function useBookingForm() {
   const [step, setStep] = useState<Step>(1);
 
   const [branchId, setBranchId] = useState(handoff.branchId ?? '');
-  
+
   const [doctorId, setDoctorId] = useState<string | null>(handoff.doctorId ?? null);
   const [serviceId, setServiceId] = useState(handoff.serviceId ?? '');
 
@@ -51,7 +52,7 @@ export function useBookingForm() {
   const [petMode, setPetMode] = useState<PetMode>('existing');
   const [petId, setPetId] = useState(handoff.petId ?? '');
   const [newPet, setNewPet] = useState<NewPetFormState>(EMPTY_NEW_PET);
-  
+
   const [nameLocked, setNameLocked] = useState(true);
 
   const [commonSymptoms, setCommonSymptoms] = useState<CommonSymptom[]>([]);
@@ -60,6 +61,9 @@ export function useBookingForm() {
 
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [bookingResult, setBookingResult] = useState<Appointment | null>(null);
+  const [paymentOption, setPaymentOption] = useState<'AT_CLINIC' | 'SEPAY_QR'>('AT_CLINIC');
+  const [paymentTicket, setPaymentTicket] = useState<SepayQrTicket | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const { data: branches, isLoading: branchesLoading } = useQuery({
     queryKey: ['branches'],
@@ -118,7 +122,7 @@ export function useBookingForm() {
   const debouncedPhone = useDebouncedValue(phone.trim(), 500);
   useEffect(() => {
     if (isOwner) return;
-    
+
     if (debouncedPhone.replace(/\D/g, '').length < 10) {
       setLookupState('idle');
       return;
@@ -138,7 +142,6 @@ export function useBookingForm() {
         }
       })
       .catch(() => {
-        
         if (!cancelled) setLookupState('new');
       });
 
@@ -247,7 +250,7 @@ export function useBookingForm() {
   function goToWeek(direction: 'prev' | 'next') {
     const base = parseISO(weekOf);
     const next = direction === 'prev' ? subWeeks(base, 1) : addWeeks(base, 1);
-    
+
     setAutoAdvanced(true);
     setWeekOf(format(next, 'yyyy-MM-dd'));
   }
@@ -255,6 +258,33 @@ export function useBookingForm() {
   const bookingMutation = useMutation({
     mutationFn: (payload: CreateBookingPayload) => appointmentsApi.createPublicBooking(payload),
   });
+
+  const checkoutMutation = useMutation({
+    mutationFn: ({
+      appointmentId,
+      checkoutPhone,
+    }: {
+      appointmentId: string;
+      checkoutPhone: string;
+    }) => appointmentsApi.createPublicCheckout(appointmentId, checkoutPhone),
+    onSuccess: (ticket) => {
+      setPaymentTicket(ticket);
+      setPaymentError(null);
+    },
+    onError: (error) => {
+      setPaymentError(
+        getErrorMessage(
+          error,
+          'Lịch hẹn đã được tạo nhưng chưa thể mở thanh toán. Vui lòng thử lại.',
+        ),
+      );
+    },
+  });
+
+  function startCheckout(appointment: Appointment) {
+    setPaymentError(null);
+    checkoutMutation.mutate({ appointmentId: appointment.id, checkoutPhone: phone.trim() });
+  }
 
   function submit() {
     if (!selectedSlot || !branchId || doctorId === null || !serviceId) return;
@@ -265,7 +295,7 @@ export function useBookingForm() {
       ownerFullName: ownerFullName.trim(),
       email: email.trim() || undefined,
       branchId,
-      
+
       doctorId: doctorId || undefined,
       serviceId,
       startAt: selectedSlot.startAt,
@@ -288,11 +318,13 @@ export function useBookingForm() {
     }
 
     bookingMutation.mutate(payload, {
-      onSuccess: setBookingResult,
+      onSuccess: (appointment) => {
+        setBookingResult(appointment);
+        if (paymentOption === 'SEPAY_QR') startCheckout(appointment);
+      },
       onError: (error) => {
         setSubmitError(getErrorMessage(error, 'Đặt lịch thất bại. Vui lòng thử lại.'));
         if (isConflictError(error)) {
-          
           void queryClient.invalidateQueries({ queryKey: calendarQueryKey });
           setSelectedSlot(null);
           setStep(4);
@@ -307,7 +339,13 @@ export function useBookingForm() {
     setStep,
     canProceed,
 
-    branch: { id: branchId, list: branches, isLoading: branchesLoading, selected: selectedBranch, select: selectBranch },
+    branch: {
+      id: branchId,
+      list: branches,
+      isLoading: branchesLoading,
+      selected: selectedBranch,
+      select: selectBranch,
+    },
     service: {
       id: serviceId,
       list: services,
@@ -316,7 +354,13 @@ export function useBookingForm() {
       select: selectService,
       duration: serviceDuration,
     },
-    doctor: { id: doctorId, list: doctors, isLoading: doctorsLoading, selected: selectedDoctor, select: selectDoctor },
+    doctor: {
+      id: doctorId,
+      list: doctors,
+      isLoading: doctorsLoading,
+      selected: selectedDoctor,
+      select: selectDoctor,
+    },
     schedule: {
       days: calendarDays,
       isLoading: calendarLoading,
@@ -361,7 +405,20 @@ export function useBookingForm() {
       onFilesSelected,
       removePhoto,
     },
-    result: { booking: bookingResult, submitError, submit, isSubmitting: bookingMutation.isPending },
+    payment: {
+      option: paymentOption,
+      setOption: setPaymentOption,
+      ticket: paymentTicket,
+      error: paymentError,
+      isStarting: checkoutMutation.isPending,
+      retry: () => bookingResult && startCheckout(bookingResult),
+    },
+    result: {
+      booking: bookingResult,
+      submitError,
+      submit,
+      isSubmitting: bookingMutation.isPending,
+    },
   };
 }
 

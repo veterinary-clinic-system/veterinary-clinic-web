@@ -22,10 +22,12 @@ export function useHomeReveal() {
       { threshold: 0.08 },
     );
     const observeSections = () => {
-      root.querySelectorAll('section:not(.pet-hero):not(.pet-reveal)').forEach((section) => {
-        section.classList.add('pet-reveal');
-        observer.observe(section);
-      });
+      root
+        .querySelectorAll('section:not(.pet-hero):not(.garden-hero):not(.pet-reveal)')
+        .forEach((section) => {
+          section.classList.add('pet-reveal');
+          observer.observe(section);
+        });
     };
     observeSections();
     const mutation = new MutationObserver(observeSections);

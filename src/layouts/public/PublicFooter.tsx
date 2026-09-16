@@ -14,7 +14,7 @@ const CLINIC_LINKS = [
 
 export function PublicFooter() {
   return (
-    <footer className="border-t border-border bg-surface">
+    <footer className="pet-footer border-t border-border bg-surface">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <p className="flex items-center gap-2 font-semibold text-foreground">

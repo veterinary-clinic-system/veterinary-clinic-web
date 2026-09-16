@@ -4,7 +4,7 @@ import { formatDate } from '@/utils/format';
 
 const WIDTH = 640;
 const HEIGHT = 220;
-const PADDING = { top: 16, right: 16, bottom: 32, left: 56 };
+const PADDING = { top: 24, right: 56, bottom: 40, left: 76 };
 
 const PLOT_WIDTH = WIDTH - PADDING.left - PADDING.right;
 const PLOT_HEIGHT = HEIGHT - PADDING.top - PADDING.bottom;
@@ -29,7 +29,7 @@ export function LabTrendChart({
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         preserveAspectRatio="xMidYMid meet"
-        className="h-auto w-full min-w-[480px]"
+        className="h-auto w-full min-w-[640px]"
         role="img"
         aria-label={`Biểu đồ xu hướng, ${points.length} lần đo`}
       >

@@ -1,0 +1,1717 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap');
+
+/* Scoped to the owner's world. No staff workspace selectors. */
+.garden-experience {
+  --color-primary: 31 73 46;
+  --color-primary-soft: 231 241 219;
+  --color-foreground: 28 55 35;
+  --color-muted-foreground: 91 111 91;
+  --color-surface-muted: 242 248 235;
+  --color-border: 214 225 207;
+  --garden-orange: #df681e;
+  --garden-serif: 'Lora', Georgia, serif;
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  background: #eff8e9;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+.garden-experience > main,
+.garden-experience > footer {
+  position: relative;
+  z-index: 1;
+}
+.garden-experience > main {
+  min-width: 0;
+}
+.garden-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 35%, #fcfff3aa, transparent 60%),
+    linear-gradient(140deg, #edf9e9, #f5f5df 65%, #dfeedd);
+}
+.garden-light {
+  position: absolute;
+  width: 65vw;
+  height: 65vw;
+  border-radius: 50%;
+  filter: blur(65px);
+  opacity: 0.65;
+}
+.garden-light-sun {
+  background: #fff4c2;
+  top: -45vw;
+  left: 15%;
+  animation: garden-light-drift 24s ease-in-out infinite alternate;
+}
+.garden-light-mint {
+  width: 45vw;
+  height: 45vw;
+  background: #b9d9b4;
+  bottom: -30vw;
+  right: -10%;
+  animation: garden-light-drift 19s ease-in-out infinite alternate-reverse;
+}
+.garden-webgl {
+  position: absolute;
+  inset: 0;
+  opacity: 0.78;
+}
+.garden-webgl canvas {
+  display: block;
+}
+.garden-contour {
+  position: absolute;
+  width: 65vw;
+  height: 80vh;
+  border: 1px solid #9ebf8e24;
+  border-radius: 50%;
+  transform: rotate(-30deg);
+}
+.garden-contour-one {
+  left: -44vw;
+  top: 0;
+  box-shadow:
+    0 0 0 42px #b2cda911,
+    0 0 0 84px #b2cda90a;
+}
+.garden-contour-two {
+  right: -46vw;
+  bottom: 0;
+  transform: rotate(40deg);
+  box-shadow: 0 0 0 55px #b2cda911;
+}
+.garden-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.2;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%235b6b46' opacity='.2' filter='url(%23n)' d='M0 0h180v180H0z'/%3E%3C/svg%3E");
+}
+.garden-experience .max-w-6xl {
+  max-width: 1280px;
+}
+.garden-experience :where(h1, h2) {
+  font-family: var(--garden-serif);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+}
+.garden-experience h2 {
+  font-size: clamp(28px, 3vw, 43px);
+  line-height: 1.22;
+}
+.garden-experience p {
+  line-height: 1.8;
+}
+.garden-experience .pet-header {
+  margin: 16px 24px 0;
+  top: 12px;
+  border: 1px solid #ffffffaa;
+  border-radius: 22px;
+  background: #f8fff1d9;
+  box-shadow:
+    0 8px 36px #31522b06,
+    inset 0 1px white;
+  backdrop-filter: blur(20px);
+  animation: garden-fade-in 0.7s both;
+}
+.garden-experience .pet-header > nav {
+  max-width: 1500px;
+  height: 74px;
+  padding-inline: 24px;
+  gap: 24px;
+}
+.garden-experience .pet-header > nav > a:first-child {
+  margin-right: auto;
+}
+.garden-experience .pet-header > nav > a:first-child > span:first-child {
+  background: #23452b;
+  width: 42px;
+  height: 42px;
+  border-radius: 16px 16px 16px 5px;
+}
+.garden-experience .pet-header > nav > a:first-child > span:last-child {
+  font-size: 19px;
+  letter-spacing: -0.04em;
+}
+.garden-experience .pet-header > nav > div:nth-child(2) {
+  justify-content: center;
+}
+.garden-experience .pet-header nav a[href='/booking'] {
+  background: var(--garden-orange);
+  padding-inline: 22px;
+  color: white;
+  border: none;
+  box-shadow: 0 5px 15px #c45d1720;
+}
+.garden-experience .pet-header nav a[href='/booking']:hover {
+  background: #c55614;
+  transform: translateY(-2px);
+}
+.garden-experience .pet-header nav a[href='/login'] {
+  border: 0;
+}
+.garden-motion-control {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 0 15px;
+  border: 1px solid #dce5d5;
+  border-radius: 30px;
+  background: #fcfff7e8;
+  box-shadow: 0 4px 18px #28462a10;
+  font-size: 1rem;
+  color: #3a583b;
+  backdrop-filter: blur(12px);
+}
+.garden-motion-control > span:first-child {
+  font-size: 16px;
+}
+.garden-hero {
+  position: relative;
+  max-width: 1640px;
+  margin: auto;
+  padding: 46px 40px 0;
+}
+.garden-hero-heading {
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  max-width: 850px;
+  margin: auto;
+}
+.garden-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: #56734d;
+}
+.garden-eyebrow > span {
+  width: 6px;
+  height: 6px;
+  background: #d77839;
+  border-radius: 50%;
+  box-shadow: 0 0 0 5px #e28a4a13;
+}
+.garden-hero h1 {
+  margin-top: 20px;
+  font-size: clamp(60px, 6.8vw, 108px);
+  line-height: 1.04;
+  letter-spacing: -0.065em;
+  font-weight: 400;
+}
+.garden-hero h1 > span {
+  display: block;
+  animation: garden-word-reveal 1.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.garden-hero h1 > span:first-child {
+  animation-delay: 0.15s;
+}
+.garden-hero h1 > span:last-child {
+  animation-delay: 0.3s;
+}
+.garden-hero h1 em {
+  color: #b66b32;
+  font-weight: 400;
+}
+.garden-hero-description {
+  margin: 20px auto 0;
+  font-size: 1rem;
+  color: #65775c;
+  animation: garden-rise 0.9s 0.45s both;
+}
+.garden-hero-actions {
+  margin-top: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  animation: garden-rise 0.9s 0.55s both;
+}
+.garden-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  min-height: 50px;
+  padding: 0 26px;
+  border-radius: 99px;
+  color: white;
+  background: var(--garden-orange);
+  box-shadow: 0 8px 22px #d56e2430;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.garden-cta:hover {
+  background: #c85617;
+  box-shadow: 0 12px 25px #d56e2440;
+  transform: translateY(-3px);
+}
+.garden-quiet-link {
+  font-size: 1rem;
+  border-bottom: 1px solid #93a887;
+  padding-block: 8px;
+  display: inline-flex;
+  gap: 16px;
+}
+.garden-floating-card {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  width: clamp(145px, 13vw, 195px);
+  padding: 17px;
+  border-radius: 23px;
+  border: 1px solid #ffffffee;
+  background: #fbfff4d9;
+  backdrop-filter: blur(16px);
+  box-shadow:
+    0 18px 50px #2c54201a,
+    inset 0 1px white;
+  text-align: left;
+}
+.garden-health-card {
+  top: 105px;
+  left: 45px;
+  transform: rotate(-7deg);
+  animation: garden-card-left 1.2s 0.55s both;
+}
+.garden-health-card:hover {
+  transform: rotate(-3deg) translateY(-5px);
+}
+.garden-health-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 65px;
+  height: 65px;
+  border-radius: 22px;
+  background: #e2eccf;
+  margin-bottom: 23px;
+}
+.garden-health-icon > span {
+  position: absolute;
+  right: -7px;
+  bottom: -5px;
+  display: grid;
+  place-items: center;
+  background: #e99453;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 20px;
+  border: 3px solid #fffbed;
+}
+.garden-card-eyebrow {
+  font-size: 1rem;
+  letter-spacing: 0.13em;
+  color: #778968;
+}
+.garden-floating-card strong {
+  font-family: var(--garden-serif);
+  font-size: clamp(17px, 1.6vw, 23px);
+  line-height: 1.3;
+  letter-spacing: -0.035em;
+  font-weight: 400;
+  margin-top: 9px;
+}
+.garden-card-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 1rem;
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid #dce6ce;
+}
+.garden-card-link > span {
+  font-size: 18px;
+}
+.garden-moment-card {
+  width: clamp(140px, 12vw, 175px);
+  top: 100px;
+  right: 50px;
+  padding: 8px 8px 18px;
+  transform: rotate(7deg);
+  text-align: center;
+  align-items: center;
+  animation: garden-card-right 1.2s 0.7s both;
+}
+.garden-moment-card:hover {
+  transform: rotate(3deg) translateY(-5px);
+}
+.garden-moment-card > img {
+  aspect-ratio: 1/1.05;
+  object-fit: cover;
+  object-position: 25% center;
+  border-radius: 17px;
+  width: 100%;
+}
+.garden-play {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #23472c;
+  color: white;
+  margin-top: -19px;
+  z-index: 1;
+  border: 3px solid #fbfff4;
+  font-size: 19px;
+}
+.garden-moment-card > span:last-of-type {
+  font-family: var(--garden-serif);
+  line-height: 1.4;
+  font-size: 1rem;
+  margin-top: 10px;
+}
+.garden-moment-card > small {
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  margin-top: 12px;
+  color: #6d7e63;
+}
+.garden-photo-stage {
+  max-width: 1140px;
+  position: relative;
+  margin: 32px auto 0;
+  display: grid;
+  grid-template-columns: 1fr 1.22fr 1fr;
+  gap: 16px;
+  align-items: end;
+  padding-inline: 24px;
+}
+.garden-stage-orbit {
+  position: absolute;
+  inset: 30% -6% -10%;
+  border: 1px solid #97b77b45;
+  border-radius: 50%;
+  transform: rotate(-7deg);
+  z-index: -1;
+}
+.garden-photo {
+  position: relative;
+  min-width: 0;
+  height: clamp(230px, 24vw, 360px);
+  overflow: hidden;
+  border-radius: 170px 170px 30px 30px;
+  border: 6px solid #ffffffa6;
+  box-shadow: 0 18px 55px #25452514;
+  background: #aabc98;
+  animation: garden-photo-reveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.garden-photo > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.garden-photo > img[data-fallback='true'] {
+  object-fit: contain;
+  background: linear-gradient(#d7e6bf, #a3bd91);
+}
+.garden-photo-left {
+  transform: rotate(-5deg);
+  animation-delay: 0.8s;
+}
+.garden-photo-center {
+  height: clamp(275px, 28vw, 410px);
+  animation-delay: 0.65s;
+  background: #c4d5b2;
+}
+.garden-photo-right {
+  transform: rotate(5deg);
+  animation-delay: 0.95s;
+  background: #d8bd9c;
+}
+.garden-photo figcaption {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 65px 20px 25px;
+  color: white;
+  text-align: center;
+  background: linear-gradient(transparent, #16331be0);
+}
+.garden-photo figcaption strong {
+  display: block;
+  font-family: var(--garden-serif);
+  font-size: clamp(20px, 2.5vw, 32px);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+}
+.garden-photo figcaption span {
+  display: block;
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-top: 5px;
+  opacity: 0.9;
+}
+.garden-love-seal {
+  position: absolute;
+  z-index: 2;
+  right: 26%;
+  top: 37%;
+  width: 94px;
+  height: 94px;
+  background: #f6e3af;
+  color: #46602b;
+  border-radius: 50%;
+  border: 5px solid #f9f8e8;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  box-shadow: 0 5px 24px #314a261a;
+  transform: rotate(14deg);
+  animation: garden-scale-in 0.8s 1.2s both;
+}
+.garden-love-seal span {
+  font-size: 1rem;
+  letter-spacing: 0.11em;
+}
+.garden-hero-bottom {
+  max-width: 1140px;
+  margin: 32px auto 0;
+  padding-block: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 28px;
+  color: #546b47;
+  border-bottom: 1px solid #bed1af60;
+  font-size: 1rem;
+}
+.garden-hero-bottom > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.garden-hero-bottom > a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+.garden-hero-bottom > a > span {
+  font-size: 18px;
+}
+.garden-video-dialog {
+  margin: auto;
+  width: min(850px, calc(100% - 32px));
+  border: 1px solid #ffffff88;
+  border-radius: 25px;
+  padding: 12px;
+  color: #25432d;
+  background: #f6faef;
+  box-shadow: 0 30px 100px #0005;
+}
+.garden-video-dialog::backdrop {
+  background: #112719c9;
+  backdrop-filter: blur(12px);
+}
+.garden-video-dialog > div {
+  position: relative;
+}
+.garden-video-dialog button {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  font-size: 28px;
+  border-radius: 50%;
+  background: #ffffffee;
+  color: #25432d;
+}
+.garden-video-dialog video {
+  display: block;
+  width: 100%;
+  max-height: 75svh;
+  border-radius: 17px;
+}
+.garden-video-dialog p {
+  font-family: var(--garden-serif);
+  text-align: center;
+  padding: 15px 0 4px;
+}
+.garden-experience .pet-home > section:not(.garden-hero) {
+  padding-block: 65px;
+}
+.garden-discover {
+  scroll-margin-top: 110px;
+}
+.garden-discover-intro {
+  text-align: center;
+}
+.garden-discover h2 {
+  margin: 22px auto 35px;
+}
+.garden-discover h2 em {
+  color: #779166;
+  font-weight: 400;
+}
+.garden-discover-links {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.garden-discover-links > a {
+  position: relative;
+  padding: 30px;
+  background: #ffffff99;
+  border: 1px solid white;
+  border-radius: 25px;
+  box-shadow: 0 10px 30px #31522806;
+  transition:
+    transform 0.3s,
+    box-shadow 0.3s;
+}
+.garden-discover-links > a:nth-child(2) {
+  background: #e9eed7c9;
+}
+.garden-discover-links > a:nth-child(3) {
+  background: #f4e8d1bd;
+}
+.garden-discover-links > a:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 30px #31522812;
+}
+.garden-discover-links > a > span {
+  font-size: 1rem;
+  letter-spacing: 0.16em;
+  color: #68825d;
+}
+.garden-discover-links > a > strong {
+  display: block;
+  font-family: var(--garden-serif);
+  font-size: 23px;
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  margin-top: 28px;
+}
+.garden-discover-links p {
+  max-width: 220px;
+  font-size: 1rem;
+  margin-top: 10px;
+  color: #73836a;
+}
+.garden-discover-links b {
+  position: absolute;
+  bottom: 26px;
+  right: 25px;
+  font-size: 20px;
+  font-weight: 400;
+}
+.garden-experience .pet-section-header h2 {
+  font-family: var(--garden-serif);
+}
+.garden-experience .pet-section-header p {
+  max-width: 620px;
+  font-size: 1rem;
+}
+.garden-experience article {
+  border: 1px solid white;
+  border-radius: 25px;
+  background: #ffffffd9;
+  box-shadow: 0 8px 28px #34512b07;
+  transition:
+    box-shadow 0.3s,
+    transform 0.3s;
+}
+.garden-experience article:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 22px 44px #34512b12;
+}
+.garden-experience article h3 {
+  font-family: var(--garden-serif);
+  font-weight: 500;
+  font-size: 23px;
+  letter-spacing: -0.035em;
+}
+.garden-experience .pet-service-card {
+  padding: 16px;
+}
+.garden-experience .pet-service-card > img {
+  border-radius: 15px 15px 65px 15px;
+  height: 210px;
+}
+.garden-experience .pet-service-card > button {
+  border-radius: 14px;
+  min-height: 46px;
+}
+.garden-experience .pet-service-card > div {
+  padding: 8px 8px 0;
+}
+.garden-experience .pet-service-card dl {
+  margin-inline: 8px;
+}
+.garden-experience .pet-how-section {
+  background: #dde9cfaa;
+  border-color: #cadabbaa;
+  position: relative;
+}
+.garden-experience .pet-how-section > div {
+  padding-block: 12px;
+}
+.garden-experience .pet-step {
+  background: #f8fced99;
+  border: 1px solid #ffffffbf;
+  border-radius: 25px;
+  padding: 24px;
+}
+.garden-experience .pet-step > div > span:first-child {
+  border-radius: 50%;
+  background: #dceac9;
+  width: 46px;
+  height: 46px;
+}
+.garden-experience .pet-step > p:nth-child(2) {
+  font-family: var(--garden-serif);
+  font-size: 22px;
+  font-weight: 400;
+}
+.garden-experience .pet-step > p:last-child {
+  font-size: 1rem;
+}
+.garden-experience .pet-how-section a {
+  border-radius: 99px;
+}
+.garden-experience .pet-home > section.border-t.bg-surface {
+  background: #ffffff44;
+  border-color: white;
+}
+.garden-experience .pet-ai-panel {
+  position: relative;
+  padding: 48px;
+  border-radius: 35px;
+  background: linear-gradient(120deg, #edf3deee, #f9eddbdd);
+  border: 1px solid white;
+  box-shadow: 0 15px 45px #445b2a08;
+}
+.garden-experience .pet-ai-panel p {
+  font-size: 1rem;
+}
+.garden-experience .pet-ai-panel > div:last-child {
+  border-radius: 24px;
+  background: #ffffffe0;
+  border: 1px solid white;
+  box-shadow: 0 15px 30px #4d5e3310;
+  transform: rotate(2deg);
+}
+.garden-experience .pet-ai-panel li {
+  border-radius: 15px;
+  font-size: 1rem;
+}
+.garden-experience .pet-booking-banner {
+  margin: 10px 24px 35px;
+  border-radius: 36px;
+  background: #25462c;
+}
+.garden-experience .pet-booking-banner > div {
+  padding-inline: 40px;
+  padding-block: 20px;
+}
+.garden-experience .pet-booking-banner h2 {
+  color: #fbf9df;
+}
+.garden-experience .pet-booking-banner p {
+  color: #c7d8b4;
+  font-size: 1rem;
+}
+.garden-experience .pet-booking-banner a {
+  background: #e78640;
+  color: white;
+}
+
+/* Inner pages share the scenery; clinical information sits on calm surfaces. */
+.garden-experience .pet-page-heading {
+  overflow: hidden;
+  margin: 26px 24px 0;
+  background: linear-gradient(110deg, #fafff3e8, #e2edcdbf);
+  border: 1px solid white;
+  border-radius: 34px;
+  box-shadow: 0 20px 60px #325a2208;
+}
+.garden-experience .pet-page-heading::before,
+.garden-experience .pet-page-heading::after {
+  content: '';
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  right: -65px;
+  top: -115px;
+  border: 1px solid #7399532a;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 35px #73995308,
+    0 0 0 70px #73995306;
+  pointer-events: none;
+}
+.garden-experience .pet-page-heading::after {
+  width: 70px;
+  height: 110px;
+  top: 30%;
+  right: 9%;
+  background: linear-gradient(120deg, #d6e4bd, #8fac72);
+  border: 0;
+  border-radius: 90% 10% 90% 10%;
+  box-shadow: 10px 15px 20px #4d693817;
+  transform: rotate(35deg);
+}
+.garden-experience .pet-page-heading > div {
+  position: relative;
+  z-index: 1;
+  padding: 55px 40px 40px;
+}
+.garden-experience .pet-page-heading h1 {
+  font-family: var(--garden-serif);
+  font-size: clamp(36px, 4.2vw, 60px);
+  font-weight: 400;
+}
+.garden-experience .pet-page-heading p {
+  max-width: 680px;
+  font-size: 1rem;
+}
+.garden-experience .pet-page-heading .mt-6 {
+  background: #fff9;
+  border: 1px solid white;
+  border-radius: 20px;
+  padding: 18px;
+  margin-top: 28px;
+  backdrop-filter: blur(10px);
+}
+.garden-experience :where(input, select, textarea) {
+  background-color: #ffffffed;
+  border-color: #d9e2d0;
+}
+.garden-experience :where(input, select, textarea):focus {
+  box-shadow: 0 0 0 3px #b5cc9b40;
+}
+.garden-experience .care-eyebrow {
+  color: #71845c;
+  font-size: 1rem;
+}
+.garden-experience .doctor-editorial-card {
+  background: #ffffffd9;
+  padding: 28px;
+}
+.garden-experience .doctor-editorial-card > div:first-child {
+  border-radius: 24px;
+  background: #e7eddb;
+  box-shadow: 0 5px 15px #4056320c;
+}
+.garden-experience .doctor-profile-expanded {
+  background: #f2f6e9;
+  border-radius: 18px;
+}
+.garden-experience .doctor-profile-details summary {
+  min-height: 50px;
+}
+.garden-experience .garden-branch-card {
+  padding: 30px;
+  border-top: 4px solid #cbdcb8;
+}
+.garden-experience .garden-branch-card:nth-child(2n) {
+  border-top-color: #eac9aa;
+}
+.garden-experience .garden-branch-card > button {
+  border-radius: 99px;
+}
+.garden-experience .booking-experience {
+  padding-top: 55px;
+}
+.garden-experience .booking-intro {
+  margin-bottom: 42px;
+}
+.garden-experience .booking-intro h1 {
+  font-family: var(--garden-serif);
+  font-size: clamp(34px, 4vw, 55px);
+  font-weight: 400;
+}
+.garden-experience .booking-intro h1 span {
+  color: #899d71;
+}
+.garden-experience .booking-intro p {
+  font-size: 1rem;
+}
+.garden-experience .booking-form-panel {
+  border: 1px solid white;
+  border-radius: 28px;
+  box-shadow: 0 20px 70px #2948220b;
+}
+.garden-experience .booking-step-caption {
+  background: #f8fbed;
+  padding: 24px 28px;
+  color: #748460;
+}
+.garden-experience .booking-step-progress {
+  height: 4px;
+  background: #edf2e4;
+}
+.garden-experience .booking-step-progress span {
+  background: linear-gradient(90deg, #bfd39b, #d68b4b);
+}
+.garden-experience .booking-step-content {
+  padding: 30px;
+}
+.garden-experience .booking-step-content section > h2 {
+  font-size: 29px;
+}
+.garden-experience .booking-actions {
+  padding: 22px 30px;
+  background: #fbfcf5;
+}
+.garden-experience .booking-actions button {
+  border-radius: 99px;
+}
+.garden-experience .booking-summary {
+  border: 1px solid white;
+  border-radius: 26px;
+  box-shadow: 0 18px 45px #2e4c2410;
+  top: 110px;
+}
+.garden-experience .booking-summary-photo {
+  height: 185px;
+  border-radius: 24px 24px 65px 0;
+}
+.garden-experience .booking-summary h2 {
+  font-family: 'Inter', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+.garden-experience .booking-assurance {
+  background: #f0f5e6;
+  border-radius: 16px;
+}
+.garden-experience .owner-space {
+  background: transparent;
+}
+.garden-experience .owner-navigation {
+  margin-top: 26px;
+  max-width: 1210px;
+  padding: 18px 22px;
+  border: 1px solid #ffffffc7;
+  background: #fbfff5b0;
+  border-radius: 25px;
+  backdrop-filter: blur(14px);
+}
+.garden-experience .owner-brand {
+  font-family: var(--garden-serif);
+  font-weight: 400;
+  font-size: 20px;
+}
+.garden-experience .owner-brand small {
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  margin-top: 5px;
+}
+.garden-experience .owner-navigation nav {
+  background: #e9f0de;
+}
+.garden-experience .owner-navigation nav a.active {
+  background: #2c4e32;
+  box-shadow: 0 4px 12px #31592d18;
+}
+.garden-experience .owner-welcome {
+  min-height: 315px;
+  border: 1px solid white;
+  background: linear-gradient(115deg, #fbfdeb, #dbe9c7);
+  border-radius: 30px;
+  box-shadow: 0 15px 45px #3f582508;
+}
+.garden-experience .owner-welcome h2 {
+  font-family: var(--garden-serif);
+  font-size: clamp(33px, 3.6vw, 47px);
+  font-weight: 400;
+}
+.garden-experience .owner-welcome > div {
+  padding: 38px;
+}
+.garden-experience .owner-welcome img {
+  object-fit: cover;
+  mask-image: linear-gradient(to right, transparent, black 15%);
+  max-height: 360px;
+}
+.garden-experience .owner-overview {
+  margin-top: 24px;
+}
+.garden-experience .owner-overview > div,
+.garden-experience .owner-overview > a {
+  border: 1px solid white;
+  border-radius: 23px;
+  background: #ffffffc9;
+  box-shadow: 0 8px 28px #3b592006;
+  padding: 27px;
+}
+.garden-experience .owner-overview > a {
+  background: #f5e4c4db;
+}
+.garden-experience .owner-overview small {
+  font-size: 1rem;
+}
+.garden-experience .owner-overview strong {
+  font-family: var(--garden-serif);
+  font-size: 34px;
+  font-weight: 400;
+}
+.garden-experience .owner-pet-card {
+  border-top: 4px solid #b5cea0;
+  border-radius: 26px;
+}
+.garden-experience .owner-pet-card > a:first-child img {
+  border-radius: 23px;
+  width: 80px;
+  height: 80px;
+}
+.garden-experience .owner-appointment-heading {
+  background: linear-gradient(110deg, #fcfff3ed, #e2edcdbd);
+  border: 1px solid white;
+  border-radius: 27px;
+  padding: 34px;
+}
+.garden-experience .owner-appointment-heading h1 {
+  font-size: clamp(30px, 3.5vw, 44px);
+}
+.garden-experience .owner-care-note {
+  margin-top: 20px;
+  padding-bottom: 45px;
+}
+.garden-experience .owner-space [role='tablist'] {
+  background: #f9fdf2e6;
+  border-radius: 16px;
+  padding: 8px;
+  border: 1px solid white;
+}
+.garden-experience .owner-space [role='tab'] {
+  border-radius: 12px;
+}
+.garden-experience .owner-space [role='tab'][aria-selected='true'] {
+  background: #e3edd5;
+}
+.garden-experience .pet-auth {
+  padding-top: 65px;
+  padding-bottom: 70px;
+  gap: 0 45px;
+}
+.garden-experience .pet-auth-story {
+  border-radius: 180px 180px 35px 35px;
+  border: 7px solid #ffffffe0;
+  box-shadow: 0 20px 60px #24461f14;
+  transform: rotate(-3deg);
+}
+.garden-experience .pet-auth-story h2 {
+  font-size: 34px;
+  color: white;
+}
+.garden-experience .pet-auth-form {
+  background: #ffffffeb;
+  border: 1px solid white;
+  border-radius: 30px;
+  padding: 40px;
+  box-shadow: 0 20px 60px #2647220b;
+}
+.garden-experience .pet-auth-form h1 {
+  font-size: 35px;
+  font-family: var(--garden-serif);
+}
+.garden-experience .pet-auth-form p {
+  font-size: 1rem;
+}
+.garden-experience .pet-auth-form button[type='submit'] {
+  border-radius: 99px;
+}
+.garden-experience .pet-chat {
+  max-width: 920px;
+  padding-block: 55px;
+}
+.garden-experience .pet-chat > h1 {
+  font-size: clamp(32px, 4vw, 50px);
+  text-align: center;
+}
+.garden-experience .pet-chat > p:first-of-type {
+  text-align: center;
+  font-size: 1rem;
+  margin-top: 15px;
+}
+.garden-experience .pet-chat [role='log'] {
+  padding: 28px;
+  border: 1px solid white;
+  background: #fffffff0;
+  border-radius: 28px;
+  box-shadow: 0 18px 55px #284b1d0b;
+}
+.garden-experience .pet-chat [role='log'] .rounded-xl {
+  border-radius: 20px 20px 20px 5px;
+}
+.garden-experience .pet-chat form {
+  padding: 12px;
+  background: white;
+  border-radius: 99px;
+  border: 1px solid #dce5d1;
+  box-shadow: 0 10px 25px #2d472209;
+}
+.garden-experience .pet-chat form input {
+  background: transparent;
+}
+.garden-experience .pet-chat form button {
+  border-radius: 99px;
+  padding-inline: 24px;
+}
+.garden-experience .pet-chat ul {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.garden-experience .pet-chat ul button {
+  height: 100%;
+  font-size: 1rem;
+  border-radius: 17px;
+  background: #ffffffc9;
+  border-color: white;
+  padding: 16px;
+}
+.garden-experience .pet-footer {
+  background: #e2ecd8d6;
+  border-color: #cddfc0;
+  backdrop-filter: blur(12px);
+}
+.garden-experience .pet-footer > div:first-child {
+  padding-top: 60px;
+  padding-bottom: 48px;
+}
+.garden-experience .pet-footer h2 {
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.garden-experience .pet-footer p,
+.garden-experience .pet-footer a,
+.garden-experience .pet-footer dl {
+  font-size: 1rem;
+}
+.garden-experience .pet-footer > div:last-child {
+  padding-bottom: 65px;
+  font-size: 1rem;
+}
+.garden-experience .pet-reveal {
+  transform: translateY(32px);
+  transition:
+    opacity 0.8s,
+    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.garden-experience .pet-reveal.pet-visible {
+  transform: none;
+}
+.garden-experience [id] {
+  scroll-margin-top: 115px;
+}
+.garden-experience[data-motion='paused'] *,
+.garden-experience[data-motion='paused'] *::before,
+.garden-experience[data-motion='paused'] *::after {
+  animation-play-state: paused !important;
+}
+.garden-experience[data-motion='paused'] .garden-hero h1 > span,
+.garden-experience[data-motion='paused'] .garden-hero-description,
+.garden-experience[data-motion='paused'] .garden-hero-actions,
+.garden-experience[data-motion='paused'] .garden-floating-card,
+.garden-experience[data-motion='paused'] .garden-photo,
+.garden-experience[data-motion='paused'] .garden-love-seal,
+.garden-experience[data-motion='paused'] .pet-header {
+  animation: none !important;
+}
+.garden-experience[data-motion='paused'] .pet-reveal {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+@keyframes garden-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes garden-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes garden-word-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(45px) rotate(-2deg);
+    filter: blur(9px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+@keyframes garden-photo-reveal {
+  from {
+    opacity: 0;
+    translate: 0 70px;
+    rotate: -3deg;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    rotate: 0deg;
+  }
+}
+@keyframes garden-card-left {
+  from {
+    opacity: 0;
+    translate: -40px 15px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes garden-card-right {
+  from {
+    opacity: 0;
+    translate: 40px 15px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes garden-scale-in {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@keyframes garden-light-drift {
+  from {
+    transform: translate(-4%, 0) scale(1);
+  }
+  to {
+    transform: translate(12%, 10%) scale(1.12);
+  }
+}
+/* Responsive composition: keep useful controls in normal document flow. */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .garden-experience .pet-header > nav {
+    padding-inline: 15px;
+    gap: 12px;
+  }
+  .garden-experience .pet-header > nav > div:nth-child(2) {
+    gap: 12px;
+  }
+  .garden-experience .pet-header nav a {
+    font-size: 1rem;
+  }
+  .garden-experience .pet-header nav a[href='/booking'] {
+    padding-inline: 14px;
+  }
+  .garden-health-card {
+    left: 25px;
+  }
+  .garden-moment-card {
+    right: 25px;
+  }
+  .garden-hero h1 {
+    font-size: 7vw;
+  }
+}
+@media (max-width: 1023px) {
+  .garden-experience .pet-header {
+    margin: 12px 16px 0;
+    border-radius: 19px;
+    top: 8px;
+  }
+  .garden-experience .pet-header > nav {
+    height: 66px;
+    padding-inline: 16px;
+  }
+  .garden-hero {
+    padding: 35px 24px 0;
+  }
+  .garden-hero h1 {
+    font-size: clamp(52px, 7.4vw, 76px);
+  }
+  .garden-floating-card {
+    width: 130px;
+  }
+  .garden-health-card {
+    left: 24px;
+    top: 145px;
+    padding: 14px;
+  }
+  .garden-health-icon {
+    width: 45px;
+    height: 45px;
+    margin-bottom: 15px;
+  }
+  .garden-floating-card strong {
+    font-size: 17px;
+  }
+  .garden-moment-card {
+    right: 24px;
+    top: 145px;
+    width: 120px;
+  }
+  .garden-moment-card > span:last-of-type {
+    font-size: 1rem;
+  }
+  .garden-card-link {
+    font-size: 1rem;
+    margin-top: 15px;
+  }
+  .garden-hero-description {
+    max-width: 390px;
+    font-size: 1rem;
+  }
+  .garden-hero-actions {
+    gap: 15px;
+  }
+  .garden-cta {
+    min-height: 46px;
+    padding-inline: 19px;
+    font-size: 1rem;
+    gap: 15px;
+  }
+  .garden-quiet-link {
+    font-size: 1rem;
+  }
+  .garden-photo-stage {
+    margin-top: 50px;
+    padding-inline: 8px;
+    gap: 10px;
+  }
+  .garden-hero-bottom {
+    gap: 18px;
+  }
+  .garden-hero-bottom > a {
+    display: none;
+  }
+  .garden-discover-links {
+    gap: 12px;
+  }
+  .garden-discover-links > a {
+    padding: 24px;
+  }
+  .garden-discover-links > a > strong {
+    font-size: 21px;
+  }
+  .garden-experience .owner-navigation {
+    margin-inline: 16px;
+  }
+}
+@media (max-width: 767px) {
+  .garden-experience .pet-header > nav {
+    height: 62px;
+    gap: 10px;
+    padding-inline: 12px;
+  }
+  .garden-experience .pet-header > nav > a:first-child > span:first-child {
+    width: 35px;
+    height: 35px;
+    border-radius: 12px 12px 12px 4px;
+  }
+  .garden-experience .pet-header nav a[href='/booking'] {
+    font-size: 1rem;
+    padding-inline: 15px;
+  }
+  .garden-hero {
+    padding: 33px 16px 0;
+  }
+  .garden-eyebrow {
+    font-size: 1rem;
+    gap: 8px;
+    letter-spacing: 0.12em;
+  }
+  .garden-hero h1 {
+    font-size: clamp(42px, 9.7vw, 72px);
+    line-height: 1.08;
+    margin-top: 18px;
+  }
+  .garden-hero-description {
+    font-size: 1rem;
+    max-width: 350px;
+    margin-top: 18px;
+  }
+  .garden-hero-actions {
+    margin-top: 20px;
+    gap: 20px;
+  }
+  .garden-floating-card {
+    position: relative;
+    display: inline-flex;
+    vertical-align: top;
+    width: calc(50% - 28px);
+    margin-top: 35px;
+    top: auto;
+    left: auto;
+    right: auto;
+  }
+  .garden-health-card {
+    margin-left: 16px;
+    min-height: 190px;
+    padding: 17px;
+    transform: rotate(-5deg);
+  }
+  .garden-moment-card {
+    margin-left: 24px;
+    transform: rotate(5deg);
+    padding: 7px 7px 12px;
+  }
+  .garden-moment-card > img {
+    height: 115px;
+    aspect-ratio: auto;
+    object-position: 25% 35%;
+  }
+  .garden-health-icon {
+    width: 43px;
+    height: 43px;
+    margin-bottom: 10px;
+  }
+  .garden-health-icon > svg {
+    width: 22px;
+  }
+  .garden-floating-card strong {
+    font-size: 19px;
+  }
+  .garden-card-link {
+    margin-top: 13px;
+    padding-top: 8px;
+    font-size: 1rem;
+  }
+  .garden-card-eyebrow {
+    font-size: 1rem;
+  }
+  .garden-moment-card > small {
+    margin-top: 8px;
+  }
+  .garden-photo-stage {
+    margin-top: 30px;
+    margin-inline: -8px;
+    gap: 5px;
+    padding-inline: 0;
+  }
+  .garden-photo {
+    height: 195px;
+    border-width: 3px;
+    border-radius: 90px 90px 20px 20px;
+  }
+  .garden-photo-center {
+    height: 240px;
+  }
+  .garden-photo figcaption {
+    padding: 45px 7px 15px;
+  }
+  .garden-photo figcaption strong {
+    font-size: 17px;
+  }
+  .garden-photo figcaption span {
+    display: none;
+  }
+  .garden-love-seal {
+    width: 60px;
+    height: 60px;
+    border-width: 3px;
+    right: 24%;
+    top: 35%;
+    gap: 3px;
+  }
+  .garden-love-seal > svg {
+    width: 20px;
+    height: 20px;
+  }
+  .garden-love-seal span {
+    font-size: 1rem;
+    letter-spacing: 0.03em;
+  }
+  .garden-hero-bottom {
+    justify-content: center;
+    gap: 12px;
+    margin-top: 22px;
+    font-size: 1rem;
+  }
+  .garden-hero-bottom > span {
+    gap: 5px;
+  }
+  .garden-hero-bottom svg {
+    width: 12px;
+    height: 12px;
+  }
+  .garden-experience .pet-home > section:not(.garden-hero) {
+    padding-block: 40px;
+  }
+  .garden-discover h2 {
+    font-size: 28px;
+    margin-top: 18px;
+  }
+  .garden-discover-links {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .garden-discover-links > a {
+    padding: 23px;
+  }
+  .garden-discover-links > a > strong {
+    margin-top: 13px;
+    font-size: 24px;
+  }
+  .garden-discover-links p {
+    max-width: 85%;
+  }
+  .garden-experience .pet-section-header {
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .garden-experience .pet-section-header h2 {
+    font-size: 30px;
+  }
+  .garden-experience article:hover {
+    transform: none;
+  }
+  .garden-experience .pet-ai-panel {
+    padding: 25px;
+    border-radius: 26px;
+  }
+  .garden-experience .pet-ai-panel > div:last-child {
+    transform: none;
+  }
+  .garden-experience .pet-booking-banner {
+    margin-inline: 16px;
+    border-radius: 26px;
+  }
+  .garden-experience .pet-booking-banner > div {
+    padding: 0 25px;
+  }
+  .garden-experience .pet-page-heading {
+    margin: 20px 16px 0;
+    border-radius: 25px;
+  }
+  .garden-experience .pet-page-heading > div {
+    padding: 32px 22px 25px;
+  }
+  .garden-experience .pet-page-heading h1 {
+    font-size: 36px;
+  }
+  .garden-experience .pet-page-heading p {
+    font-size: 1rem;
+  }
+  .garden-experience .pet-page-heading::after {
+    opacity: 0.35;
+    right: 4%;
+    width: 45px;
+    height: 80px;
+  }
+  .garden-experience .pet-page-heading .mt-6 {
+    padding: 14px;
+    margin-inline: -8px;
+  }
+  .garden-experience .pet-page-heading .mt-6 > * {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+  }
+  .garden-experience .booking-experience {
+    padding-top: 30px;
+  }
+  .garden-experience .booking-intro {
+    margin-bottom: 30px;
+  }
+  .garden-experience .booking-intro h1 {
+    font-size: 35px;
+  }
+  .garden-experience .booking-step-content {
+    padding: 23px 18px;
+  }
+  .garden-experience .booking-step-caption {
+    padding: 19px;
+  }
+  .garden-experience .booking-actions {
+    padding: 20px 18px;
+  }
+  .garden-experience .booking-step-content section > h2 {
+    font-size: 26px;
+  }
+  .garden-experience .owner-navigation {
+    margin: 20px 16px 0;
+    padding: 18px;
+    gap: 15px;
+  }
+  .garden-experience .owner-navigation nav {
+    gap: 1px;
+    justify-content: space-between;
+  }
+  .garden-experience .owner-navigation nav a {
+    padding-inline: 8px;
+    font-size: 1rem;
+  }
+  .garden-experience .owner-welcome > div {
+    padding: 27px;
+  }
+  .garden-experience .owner-welcome {
+    min-height: auto;
+  }
+  .garden-experience .owner-overview > div,
+  .garden-experience .owner-overview > a {
+    padding: 20px;
+  }
+  .garden-experience .owner-appointment-heading {
+    padding: 27px;
+  }
+  .garden-experience .owner-overview strong {
+    font-size: 29px;
+  }
+  .garden-experience .pet-auth {
+    padding-block: 35px;
+  }
+  .garden-experience .pet-auth-form {
+    padding: 28px;
+  }
+  .garden-experience .pet-auth-form h1 {
+    font-size: 30px;
+  }
+  .garden-experience .pet-chat {
+    padding-block: 35px;
+  }
+  .garden-experience .pet-chat [role='log'] {
+    padding: 18px;
+  }
+  .garden-experience .pet-chat ul {
+    grid-template-columns: 1fr;
+  }
+  .garden-experience .pet-chat form {
+    padding: 8px;
+  }
+  .garden-experience .pet-chat form input {
+    min-width: 0;
+  }
+  .garden-experience .pet-chat form button {
+    padding-inline: 17px;
+  }
+  .garden-motion-control {
+    right: 12px;
+    bottom: 12px;
+    font-size: 1rem;
+    min-height: 38px;
+    padding-inline: 12px;
+  }
+  .garden-webgl {
+    opacity: 0.48;
+  }
+}
+@media (max-width: 380px) {
+  .garden-hero-actions {
+    gap: 12px;
+  }
+  .garden-hero h1 {
+    font-size: 39px;
+  }
+  .garden-quiet-link {
+    font-size: 1rem;
+  }
+  .garden-photo {
+    height: 165px;
+  }
+  .garden-photo-center {
+    height: 210px;
+  }
+  .garden-photo figcaption strong {
+    font-size: 1rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .garden-experience *,
+  .garden-experience *::before,
+  .garden-experience *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  .garden-experience .pet-reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Profile detail surfaces preserve status colors and medical content. */
+.garden-experience .owner-space .rounded-xl.bg-surface {
+  border-radius: 24px;
+  border-color: #fff;
+  background-color: #fffffff0;
+  box-shadow: 0 12px 36px #304b2408;
+}
+.garden-experience .owner-space .bg-surface h2 {
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.garden-experience .garden-pet-profile-header {
+  position: relative;
+  background: linear-gradient(115deg, #fffef0, #e3edd6) !important;
+  padding: 32px;
+  border: 1px solid white;
+  border-radius: 28px;
+}
+.garden-experience .garden-pet-profile-header h1 {
+  font-size: 42px;
+  font-weight: 400;
+}
+.garden-experience .garden-pet-profile-header a[href='/booking'] {
+  border-radius: 99px;
+}
+.garden-experience .garden-pet-profile-header img {
+  border-radius: 25px;
+  border: 4px solid white;
+  box-shadow: 0 8px 24px #40552d16;
+}
+.garden-experience .owner-space > div:not(.owner-navigation):not(.owner-care-note),
+.garden-experience .pet-chat,
+.garden-experience .pet-page-heading,
+.garden-experience .booking-intro {
+  animation: garden-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.garden-experience[data-motion='paused'] .owner-space > div,
+.garden-experience[data-motion='paused'] .pet-chat,
+.garden-experience[data-motion='paused'] .pet-page-heading,
+.garden-experience[data-motion='paused'] .booking-intro {
+  animation: none !important;
+}
+@media (max-width: 767px) {
+  .garden-experience .garden-pet-profile-header {
+    padding: 24px;
+  }
+  .garden-experience .garden-pet-profile-header h1 {
+    font-size: 34px;
+  }
+}

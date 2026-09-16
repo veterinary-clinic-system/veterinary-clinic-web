@@ -9,6 +9,7 @@ import { getErrorMessage } from '@/utils/errors';
 import { flattenCategories } from '@/utils/categories';
 import { formatCurrency } from '@/utils/format';
 import { ImageUpload } from '@/components/ImageUpload';
+import { DEFAULT_ITEM_IMAGE } from '@/utils/cloudinary-assets';
 
 const LIMIT = 20;
 
@@ -28,7 +29,7 @@ interface ProductFormState {
 }
 
 const EMPTY_FORM: ProductFormState = {
-  imageUrl: '/images/default-item.svg',
+  imageUrl: DEFAULT_ITEM_IMAGE,
   itemName: '',
   describe: '',
   unitPrice: '',

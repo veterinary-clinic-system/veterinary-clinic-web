@@ -8,7 +8,7 @@ export function BranchCard({ branch }: { branch: Branch }) {
   const hours = groupOpeningHours(branch.openingHours ?? []);
 
   return (
-    <article className="flex flex-col rounded-xl border border-border bg-surface p-5">
+    <article className="garden-branch-card flex flex-col rounded-xl border border-border bg-surface p-5">
       <h3 className="text-base font-semibold text-foreground">{branch.branchName}</h3>
       {branch.description && <p className="mt-1.5 text-sm text-muted">{branch.description}</p>}
 

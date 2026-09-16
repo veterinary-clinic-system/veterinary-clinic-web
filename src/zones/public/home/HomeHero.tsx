@@ -1,87 +1,152 @@
+﻿import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Icon, IconName } from '@/components/basic';
-import { PetIllustration } from './PetIllustration';
+import { Icon } from '@/components/basic';
+import { cloudinaryImage } from '@/utils/cloudinary-assets';
 
-const TRUST_POINTS: { icon: IconName; title: string; body: string }[] = [
+const MOMENTS = [
   {
-    icon: 'stethoscope',
-    title: 'Bác sĩ chuyên khoa',
-    body: 'Nội khoa, ngoại khoa, da liễu, tiêu hoá - mỗi ca được xếp đúng chuyên khoa.',
+    image: 'images/golden-retriever-walking-v1.png',
+    label: 'Một cái ôm.',
+    caption: 'Đủ để ngày trở nên dịu dàng.',
+    className: 'garden-photo-left',
   },
   {
-    icon: 'flask',
-    title: 'Xét nghiệm tại chỗ',
-    body: 'Máu, ký sinh trùng, nước tiểu - kết quả trả thẳng vào hồ sơ bệnh án.',
+    image: 'images/pets-photoreal-v1.png',
+    label: 'Một người bạn.',
+    caption: 'Cùng bạn đi qua những ngày thật đẹp.',
+    className: 'garden-photo-center',
   },
   {
-    icon: 'building',
-    title: 'Nhiều chi nhánh',
-    body: 'Hồ sơ thú cưng dùng chung giữa các chi nhánh, khám ở đâu cũng có lịch sử.',
-  },
-  {
-    icon: 'syringe',
-    title: 'Nhắc lịch tự động',
-    body: 'Mũi tiêm nhắc lại và lịch tái khám được hệ thống theo dõi thay bạn.',
+    image: 'images/british-shorthair-jumping-v1.png',
+    label: 'Cả một gia đình.',
+    caption: 'Và yêu thương luôn ở lại.',
+    className: 'garden-photo-right',
   },
 ];
 
 export function HomeHero() {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const video = useRef<HTMLVideoElement>(null);
   return (
-    <section className="pet-hero">
-      <div className="mx-auto max-w-6xl px-4 pt-12 sm:pt-16">
-        <div className="pet-hero-grid">
-          <div className="pet-hero-copy">
-            <p className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-              <Icon name="paw" className="h-4 w-4" />
-              VETAI HUB · Chăm sóc bằng cả trái tim
-            </p>
-
-            <h1 className="pet-hero-title">
-              Vì bé là <span>gia đình.</span>
-              <br />
-              Vì yêu thương
-              <br />
-              cần được chăm sóc.
-            </h1>
-
-            <p className="mt-6 max-w-lg text-base leading-relaxed text-muted sm:text-lg">
-              Từ cái vẫy đuôi đầu tiên đến những năm tháng bên nhau. Chúng tôi đồng hành cùng bạn
-              chăm sóc bé, với bác sĩ tận tâm và hồ sơ sức khỏe luôn trong tầm tay.
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                to="/booking"
-                className="pet-primary-button inline-flex min-h-touch items-center gap-3 px-6 font-semibold"
-              >
-                Đặt lịch cho bé <span aria-hidden="true">↗</span>
-              </Link>
-              <Link
-                to="/services"
-                className="pet-secondary-button inline-flex min-h-touch items-center px-6 font-semibold"
-              >
-                Xem bảng giá dịch vụ
-              </Link>
-            </div>
-            <p className="mt-5 flex items-center gap-2 text-xs text-muted">
-              <Icon name="paw" className="h-4 w-4 text-primary" /> Đặt lịch dễ dàng · Giá dịch vụ
-              minh bạch
-            </p>
-          </div>
-          <PetIllustration />
+    <section className="garden-hero" aria-labelledby="garden-title">
+      <div className="garden-hero-heading">
+        <p className="garden-eyebrow">
+          <span /> VETAI HUB · CHO NHỮNG NGƯỜI BẠN NHỎ
+        </p>
+        <h1 id="garden-title">
+          <span>Thế giới nhỏ.</span>
+          <span>
+            Yêu thương <em>lớn.</em>
+          </span>
+        </h1>
+        <p className="garden-hero-description">
+          Từ một cái vẫy đuôi đến cả một đời gắn bó.
+          <br />
+          Cùng bạn chăm sóc bé, bằng tất cả yêu thương.
+        </p>
+        <div className="garden-hero-actions">
+          <Link to="/booking" className="garden-cta">
+            Đặt lịch cho bé <Icon name="arrow-right" className="h-4 w-4" />
+          </Link>
+          <Link to="/services" className="garden-quiet-link">
+            Khám phá dịch vụ <span aria-hidden="true">↗</span>
+          </Link>
         </div>
-
-        {}
-        <ul className="pet-trust-strip mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {TRUST_POINTS.map((point) => (
-            <li key={point.title}>
-              <Icon name={point.icon} className="h-6 w-6 text-primary" />
-              <p className="mt-2.5 font-semibold text-foreground">{point.title}</p>
-              <p className="mt-1 text-sm text-muted">{point.body}</p>
-            </li>
-          ))}
-        </ul>
       </div>
+
+      <Link to="/my/pets" className="garden-floating-card garden-health-card">
+        <div className="garden-health-icon">
+          <Icon name="paw" className="h-7 w-7" />
+          <span aria-hidden="true">♡</span>
+        </div>
+        <span className="garden-card-eyebrow">GÓC NHỎ CỦA BÉ</span>
+        <strong>
+          Mỗi cột mốc.
+          <br />
+          Đều đáng lưu giữ.
+        </strong>
+        <span className="garden-card-link">
+          Hồ sơ sức khỏe <span aria-hidden="true">↗</span>
+        </span>
+      </Link>
+      <button
+        type="button"
+        className="garden-floating-card garden-moment-card"
+        onClick={() => {
+          dialog.current?.showModal();
+          void video.current?.play().catch(() => undefined);
+        }}
+      >
+        <img src={cloudinaryImage('images/pet-companion-poster.jpg')} alt="Mèo đang chơi đùa cùng chủ" />
+        <span className="garden-play" aria-hidden="true">
+          ▷
+        </span>
+        <span>
+          Hạnh phúc đôi khi
+          <br />
+          chỉ nhỏ như thế.
+        </span>
+        <small>XEM MỘT CHÚT YÊU THƯƠNG</small>
+      </button>
+
+      <div className="garden-photo-stage">
+        <div className="garden-stage-orbit" aria-hidden="true" />
+        {MOMENTS.map((moment) => (
+          <figure key={moment.image} className={`garden-photo ${moment.className}`}>
+            <img
+              src={cloudinaryImage(moment.image)}
+              alt={moment.label + ' ' + moment.caption}
+            />
+            <figcaption>
+              <strong>{moment.label}</strong>
+              <span>{moment.caption}</span>
+            </figcaption>
+          </figure>
+        ))}
+        <div className="garden-love-seal" aria-hidden="true">
+          <span>CHĂM SÓC TỪ TRÁI TIM</span>
+          <Icon name="paw" className="h-7 w-7" />
+          <span>VETAI · WITH LOVE</span>
+        </div>
+      </div>
+      <div className="garden-hero-bottom">
+        <span>
+          <Icon name="stethoscope" className="h-4 w-4" /> Bác sĩ tận tâm
+        </span>
+        <span>
+          <Icon name="calendar" className="h-4 w-4" /> Đặt lịch dễ dàng
+        </span>
+        <span>
+          <Icon name="paw" className="h-4 w-4" /> Đồng hành cùng bé
+        </span>
+        <a href="#garden-discover">
+          Còn nhiều điều để khám phá <span aria-hidden="true">↓</span>
+        </a>
+      </div>
+      <dialog
+        ref={dialog}
+        className="garden-video-dialog"
+        aria-label="Một khoảnh khắc cùng thú cưng"
+        onClose={() => video.current?.pause()}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) dialog.current?.close();
+        }}
+      >
+        <div>
+          <button type="button" onClick={() => dialog.current?.close()} aria-label="Đóng video">
+            ×
+          </button>
+          <video
+            ref={video}
+            src="/videos/pet-companion.mp4"
+            poster={cloudinaryImage('images/pet-companion-poster.jpg')}
+            controls
+            playsInline
+            preload="none"
+          />
+          <p>Hạnh phúc đôi khi chỉ nhỏ như thế. ♡</p>
+        </div>
+      </dialog>
     </section>
   );
 }

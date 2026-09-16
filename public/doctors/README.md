@@ -8,7 +8,8 @@ avatar chữ cái.
 
 1. Đặt ảnh chân dung vào thư mục này, ví dụ `bs-le-van-an.jpg` (nên là ảnh vuông,
    tối thiểu 400×400).
-2. Cập nhật `avatarUrl` của bác sĩ tương ứng thành `/doctors/bs-le-van-an.jpg` —
+2. Upload ảnh lên Cloudinary trong thư mục `vetcare/web/doctors` và cập nhật `avatarUrl`
+   bằng URL HTTPS do Cloudinary trả về —
    qua màn hình quản trị bác sĩ, hoặc sửa `doctorSeeds` trong
    `veterinary-clinic-backend/src/shared/database/seeds/run-seed.ts` rồi seed lại.
 

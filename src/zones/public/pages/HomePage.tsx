@@ -55,6 +55,37 @@ export function HomePage() {
     <div ref={homeRef} className="pet-home">
       <HomeHero />
 
+      <section id="garden-discover" className="garden-discover mx-auto max-w-6xl px-4">
+        <div className="garden-discover-intro">
+          <span className="garden-eyebrow">MỖI NGÀY BÊN NHAU, THÊM MỘT ĐIỀU TỐT ĐẸP</span>
+          <h2>
+            Yêu bé theo cách của bạn.
+            <br />
+            <em>Chăm sóc bé, để chúng tôi.</em>
+          </h2>
+        </div>
+        <div className="garden-discover-links">
+          <Link to="/services">
+            <span>01 / KHỎE MẠNH</span>
+            <strong>Chăm sóc toàn diện</strong>
+            <p>Tìm dịch vụ phù hợp với nhu cầu của bé.</p>
+            <b aria-hidden="true">↗</b>
+          </Link>
+          <Link to="/doctors">
+            <span>02 / AN TÂM</span>
+            <strong>Gặp người bạn của bé</strong>
+            <p>Tìm hiểu bác sĩ trước khi đặt lịch khám.</p>
+            <b aria-hidden="true">↗</b>
+          </Link>
+          <Link to="/chat">
+            <span>03 / ĐỒNG HÀNH</span>
+            <strong>Lắng nghe điều bạn lo</strong>
+            <p>Trò chuyện cùng trợ lý chăm sóc thú cưng.</p>
+            <b aria-hidden="true">↗</b>
+          </Link>
+        </div>
+      </section>
+
       {(servicesLoading || servicesError || featuredServices.length > 0) && (
         <section className="mx-auto max-w-6xl px-4 py-12">
           <SectionHeader

@@ -7,6 +7,9 @@ import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './components/basic/Toast';
 import './index.css';
 import './care-experience.css';
+import './owner-design.css';
+import './garden-experience.css';
+import './staff-design.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {

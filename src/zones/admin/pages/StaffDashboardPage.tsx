@@ -1,11 +1,9 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { branchesApi } from '@/api/branches.api';
 import { DashboardKpi, DashboardSeries, reportsApi } from '@/api/reports.api';
 import {
   Alert,
-  Icon,
   PageHeader,
   Select,
   Skeleton,
@@ -17,20 +15,21 @@ import { useAuth } from '@/context/AuthContext';
 import { Role } from '@/types/enums';
 import { formatTime } from '@/utils/format';
 import { DashboardChartCard } from '../dashboard/DashboardChartCard';
+import { WorkspaceModules } from '@/layouts/staff/WorkspaceModules';
 
 const LOWER_IS_BETTER = new Set(['lowStockProducts', 'lowStockMedicines', 'waitingPatients']);
 
 const CHART_GROUPS: { question: string; keys: string[] }[] = [
   {
-    question: 'Doanh thu đang đi theo hướng nào?',
+    question: 'Hiệu quả kinh doanh',
     keys: ['revenueByDay', 'revenueByMonth'],
   },
   {
-    question: 'Phòng khám phục vụ được bao nhiêu ca, và có thêm khách mới không?',
+    question: 'Hoạt động khám & khách hàng',
     keys: ['examsByDay', 'newCustomersByDay', 'newPetsByDay'],
   },
   {
-    question: 'Bán chạy nhất là gì - nên nhập thêm thứ nào?',
+    question: 'Sản phẩm & dịch vụ nổi bật',
     keys: ['topProducts', 'topMedicines', 'topServices'],
   },
 ];
@@ -71,9 +70,10 @@ export function StaffDashboardPage() {
   return (
     <div className="flex flex-col gap-stack">
       <PageHeader
-        title="Tổng quan"
+        className="staff-welcome"
+        title="Tổng quan phòng khám"
         description={
-          data ? `Số liệu cập nhật lúc ${formatTime(data.generatedAt)}` : 'Đang lấy số liệu điều hành...'
+          data ? `Theo dõi hoạt động và bắt đầu công việc. Cập nhật lúc ${formatTime(data.generatedAt)}.` : 'Theo dõi hoạt động và bắt đầu công việc trong ngày.'
         }
         actions={
           <Select
@@ -98,7 +98,8 @@ export function StaffDashboardPage() {
       )}
 
       <section aria-label="Chỉ số hôm nay">
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <h2 className="mb-4 text-xl font-semibold">Nhịp hoạt động hôm nay</h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {dashboardQuery.isLoading
             ? Array.from({ length: 8 }, (_, index) => (
                 <Skeleton key={index} className="h-[6.5rem] rounded-xl" />
@@ -106,6 +107,8 @@ export function StaffDashboardPage() {
             : (data?.kpis ?? []).map((kpi) => <KpiTile key={kpi.key} kpi={kpi} />)}
         </div>
       </section>
+
+      <WorkspaceModules />
 
       {grouped.map((group) => (
         <section key={group.question} aria-label={group.question}>
@@ -140,6 +143,7 @@ export function StaffDashboardPage() {
 function KpiTile({ kpi }: { kpi: DashboardKpi }) {
   return (
     <StatTile
+      className="staff-kpi"
       label={kpi.label}
       to={kpi.link}
       value={
@@ -168,18 +172,12 @@ function deltaLabel(kpi: DashboardKpi): string | undefined {
   return `${direction} ${Math.abs(percent)}% so với hôm qua${judgement}`;
 }
 
-const QUICK_LINKS = [
-  { to: '/staff/queue', label: 'Hàng chờ', desc: 'Tiếp nhận và gọi số' },
-  { to: '/staff/pos', label: 'Bán hàng tại quầy', desc: 'Lập hoá đơn bán lẻ' },
-  { to: '/staff/inventory', label: 'Tồn kho', desc: 'Tra cứu số lượng và lô hàng' },
-  { to: '/staff/billing', label: 'Hoá đơn', desc: 'Danh sách và thanh toán' },
-];
-
 function NoReportAccess() {
   return (
     <div className="flex flex-col gap-stack">
       <PageHeader
-        title="Tổng quan"
+        className="staff-welcome"
+        title="Sẵn sàng cho ngày làm việc"
         description="Bắt đầu ngày làm việc từ một trong các màn hình dưới đây."
       />
 
@@ -188,21 +186,7 @@ function NoReportAccess() {
         tới các màn hình bạn dùng hằng ngày.
       </Alert>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {QUICK_LINKS.map((link) => (
-          <Link
-            key={link.to}
-            to={link.to}
-            className="flex items-start justify-between gap-3 rounded-xl border border-border bg-surface p-card transition-colors hover:border-primary/40 hover:bg-primary-soft"
-          >
-            <span>
-              <span className="block font-medium text-foreground">{link.label}</span>
-              <span className="block text-sm text-muted">{link.desc}</span>
-            </span>
-            <Icon name="arrow-right" className="mt-0.5 h-4 w-4 text-muted" />
-          </Link>
-        ))}
-      </div>
+      <WorkspaceModules />
     </div>
   );
 }

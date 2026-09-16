@@ -28,7 +28,7 @@ export function StaffLayout() {
   const density = isClinicalPath(location.pathname, user?.role) ? 'compact' : 'comfortable';
 
   return (
-    <div data-density={density} className="flex min-h-screen bg-surface-muted">
+    <div data-density={density} className="staff-workspace flex min-h-screen bg-surface-muted">
       <a
         href="#noi-dung-chinh"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:font-medium focus:text-primary-foreground"
@@ -39,7 +39,7 @@ export function StaffLayout() {
       <aside
         className={cn(
           'sticky top-0 hidden h-screen shrink-0 border-r border-border transition-[width] lg:block',
-          collapsed ? 'w-[68px]' : 'w-60',
+          collapsed ? 'w-[76px]' : 'w-[304px]',
         )}
       >
         <StaffSidebar
@@ -69,7 +69,7 @@ export function StaffLayout() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <StaffTopbar onOpenMobileNav={() => setMobileNavOpen(true)} />
-        <main id="noi-dung-chinh" className="flex-1 px-4 py-5 sm:px-6 sm:py-6">
+        <main id="noi-dung-chinh" className="staff-main min-w-0 flex-1 px-4 py-6 sm:px-7 sm:py-8">
           <Outlet />
         </main>
       </div>

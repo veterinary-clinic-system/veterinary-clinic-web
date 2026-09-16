@@ -7,6 +7,7 @@ import { QueryErrorState } from '@/components/QueryErrorState';
 import { AppointmentStatus } from '@/types/enums';
 import { Appointment } from '@/types/models';
 import { PetCard } from '../components/PetCard';
+import { cloudinaryImage } from '@/utils/cloudinary-assets';
 
 const PAGE_SIZE = 12;
 
@@ -72,7 +73,7 @@ export function MyPetsPage() {
           </Link>
         </div>
         <img
-          src="/images/pets-photoreal-v1.png"
+          src={cloudinaryImage('images/pets-photoreal-v1.png')}
           alt="Chó và mèo đồng hành cùng chủ nuôi"
           width="1254"
           height="1254"

@@ -10,6 +10,7 @@ import {
 import { Badge, Button, Input, Modal, Select, Table, useToast } from '@/components/basic';
 import type { Column, SortOrder } from '@/components/basic';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { DEFAULT_STAFF_IMAGE } from '@/utils/cloudinary-assets';
 import {
   EMPLOYEE_STATUS_LABEL_VI,
   EmployeeStatus,
@@ -42,7 +43,7 @@ interface EmployeeFormState {
 }
 
 const EMPTY_FORM: EmployeeFormState = {
-  avatarUrl: '/images/default-staff.svg',
+  avatarUrl: DEFAULT_STAFF_IMAGE,
   fullName: '',
   phone: '',
   email: '',

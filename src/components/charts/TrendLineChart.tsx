@@ -3,7 +3,7 @@ import { buildScale, ChartPoint, compactNumber, formatValue, ValueFormat } from 
 
 const WIDTH = 640;
 const HEIGHT = 200;
-const PADDING = { top: 12, right: 16, bottom: 26, left: 52 };
+const PADDING = { top: 32, right: 48, bottom: 32, left: 76 };
 const PLOT_WIDTH = WIDTH - PADDING.left - PADDING.right;
 const PLOT_HEIGHT = HEIGHT - PADDING.top - PADDING.bottom;
 
@@ -46,10 +46,10 @@ export function TrendLineChart({
   const labelEvery = Math.max(1, Math.ceil(points.length / 6));
 
   return (
-    <div className="relative">
+    <div className="relative overflow-x-auto">
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-        className="w-full"
+        className="w-full min-w-[640px]"
         role="img"
         aria-labelledby={labelledBy}
         preserveAspectRatio="xMidYMid meet"

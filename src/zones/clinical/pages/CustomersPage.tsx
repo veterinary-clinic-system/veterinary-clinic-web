@@ -12,6 +12,7 @@ import type { Column, SortOrder } from '@/components/basic';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { Customer } from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';
+import { DEFAULT_USER_IMAGE } from '@/utils/cloudinary-assets';
 import { ImageUpload } from '@/components/ImageUpload';
 import { formatDate } from '@/utils/format';
 
@@ -32,7 +33,7 @@ interface CustomerFormState {
 }
 
 const EMPTY_FORM: CustomerFormState = {
-  avatarUrl: '/images/default-user.svg',
+  avatarUrl: DEFAULT_USER_IMAGE,
   phone: '',
   fullName: '',
   email: '',

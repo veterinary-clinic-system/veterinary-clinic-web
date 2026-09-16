@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { branchesApi } from '@/api/branches.api';
+import { sepayApi, SepayQrTicket } from '@/api/billing.api';
 import { posApi } from '@/api/pos.api';
 import {
   Badge,
@@ -15,7 +16,7 @@ import {
 } from '@/components/basic';
 import { useAuth } from '@/context/AuthContext';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { CartStatus, PaymentMethod, PosProduct } from '@/types/models';
+import { CartStatus, PaymentMethod, PaymentStatus, PosProduct } from '@/types/models';
 import { formatCurrency } from '@/utils/format';
 import { getErrorMessage } from '@/utils/errors';
 import { PAYMENT_METHOD_LABEL_VI } from '@/utils/labels';
@@ -437,22 +438,41 @@ function PaymentModal({
   const [referenceCode, setReferenceCode] = useState('');
   const [invoiceId, setInvoiceId] = useState<string | null>(null);
   const [invoiceCode, setInvoiceCode] = useState('');
+  const usesSepay =
+    paymentMethod === PaymentMethod.BANK_TRANSFER || paymentMethod === PaymentMethod.QR;
 
   const checkout = useMutation({
     mutationFn: () =>
       posApi.checkout(cartId, {
         paymentMethod,
-        referenceCode: referenceCode.trim() || undefined,
+        amountPaid: usesSepay ? 0 : undefined,
+        referenceCode: usesSepay ? undefined : referenceCode.trim() || undefined,
       }),
     onSuccess: (result) => {
       setInvoiceId(result.invoice.id);
       setInvoiceCode(result.invoice.invoiceCode);
-      toast.show(`Đã thanh toán — hóa đơn ${result.invoice.invoiceCode}`, 'success');
+      toast.show(
+        usesSepay
+          ? `Đã tạo hóa đơn ${result.invoice.invoiceCode} — hãy tạo mã VietQR`
+          : `Đã thanh toán — hóa đơn ${result.invoice.invoiceCode}`,
+        'success',
+      );
     },
     onError: (error) => toast.show(getErrorMessage(error), 'error'),
   });
 
   if (invoiceId) {
+    if (usesSepay) {
+      return (
+        <PosSepayPayment
+          invoiceId={invoiceId}
+          invoiceCode={invoiceCode}
+          amount={totalAmount}
+          onClose={onPaid}
+        />
+      );
+    }
+
     return (
       <Modal
         open
@@ -503,17 +523,122 @@ function PaymentModal({
             label: PAYMENT_METHOD_LABEL_VI[m],
           }))}
         />
-        {paymentMethod !== PaymentMethod.CASH && (
+        {!usesSepay && paymentMethod !== PaymentMethod.CASH && (
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-muted">Mã giao dịch (để đối soát)</span>
+            <span className="text-muted">Mã giao dịch đã thu bên ngoài</span>
             <input
               value={referenceCode}
               onChange={(e) => setReferenceCode(e.target.value)}
               className="rounded border border-border bg-surface px-3 py-2 text-sm"
             />
+            <span className="text-xs text-muted">
+              Dùng cho giao dịch thẻ/ví đã hoàn tất trên thiết bị hoặc ứng dụng khác.
+            </span>
           </label>
         )}
+        {usesSepay && (
+          <p className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm text-foreground">
+            Sau khi tạo hóa đơn, hệ thống sẽ hiển thị VietQR và tự xác nhận khi SePay gửi
+            webhook báo tiền về.
+          </p>
+        )}
       </div>
+    </Modal>
+  );
+}
+
+function PosSepayPayment({
+  invoiceId,
+  invoiceCode,
+  amount,
+  onClose,
+}: {
+  invoiceId: string;
+  invoiceCode: string;
+  amount: number;
+  onClose: () => void;
+}) {
+  const toast = useToast();
+  const [ticket, setTicket] = useState<SepayQrTicket | null>(null);
+
+  const createQr = useMutation({
+    mutationFn: () => sepayApi.createQr(invoiceId),
+    onSuccess: setTicket,
+    onError: (error) => toast.show(getErrorMessage(error), 'error'),
+  });
+
+  const statusQuery = useQuery({
+    queryKey: ['pos-sepay-ticket', ticket?.paymentId],
+    queryFn: () => sepayApi.publicTicket(ticket!.paymentId),
+    enabled: Boolean(ticket),
+    refetchInterval: (query) =>
+      query.state.data?.status === PaymentStatus.PENDING ? 3_000 : false,
+  });
+
+  const paid = statusQuery.data?.status === PaymentStatus.SUCCESS;
+  const failed = statusQuery.data?.status === PaymentStatus.FAILED;
+
+  useEffect(() => {
+    if (paid) toast.show(`Đã nhận thanh toán cho hóa đơn ${invoiceCode}`, 'success');
+  }, [paid, invoiceCode, toast]);
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={paid ? 'Thanh toán thành công' : `Thanh toán VietQR · ${invoiceCode}`}
+      footer={
+        <div className="flex justify-end gap-2">
+          <Link
+            to={`/staff/billing/${invoiceId}`}
+            className="rounded border border-border px-4 py-2 text-sm hover:bg-surface-muted"
+          >
+            Mở hóa đơn
+          </Link>
+          <Button onClick={onClose}>{paid ? 'Bán tiếp' : 'Đóng và xử lý sau'}</Button>
+        </div>
+      }
+    >
+      {!ticket ? (
+        <div className="space-y-4 text-center">
+          <p className="text-sm text-muted">
+            Hóa đơn chưa được ghi nhận là đã thanh toán. Tạo mã VietQR để khách chuyển đúng{' '}
+            {formatCurrency(amount)}.
+          </p>
+          <Button loading={createQr.isPending} onClick={() => createQr.mutate()}>
+            Tạo mã VietQR
+          </Button>
+        </div>
+      ) : paid ? (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-5 text-center">
+          <p className="text-lg font-semibold text-primary">Đã nhận {formatCurrency(amount)}</p>
+          <p className="mt-1 text-sm text-muted">SePay đã đối soát giao dịch tự động.</p>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-3 text-center">
+          <img
+            src={ticket.qrImageUrl}
+            alt="Mã VietQR thanh toán tại quầy"
+            className="h-60 w-60 rounded-lg border border-border bg-white object-contain p-2"
+          />
+          <p className="font-semibold">{formatCurrency(ticket.amount)}</p>
+          <p className="text-sm text-muted">Nội dung chuyển khoản</p>
+          <button
+            type="button"
+            className="select-all rounded bg-surface-muted px-3 py-2 font-mono font-semibold"
+            onClick={() => void navigator.clipboard.writeText(ticket.transferContent)}
+          >
+            {ticket.transferContent}
+          </button>
+          {failed ? (
+            <Badge variant="destructive">Phiên thanh toán đã kết thúc</Badge>
+          ) : (
+            <p className="text-xs text-muted">
+              Đang chờ ngân hàng xác nhận; trạng thái được kiểm tra lại mỗi 3 giây.
+            </p>
+          )}
+        </div>
+      )}
     </Modal>
   );
 }

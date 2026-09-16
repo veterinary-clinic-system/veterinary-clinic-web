@@ -12,6 +12,7 @@ import {
   Select,
   useToast,
 } from '@/components/basic';
+import { DEFAULT_STAFF_IMAGE } from '@/utils/cloudinary-assets';
 import { Role, Specialization } from '@/types/enums';
 import { StaffUser } from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';
@@ -41,7 +42,7 @@ interface FormState {
 }
 
 const EMPTY_FORM: FormState = {
-  avatarUrl: '/images/default-staff.svg',
+  avatarUrl: DEFAULT_STAFF_IMAGE,
   phone: '',
   fullName: '',
   email: '',

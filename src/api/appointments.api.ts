@@ -7,6 +7,7 @@ import {
   MonthOverview,
   PaginatedResult,
 } from '@/types/models';
+import type { SepayQrTicket } from './billing.api';
 
 export interface CreateBookingPayload {
   phone: string;
@@ -15,7 +16,7 @@ export interface CreateBookingPayload {
   petId?: string;
   newPet?: {
     name: string;
-    
+
     speciesId?: string;
     breedId: string;
     gender: string;
@@ -23,7 +24,7 @@ export interface CreateBookingPayload {
     birthDate?: string;
   };
   branchId: string;
-  
+
   doctorId?: string;
   serviceId: string;
   startAt: string;
@@ -36,16 +37,20 @@ export interface CreateBookingPayload {
 export const appointmentsApi = {
   createPublicBooking: (payload: CreateBookingPayload) =>
     apiClient.post<Appointment>('/appointments', payload).then((r) => r.data),
+  createPublicCheckout: (appointmentId: string, phone: string) =>
+    apiClient
+      .post<SepayQrTicket>(`/appointments/${appointmentId}/checkout`, { phone })
+      .then((r) => r.data),
   createStaffBooking: (payload: CreateBookingPayload) =>
     apiClient.post<Appointment>('/appointments/staff', payload).then((r) => r.data),
-  
+
   publicCalendar: (branchId: string, doctorId: string | undefined, weekOf?: string) =>
     apiClient
       .get<DayAvailability[]>('/appointments/calendar/public', {
         params: { branchId, doctorId: doctorId || undefined, weekOf },
       })
       .then((r) => r.data),
-  
+
   ownerLookup: (phone: string) =>
     apiClient
       .get<{ found: boolean; fullName?: string }>('/appointments/owner-lookup', {
@@ -56,12 +61,12 @@ export const appointmentsApi = {
     apiClient
       .get<DayAvailability[]>('/appointments/calendar', { params: { branchId, doctorId, weekOf } })
       .then((r) => r.data),
-  
+
   staffDayCalendar: (branchId: string, doctorId: string, date?: string) =>
     apiClient
       .get<DayAvailability>('/appointments/calendar/day', { params: { branchId, doctorId, date } })
       .then((r) => r.data),
-  
+
   staffMonthCalendar: (branchId: string, doctorId: string | undefined, monthOf?: string) =>
     apiClient
       .get<MonthOverview>('/appointments/calendar/month', {
@@ -77,9 +82,10 @@ export const appointmentsApi = {
     status?: AppointmentStatus;
     sortBy?: string;
     sortOrder?: 'ASC' | 'DESC';
-    
+
     date?: string;
-  }) => apiClient.get<PaginatedResult<Appointment>>('/appointments', { params }).then((r) => r.data),
+  }) =>
+    apiClient.get<PaginatedResult<Appointment>>('/appointments', { params }).then((r) => r.data),
   getOne: (id: string) => apiClient.get<Appointment>(`/appointments/${id}`).then((r) => r.data),
   update: (
     id: string,
@@ -91,19 +97,19 @@ export const appointmentsApi = {
       notes: string;
     }>,
   ) => apiClient.patch<Appointment>(`/appointments/${id}`, payload).then((r) => r.data),
-  
+
   cancel: (id: string, reason: string) =>
     apiClient.post<Appointment>(`/appointments/${id}/cancel`, { reason }).then((r) => r.data),
-  
+
   markNoShow: (id: string, reason?: string) =>
     apiClient.post<Appointment>(`/appointments/${id}/no-show`, { reason }).then((r) => r.data),
-  
+
   doctorAbsence: (payload: {
     doctorId: string;
-    
+
     date: string;
     reason?: string;
-    
+
     reassign?: boolean;
   }) =>
     apiClient

@@ -16,12 +16,14 @@ export interface NavItem {
   label: string;
   icon: IconName;
   roles?: Role[];
-  
+
   end?: boolean;
 }
 
 export interface NavGroup {
-  
+  description?: string;
+  icon?: IconName;
+
   label?: string;
   items: NavItem[];
 }
@@ -31,8 +33,11 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [{ to: '/staff', label: 'Tổng quan', icon: 'dashboard', end: true }],
   },
   {
-    label: 'Lâm sàng',
+    label: 'Tiếp đón & khám bệnh',
+    description: 'Lịch hẹn, hồ sơ và chăm sóc thú cưng.',
+    icon: 'stethoscope',
     items: [
+      { to: '/staff/customers', label: 'Khách hàng', icon: 'customers', roles: CUSTOMER_ROLES },
       { to: '/staff/queue', label: 'Hàng chờ', icon: 'queue', roles: CLINIC_ROLES },
       { to: '/staff/calendar', label: 'Lịch làm việc', icon: 'calendar', roles: CLINIC_ROLES },
       { to: '/staff/appointments', label: 'Lịch hẹn', icon: 'appointments', roles: CLINIC_ROLES },
@@ -47,10 +52,10 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: 'Vận hành',
+    label: 'Kho & cung ứng',
+    description: 'Hàng hóa, nhập hàng và kiểm soát tồn kho.',
+    icon: 'warehouse',
     items: [
-      { to: '/staff/customers', label: 'Khách hàng', icon: 'customers', roles: CUSTOMER_ROLES },
-      { to: '/staff/catalog', label: 'Dịch vụ & thuốc', icon: 'catalog', roles: MANAGEMENT_ROLES },
       { to: '/staff/products', label: 'Sản phẩm', icon: 'box', roles: WAREHOUSE_ROLES },
       { to: '/staff/categories', label: 'Danh mục hàng hoá', icon: 'tag', roles: WAREHOUSE_ROLES },
       { to: '/staff/suppliers', label: 'Nhà cung cấp', icon: 'truck', roles: WAREHOUSE_ROLES },
@@ -67,39 +72,51 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: 'clipboard-check',
         roles: WAREHOUSE_ROLES,
       },
-      { to: '/staff/inventory', label: 'Tồn kho', icon: 'warehouse', roles: NON_DOCTOR_ROLES },
+      {
+        to: '/staff/inventory',
+        label: 'Tồn kho',
+        icon: 'warehouse',
+        roles: NON_DOCTOR_ROLES,
+        end: true,
+      },
       {
         to: '/staff/inventory/alerts',
         label: 'Cảnh báo kho',
         icon: 'alert',
         roles: NON_DOCTOR_ROLES,
       },
-      { to: '/staff/pharmacy', label: 'Quầy thuốc', icon: 'pill', roles: WAREHOUSE_ROLES },
     ],
   },
   {
-    label: 'Kinh doanh',
+    label: 'Bán hàng & thanh toán',
+    description: 'Bán tại quầy, cấp thuốc và quản lý hóa đơn.',
+    icon: 'receipt',
     items: [
+      { to: '/staff/pharmacy', label: 'Quầy thuốc', icon: 'pill', roles: WAREHOUSE_ROLES },
       { to: '/staff/pos', label: 'Bán hàng', icon: 'cart', roles: COUNTER_ROLES },
       { to: '/staff/billing', label: 'Hoá đơn', icon: 'receipt', roles: COUNTER_ROLES },
-      
-      { to: '/staff/reports', label: 'Báo cáo', icon: 'chart', roles: MANAGEMENT_ROLES },
     ],
   },
   {
-    label: 'Tổ chức',
+    label: 'Điều hành phòng khám',
+    description: 'Báo cáo, dịch vụ, nhân sự và chi nhánh.',
+    icon: 'building',
     items: [
+      { to: '/staff/reports', label: 'Báo cáo', icon: 'chart', roles: MANAGEMENT_ROLES },
+      { to: '/staff/catalog', label: 'Dịch vụ & thuốc', icon: 'catalog', roles: MANAGEMENT_ROLES },
       { to: '/staff/branches', label: 'Chi nhánh', icon: 'building', roles: SYSTEM_ROLES },
       { to: '/staff/employees', label: 'Hồ sơ nhân sự', icon: 'id-card', roles: MANAGEMENT_ROLES },
-      { to: '/staff/users', label: 'Tài khoản', icon: 'user-cog', roles: SYSTEM_ROLES },
     ],
   },
   {
     label: 'Hệ thống',
+    description: 'Tài khoản, quyền truy cập và lịch sử hoạt động.',
+    icon: 'shield',
     items: [
-      
+      { to: '/staff/users', label: 'Tài khoản', icon: 'user-cog', roles: SYSTEM_ROLES },
+
       { to: '/staff/permissions', label: 'Phân quyền', icon: 'shield', roles: SYSTEM_ROLES },
-      
+
       { to: '/staff/audit-logs', label: 'Nhật ký kiểm toán', icon: 'history', roles: SYSTEM_ROLES },
     ],
   },

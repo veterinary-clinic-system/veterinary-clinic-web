@@ -34,7 +34,7 @@ export function StaffTopbar({ onOpenMobileNav }: StaffTopbarProps) {
   const roleLabel = user ? ROLE_LABEL_VI[user.role as Role] : '';
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-surface px-3 sm:px-5">
+    <header className="staff-topbar sticky top-0 z-20 flex min-h-20 shrink-0 items-center gap-2 border-b border-border bg-surface px-3 py-3 sm:px-7">
       <button
         type="button"
         onClick={onOpenMobileNav}

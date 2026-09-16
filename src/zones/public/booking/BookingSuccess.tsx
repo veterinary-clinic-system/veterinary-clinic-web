@@ -3,6 +3,11 @@ import { format, parseISO } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Appointment } from '@/types/models';
 import { SummaryRow } from './SummaryRow';
+import { PaymentStatus } from '@/types/enums';
+import { sepayApi, SepayQrTicket } from '@/api/billing.api';
+import { useQuery } from '@tanstack/react-query';
+import { formatCurrency } from '@/utils/format';
+import type { BookingForm } from './use-booking-form';
 
 export function BookingSuccess({
   appointment,
@@ -10,13 +15,24 @@ export function BookingSuccess({
   serviceName,
   doctorName,
   isLoggedIn,
+  payment,
 }: {
   appointment: Appointment;
   branchName?: string;
   serviceName?: string;
   doctorName?: string;
   isLoggedIn: boolean;
+  payment: BookingForm['payment'];
 }) {
+  const statusQuery = useQuery({
+    queryKey: ['public-sepay-ticket', payment.ticket?.paymentId],
+    queryFn: () => sepayApi.publicTicket(payment.ticket!.paymentId),
+    enabled: !!payment.ticket,
+    refetchInterval: (query) =>
+      query.state.data?.status === PaymentStatus.PENDING ? 3_000 : false,
+  });
+  const paid = statusQuery.data?.status === PaymentStatus.SUCCESS;
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 text-center">
       <span
@@ -42,6 +58,16 @@ export function BookingSuccess({
         <SummaryRow label="Dịch vụ" value={serviceName} />
       </dl>
 
+      {payment.option === 'SEPAY_QR' && (
+        <BookingPayment
+          ticket={payment.ticket}
+          isStarting={payment.isStarting}
+          error={payment.error}
+          paid={paid}
+          onRetry={payment.retry}
+        />
+      )}
+
       <div className="mt-6 flex flex-wrap justify-center gap-3">
         {isLoggedIn ? (
           <Link
@@ -65,6 +91,65 @@ export function BookingSuccess({
           Về trang chủ
         </Link>
       </div>
+    </div>
+  );
+}
+
+function BookingPayment({
+  ticket,
+  isStarting,
+  error,
+  paid,
+  onRetry,
+}: {
+  ticket: SepayQrTicket | null;
+  isStarting: boolean;
+  error: string | null;
+  paid: boolean;
+  onRetry: () => void | null;
+}) {
+  if (isStarting) {
+    return <p className="mt-6 text-sm text-muted">Đang tạo mã QR thanh toán...</p>;
+  }
+  if (error || !ticket) {
+    return (
+      <div className="mt-6 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-left">
+        <p className="text-sm text-destructive">{error ?? 'Chưa thể tạo mã QR thanh toán.'}</p>
+        <button
+          type="button"
+          onClick={onRetry}
+          className="mt-3 text-sm font-medium text-primary hover:underline"
+        >
+          Thử mở thanh toán lại
+        </button>
+      </div>
+    );
+  }
+  if (paid) {
+    return (
+      <div className="mt-6 rounded-xl border border-primary/30 bg-primary/5 p-5">
+        <p className="text-lg font-semibold text-primary">Thanh toán thành công</p>
+        <p className="mt-1 text-sm text-muted">
+          Phòng khám đã nhận {formatCurrency(ticket.amount)}.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="mt-6 rounded-xl border border-border bg-surface p-5">
+      <h2 className="font-semibold text-foreground">
+        Quét mã để thanh toán {formatCurrency(ticket.amount)}
+      </h2>
+      <img
+        src={ticket.qrImageUrl}
+        alt="Mã QR thanh toán phí đặt lịch"
+        className="mx-auto mt-4 w-full max-w-64 rounded-lg"
+      />
+      <p className="mt-3 text-sm text-muted">Nội dung chuyển khoản</p>
+      <p className="mt-1 select-all font-mono font-semibold text-foreground">
+        {ticket.transferContent}
+      </p>
+      <p className="mt-3 text-xs text-muted">Hệ thống đang tự động chờ xác nhận thanh toán.</p>
     </div>
   );
 }

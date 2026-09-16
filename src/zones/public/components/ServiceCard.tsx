@@ -7,7 +7,7 @@ export function ServiceCard({ service }: { service: Service }) {
   const navigate = useNavigate();
 
   return (
-    <article className="flex flex-col rounded-xl border border-border bg-surface p-5 transition-colors hover:border-primary/40">
+    <article className="pet-service-card flex flex-col rounded-xl border border-border bg-surface p-5 transition-colors hover:border-primary/40">
       <img src={service.item.imageUrl} alt="" className="mb-4 h-36 w-full rounded-lg object-cover" />
       <div className="flex-1">
         <h3 className="text-base font-semibold text-foreground">{service.item.itemName}</h3>

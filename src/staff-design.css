@@ -1,0 +1,128 @@
+/* Shared staff workspace: calm surfaces, readable data, clear navigation. */
+.staff-workspace {
+  --color-primary: 24 112 91;
+  --color-primary-soft: 235 246 240;
+  --color-surface-muted: 245 247 249;
+  --color-border: 224 231 235;
+  --color-muted-foreground: 88 105 117;
+  --color-foreground: 30 47 56;
+  --radius: 0.875rem;
+  --card-padding: 1.5rem;
+  --stack-gap: 2rem;
+}
+.staff-sidebar {
+  background: #142f30;
+  color: #f5faf8;
+}
+.staff-brand-icon {
+  background: #2d5550;
+  color: #b9edce;
+}
+.staff-nav-search {
+  background: #ffffff0c;
+  border: 1px solid #ffffff24;
+  color: #cbd5e1;
+}
+.staff-nav-search:focus-within {
+  border-color: #b9edce;
+}
+.staff-group-toggle {
+  color: #c8d6d5;
+}
+.staff-group-toggle:hover,
+.staff-group-active {
+  background: #ffffff08;
+  color: white;
+}
+.staff-nav-link {
+  color: #c8d6d5;
+}
+.staff-nav-link:hover {
+  background: #ffffff0d;
+  color: white;
+}
+.staff-nav-link.is-active {
+  background: #d4eddd;
+  color: #173e35;
+  font-weight: 650;
+}
+.staff-sidebar :focus-visible {
+  outline: 2px solid #b9edce;
+  outline-offset: 3px;
+}
+.staff-topbar {
+  box-shadow: 0 2px 14px #16333204;
+}
+.staff-main > * {
+  max-width: 1600px;
+  margin-inline: auto;
+}
+.staff-main h1 {
+  font-size: clamp(1.75rem, 2.5vw, 2.25rem);
+  line-height: 1.25;
+}
+.staff-main h2 {
+  letter-spacing: -0.02em;
+}
+.staff-main table th {
+  background: #f6f8fa;
+  color: #526574;
+  padding-block: 1rem;
+  font-weight: 600;
+}
+.staff-main table td {
+  padding-block: 1rem;
+}
+.staff-main table tbody tr:hover {
+  background: #f4f9f6;
+}
+.staff-welcome {
+  background: linear-gradient(115deg, #edf5ef, #f8fbf9 70%);
+  border: 1px solid #dbe8df;
+  border-radius: 1.5rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+.staff-module {
+  border: 1px solid #e0e7eb;
+  border-radius: 1.25rem;
+  background: white;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px #16333203;
+}
+.staff-module-icon {
+  background: #edf5ef;
+  color: #26725d;
+}
+.staff-module:nth-child(2) .staff-module-icon {
+  background: #fff4e3;
+  color: #996b20;
+}
+.staff-module:nth-child(3) .staff-module-icon {
+  background: #eef1fd;
+  color: #5566a0;
+}
+.staff-module:nth-child(4) .staff-module-icon {
+  background: #f6eefa;
+  color: #89509d;
+}
+.staff-module-link:hover {
+  background: #f1f7f3;
+  color: #18705b;
+}
+.staff-kpi {
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 20px #16333203;
+}
+.staff-kpi > p:first-of-type {
+  font-size: 2rem;
+  letter-spacing: -0.04em;
+}
+@media (max-width: 639px) {
+  .staff-workspace {
+    --card-padding: 1rem;
+    --stack-gap: 1.5rem;
+  }
+  .staff-module {
+    padding: 1.25rem;
+  }
+}

@@ -32,6 +32,7 @@ export function BookingPage() {
         serviceName={form.service.selected?.item.itemName}
         doctorName={form.doctor.selected?.fullName}
         isLoggedIn={!!form.user}
+        payment={form.payment}
       />
     );
   }
@@ -94,7 +95,11 @@ export function BookingPage() {
               </Button>
             ) : (
               <Button loading={result.isSubmitting} onClick={result.submit}>
-                {result.isSubmitting ? 'Đang đặt lịch...' : 'Xác nhận đặt lịch'}
+                {result.isSubmitting
+                  ? 'Đang đặt lịch...'
+                  : form.payment.option === 'SEPAY_QR'
+                    ? 'Đặt lịch & thanh toán'
+                    : 'Xác nhận đặt lịch'}
               </Button>
             )}
           </div>

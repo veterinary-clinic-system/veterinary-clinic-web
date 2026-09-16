@@ -73,6 +73,10 @@ export const sepayApi = {
       .then((r) => r.data),
   ticket: (paymentId: string) =>
     apiClient.get<SepayTicketStatus>(`/billing/sepay/tickets/${paymentId}`).then((r) => r.data),
+  publicTicket: (paymentId: string) =>
+    apiClient
+      .get<SepayTicketStatus>(`/billing/sepay/public/tickets/${paymentId}`)
+      .then((r) => r.data),
   cancelTicket: (paymentId: string) => apiClient.delete(`/billing/sepay/tickets/${paymentId}`),
   pendingReconciliations: () =>
     apiClient.get<SepayReconciliation[]>('/billing/sepay/reconciliation').then((r) => r.data),

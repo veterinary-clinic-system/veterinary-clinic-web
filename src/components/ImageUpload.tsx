@@ -1,6 +1,7 @@
 import { ChangeEvent, useRef, useState } from 'react';
 import { FileCategory, filesApi } from '@/api/files.api';
 import { getErrorMessage } from '@/utils/errors';
+import { DEFAULT_ITEM_IMAGE } from '@/utils/cloudinary-assets';
 
 interface ImageUploadProps {
   label: string;
@@ -34,7 +35,7 @@ export function ImageUpload({ label, category, value, onChange, required }: Imag
   return (
     <div className="flex items-center gap-4">
       <img
-        src={value || '/images/default-item.svg'}
+        src={value || DEFAULT_ITEM_IMAGE}
         alt={label}
         className="h-20 w-20 rounded-lg border border-border bg-surface-muted object-cover"
       />

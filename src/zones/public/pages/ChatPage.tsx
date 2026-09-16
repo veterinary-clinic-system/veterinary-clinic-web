@@ -84,7 +84,7 @@ export function ChatPage() {
   const showSuggestions = messages.length === 1;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
+    <div className="pet-chat mx-auto max-w-3xl px-4 py-8">
       <h1 className="text-2xl font-semibold tracking-tight text-foreground">
         Tư vấn cùng trợ lý AI
       </h1>
