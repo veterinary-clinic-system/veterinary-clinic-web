@@ -75,6 +75,8 @@ export interface UsePaginationResult<T> {
   totalPages: number;
 }
 
+// Shared here so ClientPagedTable and standalone pagination use identical rules.
+// eslint-disable-next-line react-refresh/only-export-components
 export function usePagination<T>(
   items: T[],
   pageSize = 10,
@@ -82,11 +84,13 @@ export function usePagination<T>(
 ): UsePaginationResult<T> {
   const [page, setPage] = useState(1);
   const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  // Callers pass primitive filter values. A signature keeps inline arrays stable
+  // while still resetting pagination whenever one of those filters changes.
+  const resetSignature = JSON.stringify(resetKeys);
 
   useEffect(() => {
     setPage(1);
-    
-  }, resetKeys);
+  }, [resetSignature]);
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);

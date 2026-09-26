@@ -1,36 +1,37 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { format, startOfMonth, startOfQuarter, startOfWeek, startOfYear, subDays } from 'date-fns';
+import {
+  format,
+  startOfDay,
+  startOfMonth,
+  startOfQuarter,
+  startOfWeek,
+  startOfYear,
+  subDays,
+} from 'date-fns';
 import { branchesApi } from '@/api/branches.api';
 import { employeesApi } from '@/api/employees.api';
 import { reportsApi, SalesReportRow } from '@/api/reports.api';
-import {
-  Button,
-  DatePicker,
-  Select,
-  Skeleton,
-  Table,
-} from '@/components/basic';
+import { Button, DatePicker, Select, Skeleton, Table } from '@/components/basic';
 import type { Column } from '@/components/basic';
 import { useToast } from '@/components/basic/Toast';
 import { PaymentMethod, PRIORITY_COLOR_LABEL_VI, PriorityColor } from '@/types/enums';
 import { PAYMENT_METHOD_LABEL_VI } from '@/utils/labels';
 import { formatCurrency } from '@/utils/format';
 
-type Preset = 'week' | 'month' | 'quarter' | 'year' | 'last30';
+type Preset = 'week' | 'month' | 'quarter' | 'year' | 'last30' | 'custom';
 
-const TODAY = new Date();
 const ISO = 'yyyy-MM-dd';
 
-const PRESET_START: Record<Preset, () => Date> = {
-  last30: () => subDays(TODAY, 30),
-  week: () => startOfWeek(TODAY, { weekStartsOn: 1 }),
-  month: () => startOfMonth(TODAY),
-  quarter: () => startOfQuarter(TODAY),
-  year: () => startOfYear(TODAY),
+const PRESET_START: Record<Exclude<Preset, 'custom'>, (today: Date) => Date> = {
+  last30: (today) => subDays(today, 30),
+  week: (today) => startOfWeek(today, { weekStartsOn: 1 }),
+  month: (today) => startOfMonth(today),
+  quarter: (today) => startOfQuarter(today),
+  year: (today) => startOfYear(today),
 };
 
-const PRESET_LABEL: Record<Preset, string> = {
+const PRESET_LABEL: Record<Exclude<Preset, 'custom'>, string> = {
   last30: '30 ngày qua',
   week: 'Tuần này',
   month: 'Tháng này',
@@ -40,9 +41,10 @@ const PRESET_LABEL: Record<Preset, string> = {
 
 export function ReportsPage() {
   const toast = useToast();
+  const today = startOfDay(new Date());
   const [preset, setPreset] = useState<Preset>('last30');
-  const [from, setFrom] = useState<string | null>(format(subDays(TODAY, 30), ISO));
-  const [to, setTo] = useState<string | null>(format(TODAY, ISO));
+  const [from, setFrom] = useState<string | null>(format(subDays(today, 30), ISO));
+  const [to, setTo] = useState<string | null>(format(today, ISO));
   const [branchId, setBranchId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [employeeUserId, setEmployeeUserId] = useState('');
@@ -55,18 +57,19 @@ export function ReportsPage() {
     queryFn: () => employeesApi.list({ limit: 100 }),
   });
 
-  function applyPreset(value: Preset) {
+  function applyPreset(value: Exclude<Preset, 'custom'>) {
     setPreset(value);
-    setFrom(format(PRESET_START[value](), ISO));
-    setTo(format(TODAY, ISO));
+    const currentToday = startOfDay(new Date());
+    setFrom(format(PRESET_START[value](currentToday), ISO));
+    setTo(format(currentToday, ISO));
   }
 
   function setCustomFrom(value: string | null) {
     setFrom(value);
-    setPreset('last30');
+    setPreset('custom');
   }
 
-  const range = { from: from ?? format(subDays(TODAY, 30), ISO), to: to ?? format(TODAY, ISO) };
+  const range = { from: from ?? format(subDays(today, 30), ISO), to: to ?? format(today, ISO) };
   const filters = {
     ...range,
     branchId: branchId || undefined,
@@ -93,21 +96,41 @@ export function ReportsPage() {
   });
   const revenueQuery = useQuery({
     queryKey: ['report-revenue', ...key, groupBy],
-    queryFn: () =>
-      reportsApi.revenue({ ...range, branchId: branchId || undefined, groupBy }),
+    queryFn: () => reportsApi.revenue({ ...filters, groupBy }),
   });
   const byServiceQuery = useQuery({
     queryKey: ['report-revenue-by-service', ...key],
-    queryFn: () => reportsApi.revenueByService({ ...range, branchId: branchId || undefined }),
+    queryFn: () => reportsApi.revenueByService(filters),
   });
   const byDoctorQuery = useQuery({
     queryKey: ['report-revenue-by-doctor', ...key],
-    queryFn: () => reportsApi.revenueByDoctor({ ...range, branchId: branchId || undefined }),
+    queryFn: () => reportsApi.revenueByDoctor(filters),
   });
   const aiAccuracyQuery = useQuery({
     queryKey: ['report-ai-accuracy', ...key],
     queryFn: () => reportsApi.aiAccuracy({ ...range, branchId: branchId || undefined }),
   });
+  const diseaseQuery = useQuery({
+    queryKey: ['report-disease-groups', range.from, range.to, branchId],
+    queryFn: () =>
+      reportsApi.examVolumeByDiseaseGroup({ ...range, branchId: branchId || undefined }),
+  });
+  const reportQueries = [
+    summaryQuery,
+    inventoryQuery,
+    salesQuery,
+    examsQuery,
+    revenueQuery,
+    byServiceQuery,
+    byDoctorQuery,
+    aiAccuracyQuery,
+    diseaseQuery,
+  ];
+  const hasReportError = reportQueries.some((query) => query.isError);
+
+  function retryFailedReports() {
+    reportQueries.filter((query) => query.isError).forEach((query) => void query.refetch());
+  }
 
   async function exportSales() {
     setExporting(true);
@@ -146,7 +169,9 @@ export function ReportsPage() {
       key: 'totalRevenue',
       header: 'Doanh thu',
       render: (row) => (
-        <span className="[font-variant-numeric:tabular-nums]">{formatCurrency(row.totalRevenue)}</span>
+        <span className="[font-variant-numeric:tabular-nums]">
+          {formatCurrency(row.totalRevenue)}
+        </span>
       ),
     },
   ];
@@ -157,7 +182,7 @@ export function ReportsPage() {
 
       <div className="flex flex-col gap-4 rounded border border-border bg-surface p-4">
         <div className="flex flex-wrap gap-2">
-          {(Object.keys(PRESET_LABEL) as Preset[]).map((value) => (
+          {(Object.keys(PRESET_LABEL) as Exclude<Preset, 'custom'>[]).map((value) => (
             <Button
               key={value}
               size="sm"
@@ -171,7 +196,15 @@ export function ReportsPage() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           <DatePicker label="Từ ngày" value={from} onChange={setCustomFrom} max={to ?? undefined} />
-          <DatePicker label="Đến ngày" value={to} onChange={setTo} min={from ?? undefined} />
+          <DatePicker
+            label="Đến ngày"
+            value={to}
+            onChange={(value) => {
+              setTo(value);
+              setPreset('custom');
+            }}
+            min={from ?? undefined}
+          />
           <Select
             label="Chi nhánh"
             value={branchId}
@@ -219,6 +252,20 @@ export function ReportsPage() {
         </div>
       </div>
 
+      {hasReportError && (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center justify-between gap-3 rounded border border-danger/30 bg-danger/5 p-4"
+        >
+          <p className="text-sm text-danger">
+            Một số báo cáo chưa tải được. Các phần còn lại vẫn hiển thị bằng dữ liệu nhận được.
+          </p>
+          <Button variant="secondary" size="sm" onClick={retryFailedReports}>
+            Thử tải lại
+          </Button>
+        </div>
+      )}
+
       {}
       <Section
         title="Tổng hợp doanh thu"
@@ -237,7 +284,10 @@ export function ReportsPage() {
         {summaryQuery.isLoading && <Skeleton className="h-24 w-full rounded-xl" />}
       </Section>
 
-      <Section title="Doanh thu theo thời gian" hint="Giá trị hàng đã bán trên hoá đơn.">
+      <Section
+        title="Tiền thực thu theo thời gian"
+        hint="Tổng giao dịch thành công trừ các khoản đã hoàn, tính theo ngày nhận tiền."
+      >
         <SimpleTable
           loading={revenueQuery.isLoading}
           rows={revenueQuery.data ?? []}
@@ -300,7 +350,10 @@ export function ReportsPage() {
       </Section>
 
       {}
-      <Section title="Báo cáo khám" hint="Tỉ lệ vắng mặt tính trên các lịch hẹn đã đến hạn trong kỳ.">
+      <Section
+        title="Báo cáo khám"
+        hint="Tỉ lệ vắng mặt tính trên các lịch hẹn đã đến hạn trong kỳ."
+      >
         {examsQuery.data && (
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
@@ -329,7 +382,10 @@ export function ReportsPage() {
         {examsQuery.isLoading && <Skeleton className="h-24 w-full rounded-xl" />}
       </Section>
 
-      <Section title="Doanh thu theo dịch vụ">
+      <Section
+        title="Tiền thực thu theo dịch vụ"
+        hint="Tiền thu và hoàn được phân bổ theo tỷ trọng giá trị từng dòng dịch vụ trên hóa đơn."
+      >
         <SimpleTable
           loading={byServiceQuery.isLoading}
           rows={byServiceQuery.data ?? []}
@@ -342,7 +398,10 @@ export function ReportsPage() {
         />
       </Section>
 
-      <Section title="Doanh thu theo bác sĩ">
+      <Section
+        title="Tiền thực thu theo bác sĩ"
+        hint="Chỉ gồm hóa đơn có lịch hẹn và bác sĩ phụ trách."
+      >
         <SimpleTable
           loading={byDoctorQuery.isLoading}
           rows={byDoctorQuery.data ?? []}
@@ -355,9 +414,21 @@ export function ReportsPage() {
         />
       </Section>
 
+      <Section title="Nhóm bệnh thường gặp" hint="Tổng hợp từ chẩn đoán trong kỳ đã chọn.">
+        <SimpleTable
+          loading={diseaseQuery.isLoading}
+          rows={diseaseQuery.data ?? []}
+          columns={[
+            { header: 'Nhóm bệnh / chẩn đoán', cell: (row) => row.diseaseGroup },
+            { header: 'Số lượt', cell: (row) => row.count, align: 'right' },
+          ]}
+          emptyText="Không có chẩn đoán trong kỳ."
+        />
+      </Section>
+
       <Section
-        title="Độ chính xác phân loại AI"
-        hint="Tỉ lệ nhân viên chấp nhận hay ghi đè mức độ ưu tiên do AI đề xuất."
+        title="Mức độ đồng thuận với phân loại AI"
+        hint="Tỉ lệ nhân viên giữ nguyên hoặc ghi đè mức độ ưu tiên do AI đề xuất; đây không phải độ chính xác chẩn đoán."
       >
         {aiAccuracyQuery.data && (
           <div className="flex flex-col gap-4">
@@ -377,7 +448,8 @@ export function ReportsPage() {
                 {
                   header: 'Mức độ ưu tiên (AI)',
                   cell: (r) =>
-                    PRIORITY_COLOR_LABEL_VI[r.aiPriorityColor as PriorityColor] ?? r.aiPriorityColor,
+                    PRIORITY_COLOR_LABEL_VI[r.aiPriorityColor as PriorityColor] ??
+                    r.aiPriorityColor,
                 },
                 { header: 'Chấp nhận', cell: (r) => r.acceptedCount, align: 'right' },
                 { header: 'Ghi đè', cell: (r) => r.overriddenCount, align: 'right' },
@@ -424,11 +496,10 @@ function Stat({
 }: {
   label: string;
   value: string | number;
-  
+
   tone?: 'warn' | 'bad';
 }) {
-  const toneClass =
-    tone === 'bad' ? 'text-danger' : tone === 'warn' ? 'text-warning' : '';
+  const toneClass = tone === 'bad' ? 'text-danger' : tone === 'warn' ? 'text-warning' : '';
   return (
     <div className="rounded border border-border p-3">
       <p className="text-xs text-muted">{label}</p>
@@ -471,7 +542,6 @@ function SimpleTable<T>({
         </thead>
         <tbody>
           {loading &&
-            
             Array.from({ length: 4 }).map((_, index) => (
               <tr key={`skeleton-${index}`} className="border-t border-border">
                 <td colSpan={columns.length} className="px-3">

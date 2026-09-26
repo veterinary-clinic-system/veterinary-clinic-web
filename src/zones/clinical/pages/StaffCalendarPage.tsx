@@ -56,7 +56,7 @@ export function StaffCalendarPage() {
       setDoctorId('');
     }
     
-  }, [doctorsQuery.data]);
+  }, [doctorId, doctorsQuery.data]);
 
   const anchorStr = format(anchor, 'yyyy-MM-dd');
 

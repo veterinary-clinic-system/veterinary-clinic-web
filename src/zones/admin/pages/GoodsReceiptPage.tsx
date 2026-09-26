@@ -183,7 +183,7 @@ export function GoodsReceiptPage() {
       setFormOpen(true);
     }
 
-  }, [searchParams]);
+  }, [formOpen, searchParams]);
 
   function updateLine(index: number, patch: Partial<ReceivingLine>) {
     setReceivingLines(receivingLines.map((line, i) => (i === index ? { ...line, ...patch } : line)));

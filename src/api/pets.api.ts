@@ -11,6 +11,7 @@ import {
   PetMedicalHistory,
   PetPrescription,
   Species,
+  VaccinationRecordView,
 } from '@/types/models';
 
 export const speciesApi = {
@@ -28,18 +29,32 @@ export interface PetTimelineEntry {
   examination?: Examination;
 }
 
+export interface OwnerPetHealthRecord {
+  medicalHistory: PetMedicalHistory[];
+  prescriptions: PetPrescription[];
+  labTests: PetLabTest[];
+  invoices: PetInvoice[];
+  vaccinations: VaccinationRecordView[];
+}
+
 export const petsApi = {
   mine: () => apiClient.get<Pet[]>('/pets/mine').then((r) => r.data),
   getOne: (id: string) => apiClient.get<Pet>(`/pets/${id}`).then((r) => r.data),
   search: (params: { page?: number; limit?: number; search?: string; ownerId?: string }) =>
     apiClient.get<PaginatedResult<Pet>>('/pets', { params }).then((r) => r.data),
-  create: (payload: Record<string, unknown>) => apiClient.post<Pet>('/pets', payload).then((r) => r.data),
+  create: (payload: Record<string, unknown>) =>
+    apiClient.post<Pet>('/pets', payload).then((r) => r.data),
   update: (id: string, payload: Partial<Pet>) =>
     apiClient.patch<Pet>(`/pets/${id}`, payload).then((r) => r.data),
-  timeline: (id: string) => apiClient.get<PetTimelineEntry[]>(`/pets/${id}/timeline`).then((r) => r.data),
-  
+  timeline: (id: string) =>
+    apiClient.get<PetTimelineEntry[]>(`/pets/${id}/timeline`).then((r) => r.data),
+  ownerHealthRecord: (id: string) =>
+    apiClient.get<OwnerPetHealthRecord>(`/pets/mine/${id}/health-record`).then((r) => r.data),
+
   appointments: (id: string) =>
-    apiClient.get<Appointment[]>('/appointments/mine').then((r) => r.data.filter((a) => a.petId === id)),
+    apiClient
+      .get<Appointment[]>('/appointments/mine')
+      .then((r) => r.data.filter((a) => a.petId === id)),
 
   staffAppointments: (id: string) =>
     apiClient.get<PetAppointment[]>(`/pets/${id}/appointments`).then((r) => r.data),
@@ -47,6 +62,7 @@ export const petsApi = {
     apiClient.get<PetMedicalHistory[]>(`/pets/${id}/medical-history`).then((r) => r.data),
   prescriptions: (id: string) =>
     apiClient.get<PetPrescription[]>(`/pets/${id}/prescriptions`).then((r) => r.data),
-  labTests: (id: string) => apiClient.get<PetLabTest[]>(`/pets/${id}/lab-tests`).then((r) => r.data),
+  labTests: (id: string) =>
+    apiClient.get<PetLabTest[]>(`/pets/${id}/lab-tests`).then((r) => r.data),
   invoices: (id: string) => apiClient.get<PetInvoice[]>(`/pets/${id}/invoices`).then((r) => r.data),
 };

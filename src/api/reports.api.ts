@@ -19,7 +19,7 @@ export interface DashboardKpi {
   label: string;
   value: number;
   format: 'currency' | 'count';
-  
+
   deltaRatio: number | null;
   link?: string;
 }
@@ -86,35 +86,38 @@ export interface ExamSummaryReport {
   completed: number;
   noShow: number;
   cancelled: number;
-  
+
   noShowRate: number;
   topVeterinarians: TopVeterinarian[];
 }
 
 export const reportsApi = {
-  
   dashboard: (branchId?: string) =>
     apiClient
       .get<DashboardResponse>('/reports/dashboard', { params: { branchId } })
       .then((r) => r.data),
-  revenue: (params: { from: string; to: string; groupBy?: 'day' | 'month'; branchId?: string }) =>
+  revenue: (params: ReportFilterParams & { groupBy?: 'day' | 'month' }) =>
     apiClient.get<RevenuePoint[]>('/reports/revenue', { params }).then((r) => r.data),
-  revenueByService: (params: { from: string; to: string; branchId?: string }) =>
+  revenueByService: (params: ReportFilterParams) =>
     apiClient
-      .get<{ serviceName: string; totalRevenue: number; count: number }[]>('/reports/revenue/by-service', {
-        params,
-      })
-      .then((r) => r.data),
-  revenueByDoctor: (params: { from: string; to: string; branchId?: string }) =>
-    apiClient
-      .get<{ doctorId: string; doctorName: string; totalRevenue: number; appointmentCount: number }[]>(
-        '/reports/revenue/by-doctor',
-        { params },
+      .get<{ serviceName: string; totalRevenue: number; count: number }[]>(
+        '/reports/revenue/by-service',
+        {
+          params,
+        },
       )
+      .then((r) => r.data),
+  revenueByDoctor: (params: ReportFilterParams) =>
+    apiClient
+      .get<
+        { doctorId: string; doctorName: string; totalRevenue: number; appointmentCount: number }[]
+      >('/reports/revenue/by-doctor', { params })
       .then((r) => r.data),
   examVolumeByDiseaseGroup: (params: { from?: string; to?: string; branchId?: string }) =>
     apiClient
-      .get<{ diseaseGroup: string; count: number }[]>('/reports/exam-volume-by-disease-group', { params })
+      .get<{ diseaseGroup: string; count: number }[]>('/reports/exam-volume-by-disease-group', {
+        params,
+      })
       .then((r) => r.data),
   aiAccuracy: (params: { from?: string; to?: string; branchId?: string }) =>
     apiClient.get<AiAccuracyReport>('/reports/ai-accuracy', { params }).then((r) => r.data),
@@ -122,7 +125,9 @@ export const reportsApi = {
   revenueSummary: (params: ReportFilterParams) =>
     apiClient.get<RevenueSummaryReport>('/reports/revenue/summary', { params }).then((r) => r.data),
   inventory: (branchId?: string) =>
-    apiClient.get<InventoryReport>('/reports/inventory', { params: { branchId } }).then((r) => r.data),
+    apiClient
+      .get<InventoryReport>('/reports/inventory', { params: { branchId } })
+      .then((r) => r.data),
   sales: (params: ReportFilterParams) =>
     apiClient.get<SalesReportRow[]>('/reports/sales', { params }).then((r) => r.data),
   exams: (params: { from?: string; to?: string; branchId?: string }) =>

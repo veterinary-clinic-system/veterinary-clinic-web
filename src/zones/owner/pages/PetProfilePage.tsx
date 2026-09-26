@@ -3,24 +3,18 @@ import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { appointmentsApi } from '@/api/appointments.api';
 import { petsApi } from '@/api/pets.api';
-import {
-  DescriptionList,
-  Icon,
-  Skeleton,
-  SkeletonText,
-  TabItem,
-  Tabs,
-} from '@/components/basic';
+import { DescriptionList, Icon, Skeleton, SkeletonText, TabItem, Tabs } from '@/components/basic';
 import { QueryErrorState } from '@/components/QueryErrorState';
 import { GENDER_LABEL_VI } from '@/utils/display';
 import { formatDate } from '@/utils/format';
 import { AppointmentList } from '../components/AppointmentList';
 import { petAgeLabel } from '../components/pet-display';
 import { DocumentsTab } from '../pet-profile/DocumentsTab';
+import { HealthRecordTab } from '../pet-profile/HealthRecordTab';
 import { MedicalHistoryTab } from '../pet-profile/MedicalHistoryTab';
 import { PetHeader } from '../pet-profile/PetHeader';
 
-type TabId = 'overview' | 'history' | 'appointments' | 'documents';
+type TabId = 'overview' | 'history' | 'health' | 'appointments' | 'documents';
 
 export function PetProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -79,6 +73,7 @@ export function PetProfilePage() {
   const tabs: TabItem<TabId>[] = [
     { id: 'overview', label: 'Tổng quan' },
     { id: 'history', label: 'Lịch sử khám', count: timeline?.length },
+    { id: 'health', label: 'Sức khỏe' },
     { id: 'appointments', label: 'Lịch hẹn', count: petAppointments.length },
     { id: 'documents', label: 'Tài liệu' },
   ];
@@ -126,9 +121,9 @@ export function PetProfilePage() {
           </div>
         )}
 
-        {tab === 'history' && (
-          <MedicalHistoryTab entries={timeline} isLoading={timelineLoading} />
-        )}
+        {tab === 'history' && <MedicalHistoryTab entries={timeline} isLoading={timelineLoading} />}
+
+        {tab === 'health' && <HealthRecordTab petId={id as string} />}
 
         {tab === 'appointments' && (
           <AppointmentList

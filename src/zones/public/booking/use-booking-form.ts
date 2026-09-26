@@ -24,6 +24,7 @@ import {
   SelectedSlot,
   Step,
 } from './types';
+import { resolveOwnedPetId } from './handoff';
 
 export function useBookingForm() {
   const { user } = useAuth();
@@ -120,6 +121,15 @@ export function useBookingForm() {
     setLookupState('found');
   }, [me]);
 
+  useEffect(() => {
+    if (!isOwner || !myPets) return;
+
+    // Route state is controlled by the browser and must not be trusted. Keep the
+    // handoff only when the pet really belongs to the signed-in owner.
+    const safePetId = resolveOwnedPetId(petId, myPets.map((pet) => pet.id));
+    if (safePetId !== petId) setPetId(safePetId);
+  }, [isOwner, myPets, petId]);
+
   const debouncedPhone = useDebouncedValue(phone.trim(), 500);
   useEffect(() => {
     if (isOwner) return;
@@ -186,7 +196,7 @@ export function useBookingForm() {
         return !!selectedSlot;
       case 5:
         if (!phone.trim() || !ownerFullName.trim()) return false;
-        if (effectivePetMode === 'existing') return !!petId;
+        if (effectivePetMode === 'existing') return !!selectedExistingPet;
         return newPet.name.trim().length > 0 && !!newPet.breedId;
       case 6:
         return ![...photoItems, ...videoItems].some((item) => item.status === 'uploading');
@@ -336,7 +346,8 @@ export function useBookingForm() {
     };
 
     if (effectivePetMode === 'existing') {
-      payload.petId = petId;
+      if (!selectedExistingPet) return;
+      payload.petId = selectedExistingPet.id;
     } else {
       payload.newPet = {
         name: newPet.name.trim(),

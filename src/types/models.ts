@@ -751,6 +751,7 @@ export interface PetInvoice {
   paidAt: string | null;
   paymentMethod: PaymentMethod | null;
   totalAmount: number;
+  status: InvoiceStatus;
 }
 
 export interface QueueEntry {
