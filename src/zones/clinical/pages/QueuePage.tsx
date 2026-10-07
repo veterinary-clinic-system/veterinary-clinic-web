@@ -69,12 +69,15 @@ export function QueuePage() {
     queryFn: () => queueApi.list(queueParams),
     enabled: Boolean(branchId),
     
-    refetchInterval: 30_000,
+    refetchInterval: 5_000,
   });
 
   function invalidateQueue() {
     void queryClient.invalidateQueries({ queryKey: ['queue'] });
     void queryClient.invalidateQueries({ queryKey: ['staff-appointments'] });
+    void queryClient.invalidateQueries({ queryKey: ['appointments-list'] });
+    void queryClient.invalidateQueries({ queryKey: ['staff-calendar-week'] });
+    void queryClient.invalidateQueries({ queryKey: ['staff-calendar-day'] });
   }
 
   const updateMutation = useMutation({

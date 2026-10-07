@@ -1,3 +1,4 @@
+import { useRealtimeScheduling } from '@/api/socket';
 import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Drawer, cn } from '@/components/basic';
@@ -11,6 +12,7 @@ const COLLAPSE_KEY = 'vetcare:sidebar-collapsed';
 export function StaffLayout() {
   const { user } = useAuth();
   const location = useLocation();
+  useRealtimeScheduling();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const [collapsed, setCollapsed] = useState<boolean>(

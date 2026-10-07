@@ -64,18 +64,21 @@ export function StaffCalendarPage() {
     queryKey: ['staff-calendar-week', branchId, doctorId, anchorStr],
     queryFn: () => appointmentsApi.staffCalendar(branchId, doctorId, anchorStr),
     enabled: view === 'week' && !!branchId && !!doctorId,
+    refetchInterval: 5_000,
   });
 
   const dayQuery = useQuery({
     queryKey: ['staff-calendar-day', branchId, doctorId, anchorStr],
     queryFn: () => appointmentsApi.staffDayCalendar(branchId, doctorId, anchorStr),
     enabled: view === 'day' && !!branchId && !!doctorId,
+    refetchInterval: 5_000,
   });
 
   const monthQuery = useQuery({
     queryKey: ['staff-calendar-month', branchId, doctorId, format(anchor, 'yyyy-MM')],
     queryFn: () => appointmentsApi.staffMonthCalendar(branchId, doctorId, anchorStr),
     enabled: view === 'month' && !!branchId,
+    refetchInterval: 10_000,
   });
 
   function shift(direction: -1 | 1) {

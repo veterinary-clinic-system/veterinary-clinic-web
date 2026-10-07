@@ -75,10 +75,6 @@ export function PublicFooter() {
           </p>
         </div>
       </div>
-
-      <div className="border-t border-border px-4 py-5 text-center text-sm text-muted">
-        © {new Date().getFullYear()} Veterinary Clinic System - Đồ án tốt nghiệp
-      </div>
     </footer>
   );
 }

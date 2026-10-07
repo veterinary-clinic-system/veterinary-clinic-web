@@ -63,6 +63,7 @@ export function AppointmentsListPage() {
       }),
     
     placeholderData: (prev) => prev,
+    refetchInterval: 5_000,
   });
 
   const checkInMutation = useMutation({
@@ -72,6 +73,8 @@ export function AppointmentsListPage() {
       void queryClient.invalidateQueries({ queryKey: ['appointments-list'] });
       void queryClient.invalidateQueries({ queryKey: ['staff-appointments'] });
       void queryClient.invalidateQueries({ queryKey: ['queue'] });
+      void queryClient.invalidateQueries({ queryKey: ['staff-calendar-week'] });
+      void queryClient.invalidateQueries({ queryKey: ['staff-calendar-day'] });
     },
     onError: (error) => toast.show(getErrorMessage(error), 'error'),
   });

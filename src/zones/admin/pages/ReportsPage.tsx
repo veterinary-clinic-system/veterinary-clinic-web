@@ -11,15 +11,25 @@ import {
 } from 'date-fns';
 import { branchesApi } from '@/api/branches.api';
 import { employeesApi } from '@/api/employees.api';
-import { reportsApi, SalesReportRow } from '@/api/reports.api';
-import { Button, DatePicker, Select, Skeleton, Table } from '@/components/basic';
-import type { Column } from '@/components/basic';
+import { reportsApi } from '@/api/reports.api';
+import { Button, DatePicker, PageHeader, Select, Tabs } from '@/components/basic';
+import type { TabItem } from '@/components/basic';
 import { useToast } from '@/components/basic/Toast';
-import { PaymentMethod, PRIORITY_COLOR_LABEL_VI, PriorityColor } from '@/types/enums';
+import { PaymentMethod } from '@/types/enums';
 import { PAYMENT_METHOD_LABEL_VI } from '@/utils/labels';
-import { formatCurrency } from '@/utils/format';
 
-type Preset = 'week' | 'month' | 'quarter' | 'year' | 'last30' | 'custom';
+import { ReportStatsHeader } from '../reports/ReportStatsHeader';
+import { RevenueTimelineChart } from '../reports/RevenueTimelineChart';
+import { ServiceRevenueChart } from '../reports/ServiceRevenueChart';
+import { DoctorRevenueChart } from '../reports/DoctorRevenueChart';
+import { AppointmentsAnalyticsCard } from '../reports/AppointmentsAnalyticsCard';
+import { DiseaseDistributionChart } from '../reports/DiseaseDistributionChart';
+import { SalesReportCard } from '../reports/SalesReportCard';
+import { InventoryHealthCard } from '../reports/InventoryHealthCard';
+import { AiAccuracyReportCard } from '../reports/AiAccuracyReportCard';
+
+type Preset = 'last30' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
+type ReportTab = 'all' | 'revenue' | 'clinical' | 'sales_inventory' | 'ai';
 
 const ISO = 'yyyy-MM-dd';
 
@@ -39,9 +49,19 @@ const PRESET_LABEL: Record<Exclude<Preset, 'custom'>, string> = {
   year: 'Năm nay',
 };
 
+const TABS: TabItem<ReportTab>[] = [
+  { id: 'all', label: '📊 Toàn cảnh báo cáo' },
+  { id: 'revenue', label: '💰 Doanh thu & Dòng tiền' },
+  { id: 'clinical', label: '🩺 Lâm sàng & Bác sĩ' },
+  { id: 'sales_inventory', label: '📦 Bán hàng & Kho' },
+  { id: 'ai', label: '🤖 Phân loại AI' },
+];
+
 export function ReportsPage() {
   const toast = useToast();
   const today = startOfDay(new Date());
+
+  const [activeTab, setActiveTab] = useState<ReportTab>('all');
   const [preset, setPreset] = useState<Preset>('last30');
   const [from, setFrom] = useState<string | null>(format(subDays(today, 30), ISO));
   const [to, setTo] = useState<string | null>(format(today, ISO));
@@ -50,6 +70,7 @@ export function ReportsPage() {
   const [employeeUserId, setEmployeeUserId] = useState('');
   const [groupBy, setGroupBy] = useState<'day' | 'month'>('day');
   const [exporting, setExporting] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   const branchesQuery = useQuery({ queryKey: ['branches'], queryFn: () => branchesApi.list() });
   const employeesQuery = useQuery({
@@ -67,6 +88,14 @@ export function ReportsPage() {
   function setCustomFrom(value: string | null) {
     setFrom(value);
     setPreset('custom');
+  }
+
+  function resetFilters() {
+    applyPreset('last30');
+    setBranchId('');
+    setPaymentMethod('');
+    setEmployeeUserId('');
+    setGroupBy('day');
   }
 
   const range = { from: from ?? format(subDays(today, 30), ISO), to: to ?? format(today, ISO) };
@@ -115,6 +144,7 @@ export function ReportsPage() {
     queryFn: () =>
       reportsApi.examVolumeByDiseaseGroup({ ...range, branchId: branchId || undefined }),
   });
+
   const reportQueries = [
     summaryQuery,
     inventoryQuery,
@@ -142,6 +172,7 @@ export function ReportsPage() {
       link.download = `bao-cao-ban-hang-${range.from}-${range.to}.csv`;
       link.click();
       URL.revokeObjectURL(url);
+      toast.show('Xuất file báo cáo thành công.', 'success');
     } catch {
       toast.show('Không xuất được file báo cáo.', 'error');
     } finally {
@@ -149,429 +180,292 @@ export function ReportsPage() {
     }
   }
 
-  const salesColumns: Column<SalesReportRow>[] = [
-    {
-      key: 'itemCode',
-      header: 'Mã hàng',
-      render: (row) => <span className="font-mono text-xs text-muted">{row.itemCode}</span>,
-    },
-    { key: 'itemName', header: 'Mặt hàng', render: (row) => row.itemName },
-    {
-      key: 'quantitySold',
-      header: 'Số lượng bán',
-      render: (row) => (
-        <span className="[font-variant-numeric:tabular-nums]">
-          {row.quantitySold.toLocaleString('vi-VN')}
-        </span>
-      ),
-    },
-    {
-      key: 'totalRevenue',
-      header: 'Doanh thu',
-      render: (row) => (
-        <span className="[font-variant-numeric:tabular-nums]">
-          {formatCurrency(row.totalRevenue)}
-        </span>
-      ),
-    },
-  ];
+  const isFiltered = Boolean(branchId || paymentMethod || employeeUserId || preset === 'custom');
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">Báo cáo</h1>
-
-      <div className="flex flex-col gap-4 rounded border border-border bg-surface p-4">
-        <div className="flex flex-wrap gap-2">
-          {(Object.keys(PRESET_LABEL) as Exclude<Preset, 'custom'>[]).map((value) => (
+      {/* Top Header */}
+      <PageHeader
+        title="Báo cáo & Thống kê"
+        description="Tổng quan doanh thu, số liệu lâm sàng, tình trạng kho và chất lượng gợi ý AI."
+        actions={
+          <div className="flex items-center gap-2">
             <Button
-              key={value}
+              variant="secondary"
               size="sm"
-              variant={preset === value ? 'primary' : 'secondary'}
-              onClick={() => applyPreset(value)}
+              onClick={() => setShowFilters((prev) => !prev)}
+              className="text-xs"
             >
-              {PRESET_LABEL[value]}
+              <svg className="mr-1.5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              Bộ lọc nâng cao {isFiltered && '(Đang lọc)'}
             </Button>
-          ))}
+            <Button
+              variant="primary"
+              size="sm"
+              loading={exporting}
+              onClick={() => void exportSales()}
+              className="text-xs"
+            >
+              <svg className="mr-1.5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Xuất CSV bán hàng
+            </Button>
+          </div>
+        }
+      />
+
+      {/* Date Presets and Fast Filter Bar */}
+      <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="mr-1 text-xs font-medium text-muted">Khoảng thời gian:</span>
+            {(Object.keys(PRESET_LABEL) as Exclude<Preset, 'custom'>[]).map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => applyPreset(value)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                  preset === value
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'bg-surface-muted/70 text-foreground hover:bg-surface-muted hover:text-foreground'
+                }`}
+              >
+                {PRESET_LABEL[value]}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2 text-xs text-muted">
+            <span>Từ: <strong className="text-foreground">{range.from}</strong></span>
+            <span>Đến: <strong className="text-foreground">{range.to}</strong></span>
+            {isFiltered && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="ml-2 font-medium text-primary hover:underline"
+              >
+                Đặt lại
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          <DatePicker label="Từ ngày" value={from} onChange={setCustomFrom} max={to ?? undefined} />
-          <DatePicker
-            label="Đến ngày"
-            value={to}
-            onChange={(value) => {
-              setTo(value);
-              setPreset('custom');
-            }}
-            min={from ?? undefined}
-          />
-          <Select
-            label="Chi nhánh"
-            value={branchId}
-            onChange={setBranchId}
-            options={[
-              { value: '', label: 'Tất cả chi nhánh' },
-              ...(branchesQuery.data ?? []).map((b) => ({ value: b.id, label: b.branchName })),
-            ]}
-          />
-          <Select
-            label="Phương thức thanh toán"
-            value={paymentMethod}
-            onChange={setPaymentMethod}
-            options={[
-              { value: '', label: 'Tất cả' },
-              ...Object.values(PaymentMethod).map((method) => ({
-                value: method,
-                label: PAYMENT_METHOD_LABEL_VI[method],
-              })),
-            ]}
-          />
-          <Select
-            label="Nhân viên thu tiền"
-            value={employeeUserId}
-            onChange={setEmployeeUserId}
-            options={[
-              { value: '', label: 'Tất cả' },
-              ...(employeesQuery.data?.data ?? [])
-                .filter((employee) => employee.userId)
-                .map((employee) => ({
-                  value: employee.userId as string,
-                  label: employee.fullName,
-                })),
-            ]}
-          />
-          <Select
-            label="Nhóm doanh thu theo"
-            value={groupBy}
-            onChange={(value) => setGroupBy(value as 'day' | 'month')}
-            options={[
-              { value: 'day', label: 'Ngày' },
-              { value: 'month', label: 'Tháng' },
-            ]}
-          />
-        </div>
+        {/* Collapsible / Detailed Filter Row */}
+        {showFilters && (
+          <div className="mt-4 border-t border-border pt-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+              <DatePicker label="Từ ngày" value={from} onChange={setCustomFrom} max={to ?? undefined} />
+              <DatePicker
+                label="Đến ngày"
+                value={to}
+                onChange={(value) => {
+                  setTo(value);
+                  setPreset('custom');
+                }}
+                min={from ?? undefined}
+              />
+              <Select
+                label="Chi nhánh"
+                value={branchId}
+                onChange={setBranchId}
+                options={[
+                  { value: '', label: 'Tất cả chi nhánh' },
+                  ...(branchesQuery.data ?? []).map((b) => ({ value: b.id, label: b.branchName })),
+                ]}
+              />
+              <Select
+                label="Phương thức thanh toán"
+                value={paymentMethod}
+                onChange={setPaymentMethod}
+                options={[
+                  { value: '', label: 'Tất cả' },
+                  ...Object.values(PaymentMethod).map((method) => ({
+                    value: method,
+                    label: PAYMENT_METHOD_LABEL_VI[method],
+                  })),
+                ]}
+              />
+              <Select
+                label="Nhân viên thu ngân"
+                value={employeeUserId}
+                onChange={setEmployeeUserId}
+                options={[
+                  { value: '', label: 'Tất cả' },
+                  ...(employeesQuery.data?.data ?? [])
+                    .filter((employee) => employee.userId)
+                    .map((employee) => ({
+                      value: employee.userId as string,
+                      label: employee.fullName,
+                    })),
+                ]}
+              />
+              <Select
+                label="Nhóm doanh thu theo"
+                value={groupBy}
+                onChange={(value) => setGroupBy(value as 'day' | 'month')}
+                options={[
+                  { value: 'day', label: 'Theo Ngày' },
+                  { value: 'month', label: 'Theo Tháng' },
+                ]}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
+      {/* Global Error Banner */}
       {hasReportError && (
         <div
           role="alert"
-          className="flex flex-wrap items-center justify-between gap-3 rounded border border-danger/30 bg-danger/5 p-4"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-danger/30 bg-danger/5 p-4 shadow-sm"
         >
-          <p className="text-sm text-danger">
-            Một số báo cáo chưa tải được. Các phần còn lại vẫn hiển thị bằng dữ liệu nhận được.
-          </p>
+          <div className="flex items-center gap-2 text-sm text-danger">
+            <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span>Một số khối báo cáo chưa tải được dữ liệu. Các khối còn lại vẫn hiển thị bình thường.</span>
+          </div>
           <Button variant="secondary" size="sm" onClick={retryFailedReports}>
-            Thử tải lại
+            Tải lại báo cáo
           </Button>
         </div>
       )}
 
-      {}
-      <Section
-        title="Tổng hợp doanh thu"
-        hint="Tiền thực thu, đọc từ các giao dịch thanh toán trong kỳ."
-      >
-        {summaryQuery.data && (
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
-            <Stat label="Doanh thu thuần" value={formatCurrency(summaryQuery.data.totalRevenue)} />
-            <Stat label="Đã thu" value={formatCurrency(summaryQuery.data.totalPaid)} />
-            <Stat label="Đã hoàn" value={formatCurrency(summaryQuery.data.totalRefunded)} />
-            <Stat label="Còn phải thu" value={formatCurrency(summaryQuery.data.totalUnpaid)} />
-            <Stat label="Số hóa đơn đã thu" value={summaryQuery.data.invoiceCount} />
-            <Stat label="Hóa đơn chưa thu đủ" value={summaryQuery.data.unpaidInvoiceCount} />
-          </div>
-        )}
-        {summaryQuery.isLoading && <Skeleton className="h-24 w-full rounded-xl" />}
-      </Section>
+      {/* Executive KPI Summary Header */}
+      <ReportStatsHeader
+        summary={summaryQuery.data}
+        exams={examsQuery.data}
+        inventory={inventoryQuery.data}
+        ai={aiAccuracyQuery.data}
+        loading={summaryQuery.isLoading || examsQuery.isLoading}
+      />
 
-      <Section
-        title="Tiền thực thu theo thời gian"
-        hint="Tổng giao dịch thành công trừ các khoản đã hoàn, tính theo ngày nhận tiền."
-      >
-        <SimpleTable
-          loading={revenueQuery.isLoading}
-          rows={revenueQuery.data ?? []}
-          columns={[
-            { header: 'Kỳ', cell: (r) => r.period },
-            { header: 'Doanh thu', cell: (r) => formatCurrency(r.totalRevenue), align: 'right' },
-            { header: 'Số hóa đơn', cell: (r) => r.invoiceCount, align: 'right' },
-          ]}
-          emptyText="Không có dữ liệu doanh thu trong kỳ."
+      {/* Categorized Navigation Tabs */}
+      <div className="border-b border-border">
+        <Tabs
+          items={TABS}
+          value={activeTab}
+          onChange={(tab) => setActiveTab(tab)}
+          variant="line"
         />
-      </Section>
-
-      {}
-      <Section
-        title="Báo cáo kho"
-        hint={
-          inventoryQuery.data
-            ? `Ảnh chụp tại thời điểm xem — không phụ thuộc khoảng ngày. "Sắp hết hạn" tính trong ${inventoryQuery.data.expiringSoonDays} ngày tới.`
-            : 'Ảnh chụp tại thời điểm xem — không phụ thuộc khoảng ngày.'
-        }
-      >
-        {inventoryQuery.data && (
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 xl:grid-cols-7">
-            <Stat label="Sản phẩm" value={inventoryQuery.data.totalProducts} />
-            <Stat label="Thuốc" value={inventoryQuery.data.totalMedicines} />
-            <Stat label="Vắc-xin" value={inventoryQuery.data.totalVaccines} />
-            <Stat label="Sắp hết hàng" value={inventoryQuery.data.lowStock} tone="warn" />
-            <Stat label="Hết hàng" value={inventoryQuery.data.outOfStock} tone="bad" />
-            <Stat label="Sắp hết hạn" value={inventoryQuery.data.expiringSoon} tone="warn" />
-            <Stat label="Đã hết hạn" value={inventoryQuery.data.expired} tone="bad" />
-          </div>
-        )}
-        {inventoryQuery.isLoading && <Skeleton className="h-24 w-full rounded-xl" />}
-      </Section>
-
-      {}
-      <Section
-        title="Báo cáo bán hàng"
-        hint="Mặt hàng bán chạy nhất trong kỳ, nhiều nhất trước."
-        action={
-          <Button
-            variant="secondary"
-            size="sm"
-            loading={exporting}
-            onClick={() => void exportSales()}
-          >
-            Xuất CSV
-          </Button>
-        }
-      >
-        <Table
-          columns={salesColumns}
-          data={salesQuery.data ?? []}
-          getRowId={(row) => row.itemCode}
-          loading={salesQuery.isLoading}
-          error={salesQuery.isError}
-          onRetry={() => void salesQuery.refetch()}
-          emptyMessage="Không có giao dịch bán hàng nào trong kỳ."
-        />
-      </Section>
-
-      {}
-      <Section
-        title="Báo cáo khám"
-        hint="Tỉ lệ vắng mặt tính trên các lịch hẹn đã đến hạn trong kỳ."
-      >
-        {examsQuery.data && (
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-              <Stat label="Tổng lịch hẹn" value={examsQuery.data.totalAppointments} />
-              <Stat label="Đã khám xong" value={examsQuery.data.completed} />
-              <Stat label="Vắng mặt" value={examsQuery.data.noShow} tone="warn" />
-              <Stat label="Đã hủy" value={examsQuery.data.cancelled} />
-              <Stat
-                label="Tỉ lệ vắng"
-                value={`${Math.round(examsQuery.data.noShowRate * 100)}%`}
-                tone={examsQuery.data.noShowRate > 0.15 ? 'bad' : undefined}
-              />
-            </div>
-            <SimpleTable
-              loading={false}
-              rows={examsQuery.data.topVeterinarians}
-              columns={[
-                { header: 'Bác sĩ', cell: (r) => r.doctorName },
-                { header: 'Số lượt', cell: (r) => r.examCount, align: 'right' },
-                { header: 'Vắng mặt', cell: (r) => r.noShowCount, align: 'right' },
-              ]}
-              emptyText="Không có lượt khám nào trong kỳ."
-            />
-          </div>
-        )}
-        {examsQuery.isLoading && <Skeleton className="h-24 w-full rounded-xl" />}
-      </Section>
-
-      <Section
-        title="Tiền thực thu theo dịch vụ"
-        hint="Tiền thu và hoàn được phân bổ theo tỷ trọng giá trị từng dòng dịch vụ trên hóa đơn."
-      >
-        <SimpleTable
-          loading={byServiceQuery.isLoading}
-          rows={byServiceQuery.data ?? []}
-          columns={[
-            { header: 'Dịch vụ', cell: (r) => r.serviceName },
-            { header: 'Doanh thu', cell: (r) => formatCurrency(r.totalRevenue), align: 'right' },
-            { header: 'Số lượt', cell: (r) => r.count, align: 'right' },
-          ]}
-          emptyText="Không có dữ liệu."
-        />
-      </Section>
-
-      <Section
-        title="Tiền thực thu theo bác sĩ"
-        hint="Chỉ gồm hóa đơn có lịch hẹn và bác sĩ phụ trách."
-      >
-        <SimpleTable
-          loading={byDoctorQuery.isLoading}
-          rows={byDoctorQuery.data ?? []}
-          columns={[
-            { header: 'Bác sĩ', cell: (r) => r.doctorName },
-            { header: 'Doanh thu', cell: (r) => formatCurrency(r.totalRevenue), align: 'right' },
-            { header: 'Số lịch hẹn', cell: (r) => r.appointmentCount, align: 'right' },
-          ]}
-          emptyText="Không có dữ liệu."
-        />
-      </Section>
-
-      <Section title="Nhóm bệnh thường gặp" hint="Tổng hợp từ chẩn đoán trong kỳ đã chọn.">
-        <SimpleTable
-          loading={diseaseQuery.isLoading}
-          rows={diseaseQuery.data ?? []}
-          columns={[
-            { header: 'Nhóm bệnh / chẩn đoán', cell: (row) => row.diseaseGroup },
-            { header: 'Số lượt', cell: (row) => row.count, align: 'right' },
-          ]}
-          emptyText="Không có chẩn đoán trong kỳ."
-        />
-      </Section>
-
-      <Section
-        title="Mức độ đồng thuận với phân loại AI"
-        hint="Tỉ lệ nhân viên giữ nguyên hoặc ghi đè mức độ ưu tiên do AI đề xuất; đây không phải độ chính xác chẩn đoán."
-      >
-        {aiAccuracyQuery.data && (
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <Stat label="Tổng số đánh giá" value={aiAccuracyQuery.data.totalEvaluated} />
-              <Stat label="Chấp nhận AI" value={aiAccuracyQuery.data.accepted} />
-              <Stat label="Ghi đè AI" value={aiAccuracyQuery.data.overridden} />
-              <Stat
-                label="Tỉ lệ chấp nhận"
-                value={`${Math.round(aiAccuracyQuery.data.acceptanceRate * 100)}%`}
-              />
-            </div>
-            <SimpleTable
-              loading={false}
-              rows={aiAccuracyQuery.data.breakdownByColor}
-              columns={[
-                {
-                  header: 'Mức độ ưu tiên (AI)',
-                  cell: (r) =>
-                    PRIORITY_COLOR_LABEL_VI[r.aiPriorityColor as PriorityColor] ??
-                    r.aiPriorityColor,
-                },
-                { header: 'Chấp nhận', cell: (r) => r.acceptedCount, align: 'right' },
-                { header: 'Ghi đè', cell: (r) => r.overriddenCount, align: 'right' },
-              ]}
-              emptyText="Không có dữ liệu."
-            />
-          </div>
-        )}
-        {aiAccuracyQuery.isLoading && <Skeleton className="h-24 w-full rounded-xl" />}
-      </Section>
-    </div>
-  );
-}
-
-function Section({
-  title,
-  hint,
-  action,
-  children,
-}: {
-  title: string;
-  hint?: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="rounded border border-border bg-surface p-4">
-      <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="font-medium">{title}</h2>
-          {hint && <p className="text-sm text-muted">{hint}</p>}
-        </div>
-        {action}
       </div>
-      {children}
-    </section>
-  );
-}
 
-function Stat({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string | number;
+      {/* Tab Panels */}
+      {activeTab === 'all' && (
+        <div className="space-y-6">
+          {/* Main Revenue Timeline Chart */}
+          <RevenueTimelineChart
+            data={revenueQuery.data ?? []}
+            loading={revenueQuery.isLoading}
+            groupBy={groupBy}
+          />
 
-  tone?: 'warn' | 'bad';
-}) {
-  const toneClass = tone === 'bad' ? 'text-danger' : tone === 'warn' ? 'text-warning' : '';
-  return (
-    <div className="rounded border border-border p-3">
-      <p className="text-xs text-muted">{label}</p>
-      <p className={`text-xl font-semibold ${value === 0 ? 'text-muted' : toneClass}`}>{value}</p>
-    </div>
-  );
-}
+          {/* 2-Column: Revenue by Service & Appointment Analytics */}
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <ServiceRevenueChart
+              data={byServiceQuery.data ?? []}
+              loading={byServiceQuery.isLoading}
+            />
+            <AppointmentsAnalyticsCard
+              data={examsQuery.data}
+              loading={examsQuery.isLoading}
+            />
+          </div>
 
-interface SimpleColumn<T> {
-  header: string;
-  cell: (row: T) => string | number;
-  align?: 'left' | 'right';
-}
+          {/* 2-Column: Doctor Revenue & Common Disease Groups */}
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <DoctorRevenueChart
+              data={byDoctorQuery.data ?? []}
+              loading={byDoctorQuery.isLoading}
+            />
+            <DiseaseDistributionChart
+              data={diseaseQuery.data ?? []}
+              loading={diseaseQuery.isLoading}
+            />
+          </div>
 
-function SimpleTable<T>({
-  rows,
-  columns,
-  loading,
-  emptyText,
-}: {
-  rows: T[];
-  columns: SimpleColumn<T>[];
-  loading: boolean;
-  emptyText: string;
-}) {
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[480px] border-collapse text-sm">
-        <thead>
-          <tr className="bg-surface-muted text-left">
-            {columns.map((c) => (
-              <th
-                key={c.header}
-                className={`px-3 py-2 ${c.align === 'right' ? 'text-right' : 'text-left'}`}
-              >
-                {c.header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {loading &&
-            Array.from({ length: 4 }).map((_, index) => (
-              <tr key={`skeleton-${index}`} className="border-t border-border">
-                <td colSpan={columns.length} className="px-3">
-                  <div className="flex h-row items-center">
-                    <Skeleton className="h-3.5 w-full max-w-sm" />
-                  </div>
-                </td>
-              </tr>
-            ))}
-          {!loading && rows.length === 0 && (
-            <tr>
-              <td colSpan={columns.length} className="px-3 py-6 text-center text-muted">
-                {emptyText}
-              </td>
-            </tr>
-          )}
-          {rows.map((row, idx) => (
-            <tr key={idx} className="border-t border-border">
-              {columns.map((c) => (
-                <td
-                  key={c.header}
-                  className={`px-3 py-2 ${c.align === 'right' ? 'text-right [font-variant-numeric:tabular-nums]' : 'text-left'}`}
-                >
-                  {c.cell(row)}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          {/* 2-Column: Sales Products & Inventory Health */}
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <SalesReportCard
+              data={salesQuery.data ?? []}
+              loading={salesQuery.isLoading}
+              exporting={exporting}
+              onExport={() => void exportSales()}
+            />
+            <InventoryHealthCard
+              data={inventoryQuery.data}
+              loading={inventoryQuery.isLoading}
+            />
+          </div>
+
+          {/* AI Accuracy Card */}
+          <AiAccuracyReportCard
+            data={aiAccuracyQuery.data}
+            loading={aiAccuracyQuery.isLoading}
+          />
+        </div>
+      )}
+
+      {activeTab === 'revenue' && (
+        <div className="space-y-6">
+          <RevenueTimelineChart
+            data={revenueQuery.data ?? []}
+            loading={revenueQuery.isLoading}
+            groupBy={groupBy}
+          />
+
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <ServiceRevenueChart
+              data={byServiceQuery.data ?? []}
+              loading={byServiceQuery.isLoading}
+            />
+            <DoctorRevenueChart
+              data={byDoctorQuery.data ?? []}
+              loading={byDoctorQuery.isLoading}
+            />
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'clinical' && (
+        <div className="space-y-6">
+          <AppointmentsAnalyticsCard
+            data={examsQuery.data}
+            loading={examsQuery.isLoading}
+          />
+          <DiseaseDistributionChart
+            data={diseaseQuery.data ?? []}
+            loading={diseaseQuery.isLoading}
+          />
+        </div>
+      )}
+
+      {activeTab === 'sales_inventory' && (
+        <div className="space-y-6">
+          <SalesReportCard
+            data={salesQuery.data ?? []}
+            loading={salesQuery.isLoading}
+            exporting={exporting}
+            onExport={() => void exportSales()}
+          />
+          <InventoryHealthCard
+            data={inventoryQuery.data}
+            loading={inventoryQuery.isLoading}
+          />
+        </div>
+      )}
+
+      {activeTab === 'ai' && (
+        <div className="space-y-6">
+          <AiAccuracyReportCard
+            data={aiAccuracyQuery.data}
+            loading={aiAccuracyQuery.isLoading}
+          />
+        </div>
+      )}
     </div>
   );
 }
