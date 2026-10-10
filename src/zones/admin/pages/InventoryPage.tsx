@@ -154,16 +154,20 @@ export function InventoryPage() {
     {
       key: 'code',
       header: 'Mã hàng',
-      render: (row) => <span className="font-mono text-xs text-muted">{row.item?.code ?? '—'}</span>,
+      width: '120px',
+      className: 'whitespace-nowrap font-mono text-xs text-muted',
+      render: (row) => row.item?.code ?? '—',
     },
     {
       key: 'itemName',
       header: 'Mặt hàng',
+      minWidth: '220px',
+      className: 'whitespace-nowrap',
       render: (row) => (
         <button
           type="button"
           onClick={() => setBatchesOf(row)}
-          className="font-medium text-primary hover:underline"
+          className="font-medium text-primary hover:underline text-left whitespace-nowrap"
         >
           {row.item?.itemName ?? '—'}
         </button>
@@ -171,9 +175,10 @@ export function InventoryPage() {
     },
     {
       key: 'inventoryQuantity',
-      header: 'Tồn',
+      header: 'Tồn kho',
       sortable: true,
-      
+      width: '120px',
+      className: 'whitespace-nowrap',
       render: (row) => {
         const level = stockLevelOf(row.inventoryQuantity);
         return (
@@ -189,6 +194,8 @@ export function InventoryPage() {
     {
       key: 'active',
       header: 'Trạng thái',
+      width: '180px',
+      className: 'whitespace-nowrap',
       render: (row) => (
         <Badge variant={row.active ? 'success' : 'outline'}>
           {row.active ? 'Đang kinh doanh' : 'Ngưng tại chi nhánh'}
@@ -198,8 +205,11 @@ export function InventoryPage() {
     {
       key: 'actions',
       header: '',
+      minWidth: '300px',
+      align: 'right',
+      className: 'whitespace-nowrap text-right',
       render: (row) => (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
           <Button size="sm" variant="secondary" onClick={() => setBatchesOf(row)}>
             Xem lô
           </Button>
@@ -326,6 +336,7 @@ export function InventoryPage() {
       </div>
 
       <Table
+        minWidth="950px"
         columns={columns}
         data={data?.data ?? []}
         getRowId={(row) => row.id}

@@ -95,6 +95,8 @@ export function PharmacyPage() {
     {
       key: 'createdAt',
       header: 'Kê lúc',
+      width: '160px',
+      className: 'whitespace-nowrap tabular-nums',
       render: (row) => (
         <button
           type="button"
@@ -112,11 +114,17 @@ export function PharmacyPage() {
     {
       key: 'items',
       header: 'Số loại thuốc',
+      width: '120px',
+      align: 'center',
+      className: 'whitespace-nowrap text-center tabular-nums',
       render: (row) => row.items?.length ?? 0,
     },
     {
       key: 'status',
       header: 'Trạng thái',
+      width: '140px',
+      align: 'center',
+      className: 'whitespace-nowrap text-center',
       render: (row) => (
         <Badge variant={STATUS_VARIANT[row.status]}>
           {PRESCRIPTION_STATUS_LABEL_VI[row.status]}
@@ -132,11 +140,15 @@ export function PharmacyPage() {
     {
       key: 'medication',
       header: 'Thuốc',
+      minWidth: '180px',
+      className: 'whitespace-nowrap font-medium',
       render: (row) => row.medication?.item?.itemName ?? '—',
     },
     {
       key: 'quantity',
       header: 'Số lượng',
+      width: '110px',
+      className: 'whitespace-nowrap tabular-nums',
       render: (row) => (
         <span className="font-semibold">
           {row.quantity} {row.medication?.unit ?? ''}
@@ -146,6 +158,8 @@ export function PharmacyPage() {
     {
       key: 'stock',
       header: 'Tồn dùng được',
+      width: '130px',
+      className: 'whitespace-nowrap tabular-nums',
       render: (row) => {
         const stock = stockByItemId.get(row.id);
         if (!stock) return '—';
@@ -157,15 +171,17 @@ export function PharmacyPage() {
         );
       },
     },
-    { key: 'dosage', header: 'Liều', render: (row) => row.dosage },
-    { key: 'frequency', header: 'Tần suất', render: (row) => row.frequency ?? '—' },
-    { key: 'durationDays', header: 'Số ngày', render: (row) => row.durationDays },
+    { key: 'dosage', header: 'Liều', minWidth: '110px', className: 'whitespace-nowrap', render: (row) => row.dosage },
+    { key: 'frequency', header: 'Tần suất', minWidth: '110px', className: 'whitespace-nowrap', render: (row) => row.frequency ?? '—' },
+    { key: 'durationDays', header: 'Số ngày', width: '90px', align: 'center', className: 'whitespace-nowrap text-center tabular-nums', render: (row) => row.durationDays },
     {
       key: 'route',
       header: 'Đường dùng',
+      width: '120px',
+      className: 'whitespace-nowrap',
       render: (row) => MEDICATION_ROUTE_LABEL_VI[row.route] ?? row.route,
     },
-    { key: 'instructions', header: 'Dặn dò', render: (row) => row.instructions ?? '—' },
+    { key: 'instructions', header: 'Dặn dò', minWidth: '160px', className: 'max-w-[220px] truncate', render: (row) => row.instructions ?? '—' },
   ];
 
   const prescription = view?.prescription;

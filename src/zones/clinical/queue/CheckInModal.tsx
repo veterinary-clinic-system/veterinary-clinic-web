@@ -58,25 +58,60 @@ export function CheckInModal({
   );
 
   const columns: Column<Appointment>[] = [
-    { key: 'startAt', header: 'Giờ hẹn', render: (row) => formatTime(row.startAt) },
-    { key: 'pet', header: 'Thú cưng', render: (row) => row.pet?.name ?? '—' },
+    {
+      key: 'startAt',
+      header: 'Giờ hẹn',
+      width: '100px',
+      minWidth: '90px',
+      className: 'whitespace-nowrap tabular-nums font-medium text-foreground',
+      render: (row) => formatTime(row.startAt),
+    },
+    {
+      key: 'pet',
+      header: 'Thú cưng',
+      width: '160px',
+      minWidth: '140px',
+      className: 'whitespace-nowrap font-semibold text-primary',
+      render: (row) => row.pet?.name ?? '—',
+    },
     {
       key: 'owner',
       header: 'Chủ nuôi',
-      render: (row) => `${row.pet?.owner?.fullName ?? '—'} · ${row.pet?.owner?.phone ?? '—'}`,
+      width: '220px',
+      minWidth: '180px',
+      className: 'whitespace-nowrap',
+      render: (row) => (
+        <span className="text-muted">
+          <span className="font-medium text-foreground">{row.pet?.owner?.fullName ?? '—'}</span> · <span className="tabular-nums">{row.pet?.owner?.phone ?? '—'}</span>
+        </span>
+      ),
     },
-    { key: 'doctor', header: 'Bác sĩ', render: (row) => row.doctor?.fullName ?? '—' },
+    {
+      key: 'doctor',
+      header: 'Bác sĩ',
+      width: '160px',
+      minWidth: '140px',
+      className: 'whitespace-nowrap text-muted',
+      render: (row) => row.doctor?.fullName ?? '—',
+    },
     {
       key: 'actions',
       header: '',
+      width: '180px',
+      minWidth: '160px',
+      align: 'right',
+      className: 'whitespace-nowrap',
       render: (row) => (
-        <Button
-          size="sm"
-          loading={checkInMutation.isPending && checkInMutation.variables === row.id}
-          onClick={() => checkInMutation.mutate(row.id)}
-        >
-          Tiếp nhận (Check-in)
-        </Button>
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            className="whitespace-nowrap"
+            loading={checkInMutation.isPending && checkInMutation.variables === row.id}
+            onClick={() => checkInMutation.mutate(row.id)}
+          >
+            Tiếp nhận (Check-in)
+          </Button>
+        </div>
       ),
     },
   ];
@@ -107,6 +142,7 @@ export function CheckInModal({
           ]}
         />
         <Table
+          minWidth="750px"
           columns={columns}
           data={pending}
           getRowId={(row) => row.id}

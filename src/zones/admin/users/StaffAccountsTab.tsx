@@ -59,21 +59,55 @@ export function StaffAccountsTab() {
     {
       key: 'fullName',
       header: 'Họ và tên',
-      render: (user) => <span className="flex items-center gap-2 font-medium text-foreground"><img src={user.avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />{user.fullName}</span>,
+      width: '240px',
+      minWidth: '200px',
+      className: 'whitespace-nowrap',
+      render: (user) => (
+        <span className="flex items-center gap-2 font-medium text-foreground">
+          <img src={user.avatarUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+          <span>{user.fullName}</span>
+        </span>
+      ),
     },
-    { key: 'phone', header: 'Số điện thoại' },
-    { key: 'email', header: 'Email', hideBelow: 'lg', render: (user) => user.email ?? '—' },
-    { key: 'role', header: 'Vai trò', render: (user) => ROLE_LABEL_VI[user.role] },
+    {
+      key: 'phone',
+      header: 'Số điện thoại',
+      width: '140px',
+      minWidth: '120px',
+      className: 'whitespace-nowrap tabular-nums text-muted',
+    },
+    {
+      key: 'email',
+      header: 'Email',
+      width: '200px',
+      minWidth: '160px',
+      hideBelow: 'lg',
+      className: 'whitespace-nowrap text-muted',
+      render: (user) => user.email ?? '—',
+    },
+    {
+      key: 'role',
+      header: 'Vai trò',
+      width: '150px',
+      minWidth: '130px',
+      className: 'whitespace-nowrap',
+      render: (user) => ROLE_LABEL_VI[user.role],
+    },
     {
       key: 'branchId',
       header: 'Chi nhánh',
+      width: '180px',
+      minWidth: '150px',
       hideBelow: 'md',
-      
+      className: 'whitespace-nowrap text-muted',
       render: (user) => (user.role === Role.ADMIN ? 'Toàn hệ thống' : branchName(user.branchId)),
     },
     {
       key: 'active',
       header: 'Trạng thái',
+      width: '150px',
+      minWidth: '130px',
+      className: 'whitespace-nowrap',
       render: (user) => (
         <StatusBadge variant={user.active ? 'success' : 'destructive'}>
           {user.active ? 'Hoạt động' : 'Đã khoá'}
@@ -85,6 +119,7 @@ export function StaffAccountsTab() {
   return (
     <>
       <DataTable
+        minWidth="1050px"
         columns={columns}
         data={listQuery.data?.data ?? []}
         getRowId={(user) => user.id}

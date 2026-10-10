@@ -10,11 +10,12 @@ export interface DataColumn<T> {
   header: string;
   render?: (row: T) => ReactNode;
   sortable?: boolean;
-  
-  align?: 'left' | 'right';
-  
+  align?: 'left' | 'center' | 'right';
   hideBelow?: 'sm' | 'md' | 'lg';
   width?: string;
+  minWidth?: string;
+  className?: string;
+  headerClassName?: string;
 }
 
 export interface DataTableProps<T> {
@@ -51,6 +52,7 @@ export interface DataTableProps<T> {
   emptyDescription?: string;
   emptyAction?: ReactNode;
   className?: string;
+  minWidth?: string;
 }
 
 export function DataTable<T>({
@@ -78,6 +80,7 @@ export function DataTable<T>({
   emptyDescription,
   emptyAction,
   className,
+  minWidth,
 }: DataTableProps<T>) {
   const selectable = Boolean(selectedIds && onSelectionChange);
   const selected = selectedIds ?? [];
@@ -158,7 +161,10 @@ export function DataTable<T>({
         <EmptyState title={emptyTitle} description={emptyDescription} action={emptyAction} />
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border bg-surface">
-          <table className="w-full border-collapse text-data">
+          <table
+            className="w-full min-w-full border-collapse text-data"
+            style={minWidth ? { minWidth } : undefined}
+          >
             <thead>
               <tr className="border-b border-border-strong bg-surface-muted text-left">
                 {selectable && (
@@ -180,7 +186,10 @@ export function DataTable<T>({
                     <th
                       key={column.key}
                       scope="col"
-                      style={column.width ? { width: column.width } : undefined}
+                      style={{
+                        width: column.width,
+                        minWidth: column.minWidth,
+                      }}
                       aria-sort={
                         isSortable
                           ? isActive
@@ -191,9 +200,10 @@ export function DataTable<T>({
                           : undefined
                       }
                       className={cn(
-                        'px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted',
-                        column.align === 'right' && 'text-right',
+                        'px-3.5 py-3 text-xs font-semibold uppercase tracking-wide text-muted whitespace-nowrap',
+                        column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : 'text-left',
                         column.hideBelow && hideClass[column.hideBelow],
+                        column.headerClassName,
                       )}
                     >
                       {isSortable ? (
@@ -201,11 +211,13 @@ export function DataTable<T>({
                           type="button"
                           onClick={() => handleHeaderClick(column)}
                           className={cn(
-                            'inline-flex items-center gap-1 rounded hover:text-foreground',
-                            isActive && 'text-foreground',
+                            'inline-flex items-center gap-1.5 rounded hover:text-foreground whitespace-nowrap transition-colors',
+                            column.align === 'right' && 'flex-row-reverse',
+                            column.align === 'center' && 'justify-center',
+                            isActive && 'text-foreground font-bold',
                           )}
                         >
-                          {column.header}
+                          <span>{column.header}</span>
                           <Icon
                             name={isActive && sortOrder === 'DESC' ? 'chevron-down' : 'chevron-right'}
                             className={cn(
@@ -221,7 +233,7 @@ export function DataTable<T>({
                     </th>
                   );
                 })}
-                {rowActions && <th scope="col" className="w-12 px-3" />}
+                {rowActions && <th scope="col" className="w-12 px-3 whitespace-nowrap" />}
               </tr>
             </thead>
 
@@ -263,10 +275,15 @@ export function DataTable<T>({
                         {columns.map((column) => (
                           <td
                             key={column.key}
+                            style={{
+                              width: column.width,
+                              minWidth: column.minWidth,
+                            }}
                             className={cn(
-                              'h-row px-3 py-2 align-middle text-foreground',
-                              column.align === 'right' && 'text-right',
+                              'h-row px-3.5 py-2.5 align-middle text-foreground',
+                              column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : 'text-left',
                               column.hideBelow && hideClass[column.hideBelow],
+                              column.className,
                             )}
                           >
                             {column.render
@@ -275,7 +292,7 @@ export function DataTable<T>({
                           </td>
                         ))}
                         {rowActions && (
-                          <td className="px-3 text-right" onClick={(event) => event.stopPropagation()}>
+                          <td className="px-3 text-right whitespace-nowrap" onClick={(event) => event.stopPropagation()}>
                             {rowActions(row)}
                           </td>
                         )}

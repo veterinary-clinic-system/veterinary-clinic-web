@@ -26,12 +26,15 @@ export function PatientsSearchPage() {
     {
       key: 'name',
       header: 'Thú cưng',
+      width: '220px',
+      minWidth: '180px',
+      className: 'whitespace-nowrap',
       render: (pet) => (
         <span className="flex items-center gap-2.5">
-          <Avatar name={pet.name} src={pet.avatarUrl} size="xs" />
+          <Avatar name={pet.name} src={pet.avatarUrl} size="xs" className="shrink-0" />
           <span className="min-w-0">
-            <span className="block truncate font-medium text-foreground">{pet.name}</span>
-            <span className="block font-mono text-xs text-muted">{pet.petCode}</span>
+            <span className="block truncate font-semibold text-primary">{pet.name}</span>
+            <span className="block font-mono text-xs text-muted font-normal">{pet.petCode}</span>
           </span>
         </span>
       ),
@@ -39,9 +42,12 @@ export function PatientsSearchPage() {
     {
       key: 'breed',
       header: 'Giống loài',
+      width: '200px',
+      minWidth: '160px',
+      className: 'whitespace-nowrap',
       render: (pet) => (
         <span>
-          <span className="block">{pet.breed?.breedName ?? '—'}</span>
+          <span className="block font-medium text-foreground">{pet.breed?.breedName ?? '—'}</span>
           <span className="block text-xs text-muted">
             {[pet.breed?.species?.speciesName, petAgeLabel(pet.birthDate)].filter(Boolean).join(' · ')}
           </span>
@@ -51,7 +57,10 @@ export function PatientsSearchPage() {
     {
       key: 'alerts',
       header: 'Lưu ý',
+      width: '160px',
+      minWidth: '140px',
       hideBelow: 'md',
+      className: 'whitespace-nowrap',
       render: (pet) =>
         pet.allergies.length > 0 || pet.chronicConditions.length > 0 ? (
           <span className="flex flex-wrap gap-1">
@@ -65,25 +74,31 @@ export function PatientsSearchPage() {
     {
       key: 'microchip',
       header: 'Microchip',
+      width: '150px',
+      minWidth: '130px',
       hideBelow: 'lg',
+      className: 'whitespace-nowrap font-mono text-xs text-muted',
       render: (pet) =>
         pet.microchipId ? (
-          <span className="font-mono text-xs">{pet.microchipId}</span>
+          <span>{pet.microchipId}</span>
         ) : (
-          <span className="text-muted">—</span>
+          <span>—</span>
         ),
     },
     {
       key: 'owner',
       header: 'Chủ nuôi',
+      width: '200px',
+      minWidth: '170px',
+      className: 'whitespace-nowrap',
       render: (pet) => (
         <span>
-          <span className="block">{pet.owner?.fullName ?? '—'}</span>
+          <span className="block font-medium text-foreground">{pet.owner?.fullName ?? '—'}</span>
           {pet.owner?.phone && (
             <a
               href={`tel:${pet.owner.phone.replace(/\s/g, '')}`}
               onClick={(event) => event.stopPropagation()}
-              className="block text-xs text-primary hover:underline"
+              className="block text-xs text-primary hover:underline tabular-nums"
             >
               {pet.owner.phone}
             </a>
@@ -103,6 +118,7 @@ export function PatientsSearchPage() {
       />
 
       <DataTable
+        minWidth="950px"
         columns={columns}
         data={query.data?.data ?? []}
         getRowId={(pet) => pet.id}

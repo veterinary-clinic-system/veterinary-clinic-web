@@ -9,6 +9,11 @@ export interface Column<T> {
   header: string;
   render?: (row: T) => ReactNode;
   sortable?: boolean;
+  width?: string;
+  minWidth?: string;
+  align?: 'left' | 'center' | 'right';
+  className?: string;
+  headerClassName?: string;
 }
 
 export type SortOrder = 'ASC' | 'DESC';
@@ -25,13 +30,12 @@ export interface TableProps<T> {
   total?: number;
   onPageChange?: (page: number) => void;
   loading?: boolean;
-  
   error?: boolean;
   onRetry?: () => void;
-  
   errorTitle?: string;
   emptyMessage?: string;
   className?: string;
+  minWidth?: string;
 }
 
 export function Table<T>({
@@ -51,6 +55,7 @@ export function Table<T>({
   errorTitle,
   emptyMessage = 'Không có dữ liệu',
   className,
+  minWidth,
 }: TableProps<T>) {
   const sortingEnabled = Boolean(onSortChange);
   const paginationEnabled = Boolean(onPageChange);
@@ -67,41 +72,68 @@ export function Table<T>({
   const currentPage = page ?? 1;
 
   if (error) {
-    
     return <ErrorState title={errorTitle} onRetry={onRetry} className={className} />;
   }
 
   return (
     <div className={cn('flex flex-col gap-3', className)}>
-      {}
-      <div className="overflow-x-auto rounded-xl border border-border bg-surface">
-        <table className="w-full border-collapse text-data">
+      {/* Table view */}
+      <div className="overflow-x-auto rounded-xl border border-border bg-surface shadow-sm">
+        <table
+          className="w-full min-w-full border-collapse text-data"
+          style={minWidth ? { minWidth } : undefined}
+        >
           <thead>
             <tr className="border-b border-border-strong bg-surface-muted text-left">
               {columns.map((column) => {
                 const isSortable = sortingEnabled && column.sortable;
                 const isActive = isSortable && sortBy === column.key;
+                const alignClass =
+                  column.align === 'right'
+                    ? 'text-right'
+                    : column.align === 'center'
+                      ? 'text-center'
+                      : 'text-left';
+
                 return (
                   <th
                     key={column.key}
                     scope="col"
-                    aria-sort={isSortable ? (isActive ? (sortOrder === 'ASC' ? 'ascending' : 'descending') : 'none') : undefined}
-                    className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted"
+                    style={{
+                      width: column.width,
+                      minWidth: column.minWidth,
+                    }}
+                    aria-sort={
+                      isSortable
+                        ? isActive
+                          ? sortOrder === 'ASC'
+                            ? 'ascending'
+                            : 'descending'
+                          : 'none'
+                        : undefined
+                    }
+                    className={cn(
+                      'px-3.5 py-3 text-xs font-semibold uppercase tracking-wide text-muted whitespace-nowrap',
+                      alignClass,
+                      column.headerClassName,
+                    )}
                   >
                     {isSortable ? (
                       <button
                         type="button"
                         onClick={() => handleHeaderClick(column)}
                         className={cn(
-                          'inline-flex items-center gap-1 rounded hover:text-foreground',
-                          isActive && 'text-foreground',
+                          'inline-flex items-center gap-1.5 rounded hover:text-foreground whitespace-nowrap transition-colors',
+                          column.align === 'right' && 'flex-row-reverse',
+                          column.align === 'center' && 'justify-center',
+                          isActive && 'text-foreground font-bold',
                         )}
                       >
-                        {column.header}
+                        <span>{column.header}</span>
                         <Icon
                           name={isActive && sortOrder === 'DESC' ? 'chevron-down' : 'chevron-right'}
                           className={cn(
-                            'h-3.5 w-3.5',
+                            'h-3.5 w-3.5 transition-transform',
                             isActive && sortOrder === 'ASC' && '-rotate-90',
                             !isActive && 'opacity-40',
                           )}
@@ -117,10 +149,9 @@ export function Table<T>({
           </thead>
           <tbody>
             {loading ? (
-              
               Array.from({ length: 5 }).map((_, index) => (
                 <tr key={`skeleton-${index}`} className="border-b border-border last:border-b-0">
-                  <td colSpan={columns.length} className="px-3">
+                  <td colSpan={columns.length} className="px-3.5">
                     <div className="flex h-row items-center">
                       <Skeleton className="h-3.5 w-full max-w-sm" />
                     </div>
@@ -129,18 +160,43 @@ export function Table<T>({
               ))
             ) : data.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-3 py-6 text-center text-muted">
+                <td colSpan={columns.length} className="px-3.5 py-8 text-center text-muted">
                   {emptyMessage}
                 </td>
               </tr>
             ) : (
               data.map((row) => (
-                <tr key={getRowId(row)} className="border-b border-border last:border-b-0 hover:bg-surface-muted/60">
-                  {columns.map((column) => (
-                    <td key={column.key} className="h-row px-3 py-2 align-middle text-foreground">
-                      {column.render ? column.render(row) : String((row as Record<string, unknown>)[column.key] ?? '')}
-                    </td>
-                  ))}
+                <tr
+                  key={getRowId(row)}
+                  className="border-b border-border last:border-b-0 transition-colors hover:bg-surface-muted/60"
+                >
+                  {columns.map((column) => {
+                    const alignClass =
+                      column.align === 'right'
+                        ? 'text-right'
+                        : column.align === 'center'
+                          ? 'text-center'
+                          : 'text-left';
+
+                    return (
+                      <td
+                        key={column.key}
+                        style={{
+                          width: column.width,
+                          minWidth: column.minWidth,
+                        }}
+                        className={cn(
+                          'h-row px-3.5 py-2.5 align-middle text-foreground',
+                          alignClass,
+                          column.className,
+                        )}
+                      >
+                        {column.render
+                          ? column.render(row)
+                          : String((row as Record<string, unknown>)[column.key] ?? '')}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))
             )}

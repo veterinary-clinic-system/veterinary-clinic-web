@@ -135,19 +135,19 @@ export function MedicationsTab() {
       </div>
 
       <div className="overflow-x-auto rounded border border-border">
-        <table className="w-full min-w-[1000px] border-collapse text-sm">
+        <table className="w-full min-w-[1150px] border-collapse text-sm">
           <thead>
             <tr className="bg-surface-muted text-left">
-              <th className="px-3 py-2">Mã</th>
-              <th className="px-3 py-2">Tên</th>
-              <th className="px-3 py-2">Danh mục</th>
-              <th className="px-3 py-2">Tên gốc</th>
-              <th className="px-3 py-2">Hoạt chất</th>
-              <th className="px-3 py-2">Nhà sản xuất</th>
-              <th className="px-3 py-2 text-right">Giá bán</th>
-              <th className="px-3 py-2 text-right">Giá vốn</th>
-              <th className="px-3 py-2">Đơn vị</th>
-              <th className="px-3 py-2" />
+              <th className="px-3 py-2 whitespace-nowrap font-medium">Mã</th>
+              <th className="px-3 py-2 whitespace-nowrap font-medium">Tên</th>
+              <th className="px-3 py-2 whitespace-nowrap font-medium">Danh mục</th>
+              <th className="px-3 py-2 whitespace-nowrap font-medium">Tên gốc</th>
+              <th className="px-3 py-2 whitespace-nowrap font-medium">Hoạt chất</th>
+              <th className="px-3 py-2 whitespace-nowrap font-medium">Nhà sản xuất</th>
+              <th className="px-3 py-2 text-right whitespace-nowrap font-medium">Giá bán</th>
+              <th className="px-3 py-2 text-right whitespace-nowrap font-medium">Giá vốn</th>
+              <th className="px-3 py-2 whitespace-nowrap font-medium">Đơn vị</th>
+              <th className="px-3 py-2 whitespace-nowrap" />
             </tr>
           </thead>
           <tbody>
@@ -161,18 +161,18 @@ export function MedicationsTab() {
             />
             {(listQuery.data?.data ?? []).map((m) => (
               <tr key={m.id} className="border-t border-border hover:bg-surface-muted">
-                <td className="px-3 py-2 font-mono text-xs text-muted">{m.item.code}</td>
-                <td className="px-3 py-2"><span className="flex items-center gap-2"><img src={m.item.imageUrl} alt="" className="h-10 w-10 rounded object-cover" />{m.item.itemName}</span></td>
-                <td className="px-3 py-2 text-muted">{m.item.category?.categoryName ?? '—'}</td>
-                <td className="px-3 py-2 text-muted">{m.genericName ?? '—'}</td>
-                <td className="px-3 py-2 text-muted">{m.activeIngredient ?? '—'}</td>
-                <td className="px-3 py-2 text-muted">{m.manufacturer ?? '—'}</td>
-                <td className="px-3 py-2 text-right">{formatCurrency(m.item.unitPrice)}</td>
-                <td className="px-3 py-2 text-right text-muted">
+                <td className="px-3 py-2 font-mono text-xs text-muted whitespace-nowrap">{m.item.code}</td>
+                <td className="px-3 py-2 whitespace-nowrap font-medium text-foreground"><span className="flex items-center gap-2"><img src={m.item.imageUrl} alt="" className="h-10 w-10 shrink-0 rounded object-cover" />{m.item.itemName}</span></td>
+                <td className="px-3 py-2 text-muted whitespace-nowrap">{m.item.category?.categoryName ?? '—'}</td>
+                <td className="px-3 py-2 text-muted whitespace-nowrap">{m.genericName ?? '—'}</td>
+                <td className="px-3 py-2 text-muted whitespace-nowrap">{m.activeIngredient ?? '—'}</td>
+                <td className="px-3 py-2 text-muted whitespace-nowrap">{m.manufacturer ?? '—'}</td>
+                <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums font-semibold">{formatCurrency(m.item.unitPrice)}</td>
+                <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums text-muted">
                   {formatCurrency(m.costPrice ?? 0)}
                 </td>
-                <td className="px-3 py-2">{m.unit}</td>
-                <td className="px-3 py-2">
+                <td className="px-3 py-2 whitespace-nowrap text-muted">{m.unit}</td>
+                <td className="px-3 py-2 text-right whitespace-nowrap">
                   <Button size="sm" variant="secondary" onClick={() => openEdit(m)}>
                     Sửa
                   </Button>

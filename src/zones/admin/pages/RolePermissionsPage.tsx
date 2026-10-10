@@ -144,11 +144,11 @@ export function RolePermissionsPage() {
         <table className="w-full min-w-[900px] border-collapse text-sm">
           <thead className="sticky top-0 bg-surface-muted">
             <tr className="text-left">
-              <th className="px-3 py-2 font-medium">Quyền</th>
+              <th className="px-3 py-2 font-medium whitespace-nowrap">Quyền</th>
               {roles.map((role) => (
-                <th key={role} className="px-3 py-2 text-center font-medium">
+                <th key={role} className="px-3 py-2 text-center font-medium whitespace-nowrap">
                   <div className="flex flex-col items-center gap-0.5">
-                    <span>{ROLE_LABEL_VI[role]}</span>
+                    <span className="whitespace-nowrap">{ROLE_LABEL_VI[role]}</span>
                     {role === Role.ADMIN && <Badge variant="outline">Toàn quyền</Badge>}
                     {role !== Role.ADMIN && isDirty(role) && (
                       <Badge variant="warning">Chưa lưu</Badge>

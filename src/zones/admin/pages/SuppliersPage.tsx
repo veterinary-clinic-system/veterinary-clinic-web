@@ -138,29 +138,66 @@ export function SuppliersPage() {
       key: 'supplierCode',
       header: 'Mã NCC',
       sortable: true,
-      render: (row) => <span className="font-mono text-xs text-muted">{row.supplierCode}</span>,
+      width: '130px',
+      minWidth: '110px',
+      className: 'whitespace-nowrap font-mono text-xs text-muted',
+      render: (row) => row.supplierCode,
     },
     {
       key: 'name',
       header: 'Tên nhà cung cấp',
       sortable: true,
+      width: '240px',
+      minWidth: '200px',
+      className: 'whitespace-nowrap',
       render: (row) => (
         <button
           type="button"
           onClick={() => setDetail(row)}
-          className="font-medium text-primary hover:underline"
+          className="font-semibold text-primary hover:underline text-left whitespace-nowrap"
         >
           {row.name}
         </button>
       ),
     },
-    { key: 'contactPerson', header: 'Người liên hệ', render: (row) => row.contactPerson ?? '—' },
-    { key: 'phone', header: 'Điện thoại', render: (row) => row.phone ?? '—' },
-    { key: 'email', header: 'Email', render: (row) => row.email ?? '—' },
-    { key: 'taxCode', header: 'Mã số thuế', render: (row) => row.taxCode ?? '—' },
+    {
+      key: 'contactPerson',
+      header: 'Người liên hệ',
+      width: '160px',
+      minWidth: '140px',
+      className: 'whitespace-nowrap text-foreground',
+      render: (row) => row.contactPerson ?? '—',
+    },
+    {
+      key: 'phone',
+      header: 'Điện thoại',
+      width: '140px',
+      minWidth: '120px',
+      className: 'whitespace-nowrap tabular-nums text-muted',
+      render: (row) => row.phone ?? '—',
+    },
+    {
+      key: 'email',
+      header: 'Email',
+      width: '180px',
+      minWidth: '150px',
+      className: 'whitespace-nowrap text-muted',
+      render: (row) => row.email ?? '—',
+    },
+    {
+      key: 'taxCode',
+      header: 'Mã số thuế',
+      width: '140px',
+      minWidth: '120px',
+      className: 'whitespace-nowrap tabular-nums text-muted',
+      render: (row) => row.taxCode ?? '—',
+    },
     {
       key: 'active',
       header: 'Trạng thái',
+      width: '140px',
+      minWidth: '120px',
+      className: 'whitespace-nowrap',
       render: (row) => (
         <Badge variant={row.active ? 'success' : 'destructive'}>
           {row.active ? 'Đang hợp tác' : 'Đã ngưng'}
@@ -170,8 +207,12 @@ export function SuppliersPage() {
     {
       key: 'actions',
       header: '',
+      width: '140px',
+      minWidth: '130px',
+      align: 'right',
+      className: 'whitespace-nowrap',
       render: (row) => (
-        <div className="flex gap-2">
+        <div className="flex items-center justify-end gap-2 whitespace-nowrap">
           <Button size="sm" variant="secondary" onClick={() => openEdit(row)}>
             Sửa
           </Button>
@@ -233,6 +274,7 @@ export function SuppliersPage() {
       </div>
 
       <Table
+        minWidth="1100px"
         columns={columns}
         data={data?.data ?? []}
         getRowId={(row) => row.id}

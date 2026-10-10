@@ -145,10 +145,10 @@ export function InvoiceDetailPage() {
         <table className="w-full min-w-[600px] border-collapse text-sm">
           <thead>
             <tr className="bg-surface-muted text-left">
-              <th className="px-3 py-2">Mục</th>
-              <th className="px-3 py-2 text-right">Đơn giá</th>
-              <th className="px-3 py-2 text-right">Số lượng</th>
-              <th className="px-3 py-2 text-right">Thành tiền</th>
+              <th className="px-3 py-2 whitespace-nowrap">Mục</th>
+              <th className="px-3 py-2 text-right whitespace-nowrap">Đơn giá</th>
+              <th className="px-3 py-2 text-right whitespace-nowrap">Số lượng</th>
+              <th className="px-3 py-2 text-right whitespace-nowrap">Thành tiền</th>
             </tr>
           </thead>
           <tbody>
@@ -161,10 +161,10 @@ export function InvoiceDetailPage() {
             ) : (
               invoice.items.map((item) => (
                 <tr key={item.id} className="border-t border-border">
-                  <td className="px-3 py-2">{item.item.itemName}</td>
-                  <td className="px-3 py-2 text-right">{formatCurrency(item.price)}</td>
-                  <td className="px-3 py-2 text-right">{item.quantity}</td>
-                  <td className="px-3 py-2 text-right">
+                  <td className="px-3 py-2 whitespace-nowrap font-medium text-foreground">{item.item.itemName}</td>
+                  <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums">{formatCurrency(item.price)}</td>
+                  <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums">{item.quantity}</td>
+                  <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums font-semibold">
                     {formatCurrency(item.price * item.quantity)}
                   </td>
                 </tr>
@@ -174,32 +174,32 @@ export function InvoiceDetailPage() {
           {}
           <tfoot>
             <tr className="border-t border-border">
-              <td colSpan={3} className="px-3 py-2 text-right text-muted">
+              <td colSpan={3} className="px-3 py-2 text-right text-muted whitespace-nowrap">
                 Tạm tính
               </td>
-              <td className="px-3 py-2 text-right">{formatCurrency(invoice.subtotal)}</td>
+              <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums">{formatCurrency(invoice.subtotal)}</td>
             </tr>
             {invoice.discountAmount > 0 && (
               <tr>
-                <td colSpan={3} className="px-3 py-2 text-right text-muted">
+                <td colSpan={3} className="px-3 py-2 text-right text-muted whitespace-nowrap">
                   Giảm giá
                 </td>
-                <td className="px-3 py-2 text-right">-{formatCurrency(invoice.discountAmount)}</td>
+                <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums text-success">-{formatCurrency(invoice.discountAmount)}</td>
               </tr>
             )}
             {invoice.taxAmount > 0 && (
               <tr>
-                <td colSpan={3} className="px-3 py-2 text-right text-muted">
+                <td colSpan={3} className="px-3 py-2 text-right text-muted whitespace-nowrap">
                   Thuế
                 </td>
-                <td className="px-3 py-2 text-right">{formatCurrency(invoice.taxAmount)}</td>
+                <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums">{formatCurrency(invoice.taxAmount)}</td>
               </tr>
             )}
             <tr className="border-t border-border font-medium">
-              <td colSpan={3} className="px-3 py-2 text-right">
+              <td colSpan={3} className="px-3 py-2 text-right font-semibold whitespace-nowrap">
                 Tổng cộng
               </td>
-              <td className="px-3 py-2 text-right">{formatCurrency(invoice.totalAmount)}</td>
+              <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums font-bold text-primary">{formatCurrency(invoice.totalAmount)}</td>
             </tr>
           </tfoot>
         </table>

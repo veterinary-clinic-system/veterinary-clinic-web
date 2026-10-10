@@ -63,22 +63,38 @@ export function BranchesAdminPage() {
     {
       key: 'branchName',
       header: 'Chi nhánh',
+      width: '220px',
+      minWidth: '180px',
+      className: 'whitespace-nowrap',
       render: (branch) => (
         <div className="flex flex-col">
-          <span className="font-medium text-foreground">{branch.branchName}</span>
+          <span className="font-semibold text-foreground">{branch.branchName}</span>
           {branch.description && (
             <span className="text-xs text-muted">{branch.description}</span>
           )}
         </div>
       ),
     },
-    { key: 'phone', header: 'Điện thoại' },
-    { key: 'address', header: 'Địa chỉ', hideBelow: 'md' },
+    {
+      key: 'phone',
+      header: 'Điện thoại',
+      width: '140px',
+      minWidth: '120px',
+      className: 'whitespace-nowrap tabular-nums text-muted',
+    },
+    {
+      key: 'address',
+      header: 'Địa chỉ',
+      width: '250px',
+      minWidth: '200px',
+      hideBelow: 'md',
+    },
     {
       key: 'openingHours',
       header: 'Giờ mở cửa',
+      width: '220px',
+      minWidth: '200px',
       hideBelow: 'lg',
-      
       render: (branch) => {
         const groups = groupOpeningHours(branch.openingHours ?? []);
         if (groups.length === 0) {
@@ -98,6 +114,9 @@ export function BranchesAdminPage() {
     {
       key: 'active',
       header: 'Trạng thái',
+      width: '160px',
+      minWidth: '140px',
+      className: 'whitespace-nowrap',
       render: (branch) => (
         <StatusBadge variant={branch.active ? 'success' : 'destructive'}>
           {branch.active ? 'Hoạt động' : 'Ngừng hoạt động'}
@@ -114,6 +133,7 @@ export function BranchesAdminPage() {
       />
 
       <DataTable
+        minWidth="1050px"
         columns={columns}
         data={pageItems}
         getRowId={(branch) => branch.id}

@@ -208,11 +208,14 @@ export function GoodsReceiptPage() {
     {
       key: 'receiptCode',
       header: 'Mã phiếu',
+      width: '160px',
+      minWidth: '140px',
+      className: 'whitespace-nowrap',
       render: (row) => (
         <button
           type="button"
           onClick={() => setDetailId(row.id)}
-          className="font-mono text-primary hover:underline"
+          className="font-mono text-primary hover:underline font-semibold"
         >
           {row.receiptCode}
         </button>
@@ -221,19 +224,36 @@ export function GoodsReceiptPage() {
     {
       key: 'purchaseOrder',
       header: 'Đơn đặt',
+      width: '160px',
+      minWidth: '140px',
+      className: 'whitespace-nowrap font-mono text-xs text-muted',
       render: (row) => row.purchaseOrder?.poCode ?? 'Nhập lẻ',
     },
-    { key: 'supplier', header: 'Nhà cung cấp', render: (row) => row.supplier?.name ?? '—' },
+    {
+      key: 'supplier',
+      header: 'Nhà cung cấp',
+      width: '220px',
+      minWidth: '180px',
+      className: 'whitespace-nowrap font-medium text-foreground',
+      render: (row) => row.supplier?.name ?? '—',
+    },
     {
       key: 'receivedDate',
       header: 'Ngày nhận',
       sortable: true,
+      width: '150px',
+      minWidth: '130px',
+      className: 'whitespace-nowrap tabular-nums text-muted',
       render: (row) => formatDate(row.receivedDate),
     },
     {
       key: 'totalAmount',
       header: 'Giá trị',
       sortable: true,
+      width: '160px',
+      minWidth: '140px',
+      align: 'right',
+      className: 'whitespace-nowrap tabular-nums font-semibold',
       render: (row) => formatCurrency(row.totalAmount),
     },
   ];
@@ -267,6 +287,7 @@ export function GoodsReceiptPage() {
       </div>
 
       <Table
+        minWidth="850px"
         columns={columns}
         data={data?.data ?? []}
         getRowId={(row) => row.id}
@@ -421,27 +442,57 @@ export function GoodsReceiptPage() {
             </dl>
 
             <Table
+              minWidth="750px"
               columns={[
-                { key: 'itemName', header: 'Mặt hàng', render: (row) => row.item.itemName },
+                {
+                  key: 'itemName',
+                  header: 'Mặt hàng',
+                  width: '240px',
+                  minWidth: '200px',
+                  className: 'font-medium text-foreground',
+                  render: (row) => row.item.itemName,
+                },
                 {
                   key: 'batchNo',
                   header: 'Lô',
-                  render: (row) => <span className="font-mono">{row.batchNo}</span>,
+                  width: '140px',
+                  minWidth: '120px',
+                  className: 'whitespace-nowrap font-mono text-xs text-muted',
+                  render: (row) => row.batchNo,
                 },
                 {
                   key: 'expiryDate',
                   header: 'Hạn dùng',
+                  width: '200px',
+                  minWidth: '180px',
+                  className: 'whitespace-nowrap',
                   render: (row) => (
-                    <div className="flex items-center gap-2">
-                      <span>{row.expiryDate ? formatDate(row.expiryDate) : '—'}</span>
+                    <div className="flex items-center gap-2 whitespace-nowrap">
+                      <span className="tabular-nums text-muted">{row.expiryDate ? formatDate(row.expiryDate) : '—'}</span>
                       <Badge variant={EXPIRY_BADGE_VARIANT[expiryLevel(row.expiryDate)]}>
                         {expiryLabel(row.expiryDate)}
                       </Badge>
                     </div>
                   ),
                 },
-                { key: 'quantity', header: 'Số lượng', render: (row) => row.quantity },
-                { key: 'unitCost', header: 'Giá nhập', render: (row) => formatCurrency(row.unitCost) },
+                {
+                  key: 'quantity',
+                  header: 'Số lượng',
+                  width: '110px',
+                  minWidth: '90px',
+                  align: 'right',
+                  className: 'whitespace-nowrap tabular-nums',
+                  render: (row) => row.quantity,
+                },
+                {
+                  key: 'unitCost',
+                  header: 'Giá nhập',
+                  width: '140px',
+                  minWidth: '120px',
+                  align: 'right',
+                  className: 'whitespace-nowrap tabular-nums font-medium',
+                  render: (row) => formatCurrency(row.unitCost),
+                },
               ]}
               data={detail.items ?? []}
               getRowId={(row) => row.id}

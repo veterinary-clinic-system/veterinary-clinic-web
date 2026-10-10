@@ -143,33 +143,35 @@ function LabTestRow({ test }: { test: LabTestOrder }) {
       </div>
 
       {!editing && results.length > 0 && (
-        <table className="mt-3 w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-border text-left text-xs text-muted">
-              <th className="py-1 pr-3 font-medium">Chỉ số</th>
-              <th className="py-1 pr-3 text-right font-medium">Giá trị</th>
-              <th className="py-1 pr-3 font-medium">Đơn vị</th>
-              <th className="py-1 pr-3 font-medium">Tham chiếu</th>
-            </tr>
-          </thead>
-          <tbody>
-            {results.map((result) => (
-              <tr key={result.id} className="border-b border-border/60">
-                <td className="py-1 pr-3">{result.parameter}</td>
-                <td className="py-1 pr-3 text-right tabular-nums">
-                  <span className={`rounded px-1.5 py-0.5 ${labResultFlagClasses(result.flag)}`}>
-                    {result.value}
-                  </span>
-                </td>
-                <td className="py-1 pr-3 text-muted">{result.unit ?? '—'}</td>
-                <td className="py-1 pr-3 text-xs text-muted">
-                  {result.referenceMin ?? '—'} – {result.referenceMax ?? '—'}
-                  {result.flagOverridden ? ' · KTV ghi đè' : ''}
-                </td>
+        <div className="overflow-x-auto">
+          <table className="mt-3 w-full border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-border text-left text-xs text-muted">
+                <th className="py-1 pr-3 font-medium whitespace-nowrap">Chỉ số</th>
+                <th className="py-1 pr-3 text-right font-medium whitespace-nowrap">Giá trị</th>
+                <th className="py-1 pr-3 font-medium whitespace-nowrap">Đơn vị</th>
+                <th className="py-1 pr-3 font-medium whitespace-nowrap">Tham chiếu</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {results.map((result) => (
+                <tr key={result.id} className="border-b border-border/60">
+                  <td className="py-1 pr-3 font-medium text-foreground whitespace-nowrap">{result.parameter}</td>
+                  <td className="py-1 pr-3 text-right tabular-nums whitespace-nowrap">
+                    <span className={`rounded px-1.5 py-0.5 ${labResultFlagClasses(result.flag)}`}>
+                      {result.value}
+                    </span>
+                  </td>
+                  <td className="py-1 pr-3 text-muted whitespace-nowrap">{result.unit ?? '—'}</td>
+                  <td className="py-1 pr-3 text-xs text-muted whitespace-nowrap">
+                    {result.referenceMin ?? '—'} – {result.referenceMax ?? '—'}
+                    {result.flagOverridden ? ' · KTV ghi đè' : ''}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {!editing && test.resultText && <p className="mt-2 text-sm">{test.resultText}</p>}

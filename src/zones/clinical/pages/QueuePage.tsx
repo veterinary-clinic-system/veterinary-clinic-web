@@ -69,15 +69,12 @@ export function QueuePage() {
     queryFn: () => queueApi.list(queueParams),
     enabled: Boolean(branchId),
     
-    refetchInterval: 5_000,
+    refetchInterval: 30_000,
   });
 
   function invalidateQueue() {
     void queryClient.invalidateQueries({ queryKey: ['queue'] });
     void queryClient.invalidateQueries({ queryKey: ['staff-appointments'] });
-    void queryClient.invalidateQueries({ queryKey: ['appointments-list'] });
-    void queryClient.invalidateQueries({ queryKey: ['staff-calendar-week'] });
-    void queryClient.invalidateQueries({ queryKey: ['staff-calendar-day'] });
   }
 
   const updateMutation = useMutation({
@@ -94,21 +91,28 @@ export function QueuePage() {
     {
       key: 'ticketNumber',
       header: 'STT',
-      render: (row) => <span className="text-lg font-semibold tabular-nums">{row.ticketNumber}</span>,
+      width: '80px',
+      minWidth: '70px',
+      align: 'center',
+      className: 'whitespace-nowrap',
+      render: (row) => <span className="text-lg font-bold tabular-nums text-primary">{row.ticketNumber}</span>,
     },
     {
       key: 'pet',
       header: 'Thú cưng / Chủ nuôi',
+      width: '220px',
+      minWidth: '180px',
+      className: 'whitespace-nowrap',
       render: (row) => (
         <div className="flex flex-col">
           <Link
             to={`/staff/patients/${row.petId}`}
-            className="font-medium text-primary hover:underline"
+            className="font-medium text-primary hover:underline whitespace-nowrap"
           >
             {row.pet?.name ?? '—'}
           </Link>
-          <span className="text-xs text-muted">
-            {row.pet?.owner?.fullName ?? '—'} · {row.pet?.owner?.phone ?? '—'}
+          <span className="text-xs text-muted whitespace-nowrap">
+            {row.pet?.owner?.fullName ?? '—'} · <span className="tabular-nums">{row.pet?.owner?.phone ?? '—'}</span>
           </span>
         </div>
       ),
@@ -116,6 +120,9 @@ export function QueuePage() {
     {
       key: 'source',
       header: 'Nguồn',
+      width: '130px',
+      minWidth: '110px',
+      className: 'whitespace-nowrap',
       render: (row) => (
         <Badge variant={row.source === QueueSource.WALK_IN ? 'warning' : 'default'}>
           {QUEUE_SOURCE_LABEL_VI[row.source]}
@@ -125,29 +132,44 @@ export function QueuePage() {
     {
       key: 'priorityColor',
       header: 'Ưu tiên',
+      width: '120px',
+      minWidth: '100px',
+      className: 'whitespace-nowrap',
       render: (row) =>
         row.priorityColor ? <TriageBadge color={row.priorityColor} /> : <span className="text-muted">—</span>,
     },
-    { key: 'service', header: 'Dịch vụ', render: (row) => row.service?.item?.itemName ?? '—' },
+    {
+      key: 'service',
+      header: 'Dịch vụ',
+      width: '180px',
+      minWidth: '150px',
+      className: 'whitespace-nowrap text-muted',
+      render: (row) => row.service?.item?.itemName ?? '—',
+    },
     {
       key: 'doctor',
       header: 'Bác sĩ',
+      width: '180px',
+      minWidth: '150px',
+      className: 'whitespace-nowrap',
       render: (row) =>
         row.doctor ? (
-          <span>{row.doctor.fullName}</span>
+          <span className="font-medium text-foreground">{row.doctor.fullName}</span>
         ) : (
           <span className="text-muted">Chưa gán</span>
         ),
     },
     {
-      
       key: 'checkedInAt',
       header: 'Đã chờ',
+      width: '130px',
+      minWidth: '110px',
+      className: 'whitespace-nowrap',
       render: (row) =>
         isFinished(row.status) ? (
           <span className="tabular-nums text-muted">{formatTime(row.checkedInAt)}</span>
         ) : (
-          <span className="tabular-nums">
+          <span className="tabular-nums text-muted">
             {formatDistanceToNowStrict(new Date(row.checkedInAt), { locale: vi })}
           </span>
         ),
@@ -155,13 +177,20 @@ export function QueuePage() {
     {
       key: 'status',
       header: 'Trạng thái',
+      width: '150px',
+      minWidth: '130px',
+      className: 'whitespace-nowrap',
       render: (row) => <Badge variant={statusVariant(row.status)}>{QUEUE_STATUS_LABEL_VI[row.status]}</Badge>,
     },
     {
       key: 'actions',
       header: '',
+      width: '240px',
+      minWidth: '220px',
+      align: 'right',
+      className: 'whitespace-nowrap',
       render: (row) => (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex items-center justify-end flex-nowrap gap-1.5 whitespace-nowrap">
           {!isFinished(row.status) && (
             <Button size="sm" variant="secondary" onClick={() => setAssignTarget(row)}>
               {row.doctorId ? 'Đổi bác sĩ' : 'Gán bác sĩ'}
@@ -180,7 +209,7 @@ export function QueuePage() {
               {row.appointmentId && (
                 <Link
                   to={`/staff/appointments/${row.appointmentId}/exam`}
-                  className="inline-flex h-8 items-center rounded border border-border px-3 text-sm hover:bg-surface-muted"
+                  className="inline-flex h-8 items-center rounded border border-border px-3 text-sm hover:bg-surface-muted whitespace-nowrap"
                 >
                   Phiếu khám
                 </Link>
@@ -266,6 +295,7 @@ export function QueuePage() {
       </div>
 
       <Table
+        minWidth="1200px"
         columns={columns}
         data={pageItems}
         getRowId={(row) => row.id}

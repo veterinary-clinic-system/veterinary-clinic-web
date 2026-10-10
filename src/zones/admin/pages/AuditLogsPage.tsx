@@ -59,16 +59,22 @@ export function AuditLogsPage() {
     {
       key: 'createdAt',
       header: 'Thời điểm',
-      render: (row) => <span className="whitespace-nowrap">{formatDateTime(row.createdAt)}</span>,
+      width: '170px',
+      minWidth: '150px',
+      className: 'whitespace-nowrap tabular-nums text-muted',
+      render: (row) => formatDateTime(row.createdAt),
     },
     {
       key: 'actor',
       header: 'Người thực hiện',
+      width: '220px',
+      minWidth: '180px',
+      className: 'whitespace-nowrap',
       render: (row) =>
         row.actorUserId ? (
           <div>
-            <p className="font-medium">{row.actorName ?? 'Tài khoản đã xóa'}</p>
-            <p className="text-xs text-muted">{row.actorPhone ?? row.actorUserId}</p>
+            <p className="font-medium text-foreground">{row.actorName ?? 'Tài khoản đã xóa'}</p>
+            <p className="text-xs text-muted tabular-nums">{row.actorPhone ?? row.actorUserId}</p>
           </div>
         ) : (
           <span className="text-muted">Hệ thống</span>
@@ -77,6 +83,9 @@ export function AuditLogsPage() {
     {
       key: 'action',
       header: 'Hành động',
+      width: '160px',
+      minWidth: '140px',
+      className: 'whitespace-nowrap',
       render: (row) => (
         <Badge variant={SENSITIVE_ACTIONS.has(row.action) ? 'warning' : 'outline'}>
           {AUDIT_ACTION_LABEL_VI[row.action] ?? row.action}
@@ -86,9 +95,12 @@ export function AuditLogsPage() {
     {
       key: 'entityName',
       header: 'Đối tượng',
+      width: '180px',
+      minWidth: '160px',
+      className: 'whitespace-nowrap',
       render: (row) => (
         <div>
-          <p>{AUDIT_ENTITY_LABEL_VI[row.entityName] ?? row.entityName}</p>
+          <p className="font-medium text-foreground">{AUDIT_ENTITY_LABEL_VI[row.entityName] ?? row.entityName}</p>
           {row.entityId && (
             <p className="font-mono text-xs text-muted">{row.entityId.slice(0, 8)}…</p>
           )}
@@ -98,13 +110,20 @@ export function AuditLogsPage() {
     {
       key: 'ipAddress',
       header: 'IP',
-      render: (row) => <span className="font-mono text-xs">{row.ipAddress ?? '—'}</span>,
+      width: '130px',
+      minWidth: '110px',
+      className: 'whitespace-nowrap font-mono text-xs text-muted',
+      render: (row) => row.ipAddress ?? '—',
     },
     {
       key: 'changes',
       header: '',
+      width: '110px',
+      minWidth: '90px',
+      align: 'right',
+      className: 'whitespace-nowrap',
       render: (row) => (
-        <Button variant="ghost" onClick={() => setDetail(row)}>
+        <Button variant="ghost" size="sm" onClick={() => setDetail(row)}>
           Chi tiết
         </Button>
       ),
@@ -165,6 +184,7 @@ export function AuditLogsPage() {
       </div>
 
       <Table
+        minWidth="980px"
         columns={columns}
         data={logsQuery.data?.data ?? []}
         getRowId={(row) => row.id}

@@ -135,21 +135,42 @@ export function StockTakePage() {
     {
       key: 'stockTakeCode',
       header: 'Mã phiếu',
+      width: '160px',
+      minWidth: '140px',
+      className: 'whitespace-nowrap',
       render: (row) => (
         <button
           type="button"
           onClick={() => setDetailId(row.id)}
-          className="font-mono text-primary hover:underline"
+          className="font-mono text-primary hover:underline font-semibold"
         >
           {row.stockTakeCode}
         </button>
       ),
     },
-    { key: 'branch', header: 'Chi nhánh', render: (row) => row.branch?.branchName ?? '—' },
-    { key: 'takenDate', header: 'Ngày kiểm', sortable: true, render: (row) => formatDate(row.takenDate) },
+    {
+      key: 'branch',
+      header: 'Chi nhánh',
+      width: '200px',
+      minWidth: '160px',
+      className: 'whitespace-nowrap font-medium text-foreground',
+      render: (row) => row.branch?.branchName ?? '—',
+    },
+    {
+      key: 'takenDate',
+      header: 'Ngày kiểm',
+      sortable: true,
+      width: '150px',
+      minWidth: '130px',
+      className: 'whitespace-nowrap tabular-nums text-muted',
+      render: (row) => formatDate(row.takenDate),
+    },
     {
       key: 'status',
       header: 'Trạng thái',
+      width: '150px',
+      minWidth: '130px',
+      className: 'whitespace-nowrap',
       render: (row) => (
         <Badge variant={STATUS_VARIANT[row.status]}>{STOCK_TAKE_STATUS_LABEL_VI[row.status]}</Badge>
       ),
@@ -157,6 +178,9 @@ export function StockTakePage() {
     {
       key: 'confirmedAt',
       header: 'Xác nhận lúc',
+      width: '170px',
+      minWidth: '150px',
+      className: 'whitespace-nowrap tabular-nums text-muted',
       render: (row) => (row.confirmedAt ? formatDateTime(row.confirmedAt) : '—'),
     },
   ];
@@ -211,6 +235,7 @@ export function StockTakePage() {
       </div>
 
       <Table
+        minWidth="850px"
         columns={columns}
         data={data?.data ?? []}
         getRowId={(row) => row.id}
@@ -235,6 +260,7 @@ export function StockTakePage() {
         open={detailId !== null}
         onClose={() => setDetailId(null)}
         title={detail ? `Phiếu kiểm kê ${detail.stockTakeCode}` : 'Phiếu kiểm kê'}
+        className="max-w-4xl"
         footer={
           <>
             <Button variant="secondary" onClick={() => setDetailId(null)}>
@@ -290,37 +316,68 @@ export function StockTakePage() {
             )}
 
             <Table
+              minWidth="750px"
               columns={[
-                { key: 'code', header: 'Mã', render: (row) => row.item.code },
-                { key: 'itemName', header: 'Mặt hàng', render: (row) => row.item.itemName },
-                { key: 'systemQuantity', header: 'Hệ thống', render: (row) => row.systemQuantity },
+                {
+                  key: 'code',
+                  header: 'Mã',
+                  width: '120px',
+                  minWidth: '100px',
+                  className: 'whitespace-nowrap font-mono text-xs text-muted',
+                  render: (row) => row.item.code,
+                },
+                {
+                  key: 'itemName',
+                  header: 'Mặt hàng',
+                  width: '240px',
+                  minWidth: '200px',
+                  className: 'font-medium text-foreground',
+                  render: (row) => row.item.itemName,
+                },
+                {
+                  key: 'systemQuantity',
+                  header: 'Hệ thống',
+                  width: '110px',
+                  minWidth: '90px',
+                  align: 'right',
+                  className: 'whitespace-nowrap tabular-nums text-muted',
+                  render: (row) => row.systemQuantity,
+                },
                 {
                   key: 'countedQuantity',
                   header: 'Đếm thực tế',
+                  width: '130px',
+                  minWidth: '120px',
+                  align: 'center',
+                  className: 'whitespace-nowrap',
                   render: (row) =>
                     isDraft ? (
                       <Input
                         type="number"
                         min={0}
-                        className="w-24"
+                        className="w-24 text-center tabular-nums"
                         value={counts[row.id] ?? ''}
                         onChange={(e) => setCounts({ ...counts, [row.id]: e.target.value })}
                       />
                     ) : (
-                      (row.countedQuantity ?? '—')
+                      <span className="tabular-nums font-medium">{row.countedQuantity ?? '—'}</span>
                     ),
                 },
                 {
                   key: 'discrepancy',
                   header: 'Chênh lệch',
+                  width: '120px',
+                  minWidth: '110px',
+                  align: 'center',
+                  className: 'whitespace-nowrap font-medium',
                   render: (row) => {
                     const diff = isDraft
                       ? discrepancyOf(row)
                       : row.countedQuantity === null
                         ? null
                         : row.countedQuantity - row.systemQuantity;
-                    if (diff === null) return <span className="text-muted">chưa đếm</span>;
-                    if (diff === 0) return <span className="text-muted">khớp</span>;
+                    if (diff === null) return <span className="text-muted font-normal">chưa đếm</span>;
+                    if (diff === 0) return <span className="text-muted font-normal">khớp</span>;
                     return (
                       <span className={diff > 0 ? 'text-success' : 'text-danger'}>
                         {diff > 0 ? `+${diff}` : diff}
@@ -328,7 +385,13 @@ export function StockTakePage() {
                     );
                   },
                 },
-                { key: 'note', header: 'Ghi chú', render: (row) => row.note ?? '—' },
+                {
+                  key: 'note',
+                  header: 'Ghi chú',
+                  minWidth: '140px',
+                  className: 'text-muted',
+                  render: (row) => row.note ?? '—',
+                },
               ]}
               data={detail.items ?? []}
               getRowId={(row) => row.id}

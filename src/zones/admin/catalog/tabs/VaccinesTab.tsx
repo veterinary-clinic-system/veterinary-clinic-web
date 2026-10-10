@@ -136,16 +136,16 @@ export function VaccinesTab() {
       </div>
 
       <div className="overflow-x-auto rounded border border-border">
-        <table className="w-full min-w-[900px] border-collapse text-sm">
+        <table className="w-full min-w-[1000px] border-collapse text-sm">
           <thead>
             <tr className="bg-surface-muted text-left">
-              <th className="px-3 py-2">Mã</th>
-              <th className="px-3 py-2">Tên</th>
-              <th className="px-3 py-2">Phòng bệnh</th>
-              <th className="px-3 py-2">Loài áp dụng</th>
-              <th className="px-3 py-2">Phác đồ</th>
-              <th className="px-3 py-2 text-right">Giá bán</th>
-              <th className="px-3 py-2" />
+              <th className="px-3 py-2 whitespace-nowrap font-medium">Mã</th>
+              <th className="px-3 py-2 whitespace-nowrap font-medium">Tên</th>
+              <th className="px-3 py-2 whitespace-nowrap font-medium">Phòng bệnh</th>
+              <th className="px-3 py-2 whitespace-nowrap font-medium">Loài áp dụng</th>
+              <th className="px-3 py-2 whitespace-nowrap font-medium">Phác đồ</th>
+              <th className="px-3 py-2 text-right whitespace-nowrap font-medium">Giá bán</th>
+              <th className="px-3 py-2 whitespace-nowrap" />
             </tr>
           </thead>
           <tbody>
@@ -159,21 +159,21 @@ export function VaccinesTab() {
             />
             {(listQuery.data?.data ?? []).map((v) => (
               <tr key={v.id} className="border-t border-border hover:bg-surface-muted">
-                <td className="px-3 py-2 font-mono text-xs text-muted">{v.item.code}</td>
-                <td className="px-3 py-2">{v.item.itemName}</td>
-                <td className="px-3 py-2 text-muted">{v.diseasePrevented}</td>
-                <td className="px-3 py-2 text-muted">
+                <td className="px-3 py-2 font-mono text-xs text-muted whitespace-nowrap">{v.item.code}</td>
+                <td className="px-3 py-2 whitespace-nowrap font-medium text-foreground">{v.item.itemName}</td>
+                <td className="px-3 py-2 text-muted whitespace-nowrap">{v.diseasePrevented}</td>
+                <td className="px-3 py-2 text-muted whitespace-nowrap">
                   {(v.speciesApplicable ?? []).length === 0
                     ? 'Mọi loài'
                     : (v.speciesApplicable ?? []).map((s) => s.speciesName).join(', ')}
                 </td>
-                <td className="px-3 py-2 text-muted">
+                <td className="px-3 py-2 text-muted whitespace-nowrap">
                   {v.doseCount} mũi
                   {v.intervalDays ? ` · cách ${v.intervalDays} ngày` : ''}
                   {v.boosterIntervalDays ? ` · nhắc mỗi ${v.boosterIntervalDays} ngày` : ''}
                 </td>
-                <td className="px-3 py-2 text-right">{formatCurrency(v.item.unitPrice)}</td>
-                <td className="px-3 py-2">
+                <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums font-semibold">{formatCurrency(v.item.unitPrice)}</td>
+                <td className="px-3 py-2 text-right whitespace-nowrap">
                   <Button size="sm" variant="secondary" onClick={() => openEdit(v)}>
                     Sửa
                   </Button>

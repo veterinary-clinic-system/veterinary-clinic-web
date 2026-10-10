@@ -64,13 +64,13 @@ export function LaboratoryTab({ petId }: { petId: string }) {
         <section className="rounded border border-border bg-surface p-4">
           <h2 className="mb-3 font-medium">Bảng chỉ số theo thời gian</h2>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[520px] border-collapse text-sm">
+            <table className="w-full min-w-[560px] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-border text-left">
-                  <th className="py-2 pr-4 font-medium">Chỉ số</th>
-                  <th className="py-2 pr-4 font-medium">Khoảng tham chiếu</th>
+                  <th className="py-2 pr-4 font-medium whitespace-nowrap">Chỉ số</th>
+                  <th className="py-2 pr-4 font-medium whitespace-nowrap">Khoảng tham chiếu</th>
                   {measuredOrders.map((order) => (
-                    <th key={order.id} className="py-2 pr-4 text-right font-medium">
+                    <th key={order.id} className="py-2 pr-4 text-right font-medium whitespace-nowrap">
                       {formatDate(order.resultDate ?? order.createdAt)}
                     </th>
                   ))}
@@ -83,28 +83,28 @@ export function LaboratoryTab({ petId }: { petId: string }) {
                     .find((result) => result.parameter === name);
                   return (
                     <tr key={name} className="border-b border-border/60">
-                      <td className="py-2 pr-4">
+                      <td className="py-2 pr-4 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={() => setParameter(name)}
-                          className={`font-medium hover:underline ${
-                            parameter === name ? 'text-primary' : ''
+                          className={`font-medium hover:underline whitespace-nowrap ${
+                            parameter === name ? 'text-primary font-bold' : ''
                           }`}
                         >
                           {name}
                         </button>
                       </td>
-                      <td className="py-2 pr-4 text-xs text-muted">
+                      <td className="py-2 pr-4 text-xs text-muted whitespace-nowrap">
                         {formatRange(latest?.referenceMin ?? null, latest?.referenceMax ?? null)}
                         {latest?.unit ? ` ${latest.unit}` : ''}
                       </td>
                       {measuredOrders.map((order) => {
                         const cell = (order.results ?? []).find((r) => r.parameter === name);
                         return (
-                          <td key={order.id} className="py-2 pr-4 text-right tabular-nums">
+                          <td key={order.id} className="py-2 pr-4 text-right tabular-nums whitespace-nowrap">
                             {cell ? (
                               <span
-                                className={`rounded px-1.5 py-0.5 ${labResultFlagClasses(cell.flag)}`}
+                                className={`rounded px-1.5 py-0.5 whitespace-nowrap ${labResultFlagClasses(cell.flag)}`}
                                 title={
                                   cell.flagOverridden
                                     ? `${LAB_RESULT_FLAG_LABEL_VI[cell.flag]} (kỹ thuật viên ghi đè)`

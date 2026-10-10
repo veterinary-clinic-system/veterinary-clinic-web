@@ -116,17 +116,17 @@ export function ServicesTab() {
       </form>
 
       <div className="overflow-x-auto rounded border border-border">
-        <table className="w-full min-w-[800px] border-collapse text-sm">
+        <table className="w-full min-w-[1050px] border-collapse text-sm">
           <thead>
             <tr className="bg-surface-muted text-left">
-              <th className="px-3 py-2">Mã</th>
-              <th className="px-3 py-2">Tên</th>
-              <th className="px-3 py-2">Danh mục</th>
-              <th className="px-3 py-2">Mô tả</th>
-              <th className="px-3 py-2 text-right">Giá</th>
-              <th className="px-3 py-2 text-right">Thời lượng</th>
-              <th className="px-3 py-2">Chuyên khoa</th>
-              <th className="px-3 py-2" />
+              <th className="px-3 py-2 whitespace-nowrap font-medium">Mã</th>
+              <th className="px-3 py-2 whitespace-nowrap font-medium">Tên</th>
+              <th className="px-3 py-2 whitespace-nowrap font-medium">Danh mục</th>
+              <th className="px-3 py-2 whitespace-nowrap font-medium">Mô tả</th>
+              <th className="px-3 py-2 text-right whitespace-nowrap font-medium">Giá</th>
+              <th className="px-3 py-2 text-right whitespace-nowrap font-medium">Thời lượng</th>
+              <th className="px-3 py-2 whitespace-nowrap font-medium">Chuyên khoa</th>
+              <th className="px-3 py-2 whitespace-nowrap" />
             </tr>
           </thead>
           <tbody>
@@ -141,7 +141,7 @@ export function ServicesTab() {
             {(listQuery.data?.data ?? []).map((s) =>
               editingId === s.id ? (
                 <tr key={s.id} className="border-t border-border bg-surface-muted">
-                  <td className="px-3 py-2 font-mono text-xs text-muted">{s.item.code}</td>
+                  <td className="px-3 py-2 font-mono text-xs text-muted whitespace-nowrap">{s.item.code}</td>
                   <td className="px-3 py-2">
                     <ImageUpload label="Ảnh" category="catalog-images" value={editForm.imageUrl} onChange={(imageUrl) => setEditForm({ ...editForm, imageUrl })} required />
                     <input value={editForm.itemName} onChange={(e) => setEditForm({ ...editForm, itemName: e.target.value })} className="w-full rounded border border-border bg-surface px-2 py-1" />
@@ -158,15 +158,15 @@ export function ServicesTab() {
                     <input value={editForm.describe} onChange={(e) => setEditForm({ ...editForm, describe: e.target.value })} className="w-full rounded border border-border bg-surface px-2 py-1" />
                   </td>
                   <td className="px-3 py-2">
-                    <input type="number" value={editForm.unitPrice} onChange={(e) => setEditForm({ ...editForm, unitPrice: e.target.value })} className="w-24 rounded border border-border bg-surface px-2 py-1 text-right" />
+                    <input type="number" value={editForm.unitPrice} onChange={(e) => setEditForm({ ...editForm, unitPrice: e.target.value })} className="w-24 rounded border border-border bg-surface px-2 py-1 text-right tabular-nums" />
                   </td>
                   <td className="px-3 py-2">
-                    <input type="number" value={editForm.durationMinutes} onChange={(e) => setEditForm({ ...editForm, durationMinutes: e.target.value })} className="w-20 rounded border border-border bg-surface px-2 py-1 text-right" />
+                    <input type="number" value={editForm.durationMinutes} onChange={(e) => setEditForm({ ...editForm, durationMinutes: e.target.value })} className="w-20 rounded border border-border bg-surface px-2 py-1 text-right tabular-nums" />
                   </td>
                   <td className="px-3 py-2">
                     <input value={editForm.requiresSpecialization} onChange={(e) => setEditForm({ ...editForm, requiresSpecialization: e.target.value })} className="w-full rounded border border-border bg-surface px-2 py-1" />
                   </td>
-                  <td className="flex gap-2 px-3 py-2">
+                  <td className="flex gap-2 px-3 py-2 whitespace-nowrap">
                     <button type="button" disabled={updateMutation.isPending} onClick={() => updateMutation.mutate(s.id)} className="rounded bg-primary px-2 py-1 text-xs text-primary-foreground">
                       Lưu
                     </button>
@@ -177,15 +177,15 @@ export function ServicesTab() {
                 </tr>
               ) : (
                 <tr key={s.id} className="border-t border-border hover:bg-surface-muted">
-                  <td className="px-3 py-2 font-mono text-xs text-muted">{s.item.code}</td>
-                  <td className="px-3 py-2"><span className="flex items-center gap-2"><img src={s.item.imageUrl} alt="" className="h-10 w-10 rounded object-cover" />{s.item.itemName}</span></td>
-                  <td className="px-3 py-2 text-muted">{s.item.category?.categoryName ?? '—'}</td>
-                  <td className="px-3 py-2 text-muted">{s.item.describe ?? '—'}</td>
-                  <td className="px-3 py-2 text-right">{formatCurrency(s.item.unitPrice)}</td>
-                  <td className="px-3 py-2 text-right">{s.durationMinutes} phút</td>
-                  <td className="px-3 py-2">{s.requiresSpecialization ?? '—'}</td>
-                  <td className="px-3 py-2">
-                    <button type="button" onClick={() => startEdit(s)} className="rounded border border-border px-2 py-1 text-xs hover:bg-surface-muted">
+                  <td className="px-3 py-2 font-mono text-xs text-muted whitespace-nowrap">{s.item.code}</td>
+                  <td className="px-3 py-2 whitespace-nowrap font-medium text-foreground"><span className="flex items-center gap-2"><img src={s.item.imageUrl} alt="" className="h-10 w-10 shrink-0 rounded object-cover" />{s.item.itemName}</span></td>
+                  <td className="px-3 py-2 text-muted whitespace-nowrap">{s.item.category?.categoryName ?? '—'}</td>
+                  <td className="px-3 py-2 text-muted max-w-xs truncate" title={s.item.describe ?? undefined}>{s.item.describe ?? '—'}</td>
+                  <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums font-semibold">{formatCurrency(s.item.unitPrice)}</td>
+                  <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums text-muted">{s.durationMinutes} phút</td>
+                  <td className="px-3 py-2 whitespace-nowrap text-muted">{s.requiresSpecialization ?? '—'}</td>
+                  <td className="px-3 py-2 text-right whitespace-nowrap">
+                    <button type="button" onClick={() => startEdit(s)} className="rounded border border-border px-2.5 py-1 text-xs hover:bg-surface-muted">
                       Sửa
                     </button>
                   </td>

@@ -63,7 +63,6 @@ export function AppointmentsListPage() {
       }),
     
     placeholderData: (prev) => prev,
-    refetchInterval: 5_000,
   });
 
   const checkInMutation = useMutation({
@@ -73,8 +72,6 @@ export function AppointmentsListPage() {
       void queryClient.invalidateQueries({ queryKey: ['appointments-list'] });
       void queryClient.invalidateQueries({ queryKey: ['staff-appointments'] });
       void queryClient.invalidateQueries({ queryKey: ['queue'] });
-      void queryClient.invalidateQueries({ queryKey: ['staff-calendar-week'] });
-      void queryClient.invalidateQueries({ queryKey: ['staff-calendar-day'] });
     },
     onError: (error) => toast.show(getErrorMessage(error), 'error'),
   });
@@ -83,7 +80,9 @@ export function AppointmentsListPage() {
     {
       key: 'startAt',
       header: 'Thời gian',
-      width: '9rem',
+      width: '160px',
+      minWidth: '140px',
+      className: 'whitespace-nowrap',
       render: (appointment) => (
         <span className="tabular-nums">
           <span className="font-medium text-foreground">{formatTime(appointment.startAt)}</span>{' '}
@@ -94,6 +93,9 @@ export function AppointmentsListPage() {
     {
       key: 'pet',
       header: 'Thú cưng',
+      width: '200px',
+      minWidth: '160px',
+      className: 'whitespace-nowrap',
       render: (appointment) => (
         <span>
           <span className="block font-medium text-foreground">
@@ -106,13 +108,16 @@ export function AppointmentsListPage() {
     {
       key: 'phone',
       header: 'SĐT chủ nuôi',
+      width: '140px',
+      minWidth: '120px',
       hideBelow: 'md',
+      className: 'whitespace-nowrap',
       render: (appointment) =>
         appointment.pet?.owner?.phone ? (
           <a
             href={`tel:${appointment.pet.owner.phone.replace(/\s/g, '')}`}
             onClick={(event) => event.stopPropagation()}
-            className="text-primary hover:underline"
+            className="text-primary hover:underline tabular-nums"
           >
             {appointment.pet.owner.phone}
           </a>
@@ -123,20 +128,29 @@ export function AppointmentsListPage() {
     {
       key: 'doctor',
       header: 'Bác sĩ',
+      width: '180px',
+      minWidth: '150px',
       hideBelow: 'lg',
+      className: 'whitespace-nowrap',
       render: (appointment) => appointment.doctor?.fullName ?? <span className="text-muted">Chưa gán</span>,
     },
     {
       key: 'service',
       header: 'Dịch vụ',
+      width: '180px',
+      minWidth: '150px',
       hideBelow: 'lg',
+      className: 'whitespace-nowrap',
       render: (appointment) => appointment.service?.item.itemName ?? '—',
     },
     {
       key: 'status',
       header: 'Trạng thái',
+      width: '180px',
+      minWidth: '160px',
+      className: 'whitespace-nowrap',
       render: (appointment) => (
-        <span className="flex flex-wrap items-center gap-1.5">
+        <span className="flex flex-wrap items-center gap-1.5 whitespace-nowrap">
           <Badge variant={APPOINTMENT_STATUS_TONE[appointment.status] ?? 'neutral'}>
             {APPOINTMENT_STATUS_LABEL_VI[appointment.status]}
           </Badge>
@@ -162,6 +176,7 @@ export function AppointmentsListPage() {
       />
 
       <DataTable
+        minWidth="1050px"
         columns={columns}
         data={listQuery.data?.data ?? []}
         getRowId={(appointment) => appointment.id}

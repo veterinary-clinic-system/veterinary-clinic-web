@@ -33,9 +33,9 @@ export function SlotGrid({
       >
         <thead>
           <tr className="bg-surface-muted">
-            <th className="w-20 border-b border-border px-2 py-2 text-left">Giờ</th>
+            <th className="w-20 border-b border-border px-2 py-2 text-left whitespace-nowrap font-medium">Giờ</th>
             {days.map((day) => (
-              <th key={day.date} className="border-b border-border px-2 py-2 text-left">
+              <th key={day.date} className="border-b border-border px-2 py-2 text-left whitespace-nowrap">
                 <div className="capitalize">{format(parseISO(day.date), 'EEEE', { locale: vi })}</div>
                 <div className="font-normal text-muted">{format(parseISO(day.date), 'dd/MM')}</div>
                 {!day.isBranchOpen && (

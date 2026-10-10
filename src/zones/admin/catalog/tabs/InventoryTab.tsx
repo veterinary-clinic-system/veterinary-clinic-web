@@ -107,8 +107,8 @@ export function InventoryTab() {
             <table className="w-full min-w-[500px] border-collapse text-sm">
               <thead>
                 <tr className="bg-surface-muted text-left">
-                  <th className="px-3 py-2">Mặt hàng</th>
-                  <th className="px-3 py-2 text-right">Số lượng tồn</th>
+                  <th className="px-3 py-2 whitespace-nowrap font-medium">Mặt hàng</th>
+                  <th className="px-3 py-2 text-right whitespace-nowrap font-medium">Số lượng tồn</th>
                 </tr>
               </thead>
               <tbody>
@@ -122,8 +122,8 @@ export function InventoryTab() {
                 />
                 {records.map((r) => (
                   <tr key={r.id ?? `${r.itemId}-${r.branchId}`} className="border-t border-border">
-                    <td className="px-3 py-2">{r.item?.itemName ?? r.itemId}</td>
-                    <td className="px-3 py-2 text-right">{r.inventoryQuantity}</td>
+                    <td className="px-3 py-2 whitespace-nowrap font-medium text-foreground">{r.item?.itemName ?? r.itemId}</td>
+                    <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums">{r.inventoryQuantity}</td>
                   </tr>
                 ))}
               </tbody>

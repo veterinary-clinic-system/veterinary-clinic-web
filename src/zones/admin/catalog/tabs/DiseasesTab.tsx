@@ -12,10 +12,17 @@ interface DiseaseGroupLite {
 }
 
 const COLUMNS: Column<DiseaseGroupLite>[] = [
-  { key: 'diseaseName', header: 'Tên nhóm bệnh' },
+  {
+    key: 'diseaseName',
+    header: 'Tên nhóm bệnh',
+    width: '280px',
+    minWidth: '220px',
+    className: 'whitespace-nowrap font-semibold text-foreground',
+  },
   {
     key: 'describe',
     header: 'Mô tả',
+    minWidth: '260px',
     render: (disease) => <span className="text-muted">{disease.describe ?? '—'}</span>,
   },
 ];
@@ -44,6 +51,7 @@ export function DiseasesTab() {
 
       {}
       <Table
+        minWidth="600px"
         columns={COLUMNS}
         data={diseases}
         getRowId={(disease) => disease.id}

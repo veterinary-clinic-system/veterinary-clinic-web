@@ -31,9 +31,12 @@ export function VaccinationDuePage() {
     {
       key: 'nextDueDate',
       header: 'Hạn tiêm',
+      width: '190px',
+      minWidth: '180px',
+      className: 'whitespace-nowrap',
       render: (row) => (
         <span
-          className={`rounded-full px-2 py-0.5 text-xs font-medium ${vaccinationDueClasses(
+          className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ${vaccinationDueClasses(
             row.daysUntilDue < 0 ? 'OVERDUE' : 'DUE_SOON',
           )}`}
         >
@@ -47,24 +50,30 @@ export function VaccinationDuePage() {
     {
       key: 'pet',
       header: 'Thú cưng',
+      width: '160px',
+      minWidth: '140px',
+      className: 'whitespace-nowrap',
       render: (row) => (
-        <Link to={`/staff/patients/${row.petId}`} className="text-primary hover:underline">
-          {row.petName} <span className="font-mono text-xs text-muted">{row.petCode}</span>
+        <Link to={`/staff/patients/${row.petId}`} className="text-primary hover:underline whitespace-nowrap font-medium">
+          {row.petName} <span className="font-mono text-xs text-muted font-normal">({row.petCode})</span>
         </Link>
       ),
     },
     {
       key: 'owner',
       header: 'Chủ nuôi',
+      width: '180px',
+      minWidth: '160px',
+      className: 'whitespace-nowrap',
       render: (row) => (
         <div className="flex flex-col gap-0.5">
           <Link
             to={`/staff/customers/${row.ownerId}`}
-            className="text-primary hover:underline"
+            className="text-primary hover:underline whitespace-nowrap font-medium"
           >
             {row.ownerName}
           </Link>
-          <a href={`tel:${row.ownerPhone}`} className="text-xs text-muted hover:underline">
+          <a href={`tel:${row.ownerPhone}`} className="text-xs text-muted hover:underline tabular-nums">
             {row.ownerPhone}
           </a>
         </div>
@@ -73,9 +82,11 @@ export function VaccinationDuePage() {
     {
       key: 'vaccine',
       header: 'Vaccine',
+      width: '220px',
+      minWidth: '180px',
       render: (row) => (
         <div className="flex flex-col gap-0.5">
-          <span>{row.vaccineName}</span>
+          <span className="font-medium text-foreground">{row.vaccineName}</span>
           <span className="text-xs text-muted">{row.diseasePrevented}</span>
         </div>
       ),
@@ -83,6 +94,9 @@ export function VaccinationDuePage() {
     {
       key: 'lastDose',
       header: 'Mũi gần nhất',
+      width: '180px',
+      minWidth: '160px',
+      className: 'whitespace-nowrap tabular-nums text-muted',
       render: (row) => `Mũi ${row.doseNumber} · ${formatDate(row.vaccinatedAt)}`,
     },
   ];
@@ -122,6 +136,7 @@ export function VaccinationDuePage() {
       </div>
 
       <Table
+        minWidth="950px"
         columns={columns}
         data={pageItems}
         getRowId={(row) => row.vaccinationId}

@@ -37,21 +37,47 @@ export function LaboratoryQueuePage() {
   const { page, setPage, pageItems } = usePagination(rows, PAGE_SIZE, [branchId, status]);
 
   const columns: Column<LabQueueRow>[] = [
-    { key: 'orderedAt', header: 'Chỉ định lúc', render: (row) => formatDateTime(row.orderedAt) },
+    {
+      key: 'orderedAt',
+      header: 'Chỉ định lúc',
+      width: '160px',
+      minWidth: '150px',
+      className: 'whitespace-nowrap tabular-nums text-muted',
+      render: (row) => formatDateTime(row.orderedAt),
+    },
     {
       key: 'pet',
       header: 'Thú cưng',
+      width: '180px',
+      minWidth: '150px',
+      className: 'whitespace-nowrap',
       render: (row) => (
-        <Link to={`/staff/patients/${row.petId}`} className="text-primary hover:underline">
-          {row.petName} <span className="font-mono text-xs text-muted">{row.petCode}</span>
+        <Link to={`/staff/patients/${row.petId}`} className="text-primary hover:underline font-medium">
+          {row.petName} <span className="font-mono text-xs text-muted font-normal">({row.petCode})</span>
         </Link>
       ),
     },
-    { key: 'testName', header: 'Xét nghiệm' },
-    { key: 'doctorName', header: 'Bác sĩ chỉ định', render: (row) => row.doctorName ?? '—' },
+    {
+      key: 'testName',
+      header: 'Xét nghiệm',
+      width: '220px',
+      minWidth: '180px',
+      className: 'font-medium text-foreground',
+    },
+    {
+      key: 'doctorName',
+      header: 'Bác sĩ chỉ định',
+      width: '180px',
+      minWidth: '150px',
+      className: 'whitespace-nowrap',
+      render: (row) => row.doctorName ?? '—',
+    },
     {
       key: 'status',
       header: 'Trạng thái',
+      width: '150px',
+      minWidth: '130px',
+      className: 'whitespace-nowrap',
       render: (row) => (
         <Badge variant={row.status === LabTestStatus.COMPLETED ? 'success' : 'warning'}>
           {LAB_TEST_STATUS_LABEL_VI[row.status]}
@@ -61,15 +87,23 @@ export function LaboratoryQueuePage() {
     {
       key: 'resultCount',
       header: 'Số chỉ số',
+      width: '110px',
+      minWidth: '100px',
+      align: 'center',
+      className: 'whitespace-nowrap tabular-nums',
       render: (row) => (row.resultCount > 0 ? row.resultCount : '—'),
     },
     {
       key: 'link',
       header: '',
+      width: '110px',
+      minWidth: '100px',
+      align: 'right',
+      className: 'whitespace-nowrap',
       render: (row) => (
         <Link
           to={`/staff/patients/${row.petId}`}
-          className="text-sm text-primary hover:underline"
+          className="text-sm font-medium text-primary hover:underline"
           title="Mở hồ sơ thú cưng để xem toàn bộ kết quả"
         >
           Xem hồ sơ
@@ -114,6 +148,7 @@ export function LaboratoryQueuePage() {
 
       {}
       <Table
+        minWidth="980px"
         columns={columns}
         data={pageItems}
         getRowId={(row) => row.labTestOrderId}

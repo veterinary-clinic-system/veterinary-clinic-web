@@ -165,33 +165,61 @@ export function PurchaseOrdersPage() {
     {
       key: 'poCode',
       header: 'Mã đơn',
+      width: '150px',
+      minWidth: '130px',
+      className: 'whitespace-nowrap',
       render: (row) => (
         <button
           type="button"
           onClick={() => setDetailId(row.id)}
-          className="font-mono text-primary hover:underline"
+          className="font-mono text-primary hover:underline font-semibold"
         >
           {row.poCode}
         </button>
       ),
     },
-    { key: 'supplier', header: 'Nhà cung cấp', render: (row) => row.supplier?.name ?? '—' },
-    { key: 'orderDate', header: 'Ngày đặt', sortable: true, render: (row) => formatDate(row.orderDate) },
+    {
+      key: 'supplier',
+      header: 'Nhà cung cấp',
+      width: '220px',
+      minWidth: '180px',
+      className: 'whitespace-nowrap font-medium text-foreground',
+      render: (row) => row.supplier?.name ?? '—',
+    },
+    {
+      key: 'orderDate',
+      header: 'Ngày đặt',
+      sortable: true,
+      width: '140px',
+      minWidth: '120px',
+      className: 'whitespace-nowrap tabular-nums text-muted',
+      render: (row) => formatDate(row.orderDate),
+    },
     {
       key: 'expectedDate',
       header: 'Hẹn giao',
       sortable: true,
+      width: '140px',
+      minWidth: '120px',
+      className: 'whitespace-nowrap tabular-nums text-muted',
       render: (row) => (row.expectedDate ? formatDate(row.expectedDate) : '—'),
     },
     {
       key: 'totalAmount',
       header: 'Tổng tiền',
       sortable: true,
+      width: '160px',
+      minWidth: '140px',
+      align: 'right',
+      className: 'whitespace-nowrap tabular-nums font-semibold',
       render: (row) => formatCurrency(row.totalAmount),
     },
     {
       key: 'status',
       header: 'Trạng thái',
+      width: '150px',
+      minWidth: '130px',
+      className: 'whitespace-nowrap',
       render: (row) => (
         <Badge variant={STATUS_VARIANT[row.status]}>
           {PURCHASE_ORDER_STATUS_LABEL_VI[row.status]}
@@ -201,8 +229,12 @@ export function PurchaseOrdersPage() {
     {
       key: 'actions',
       header: '',
+      width: '190px',
+      minWidth: '170px',
+      align: 'right',
+      className: 'whitespace-nowrap',
       render: (row) => (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex items-center justify-end flex-nowrap gap-2 whitespace-nowrap">
           {row.status === PurchaseOrderStatus.DRAFT && (
             <Button
               size="sm"
@@ -289,6 +321,7 @@ export function PurchaseOrdersPage() {
       </div>
 
       <Table
+        minWidth="1100px"
         columns={columns}
         data={data?.data ?? []}
         getRowId={(row) => row.id}
@@ -462,13 +495,40 @@ export function PurchaseOrdersPage() {
             </dl>
 
             <Table
+              minWidth="800px"
               columns={[
-                { key: 'code', header: 'Mã', render: (row) => row.item.code },
-                { key: 'itemName', header: 'Mặt hàng', render: (row) => row.item.itemName },
-                { key: 'quantity', header: 'Đặt', render: (row) => row.quantity },
+                {
+                  key: 'code',
+                  header: 'Mã',
+                  width: '120px',
+                  minWidth: '100px',
+                  className: 'whitespace-nowrap font-mono text-xs text-muted',
+                  render: (row) => row.item.code,
+                },
+                {
+                  key: 'itemName',
+                  header: 'Mặt hàng',
+                  width: '240px',
+                  minWidth: '200px',
+                  className: 'font-medium text-foreground',
+                  render: (row) => row.item.itemName,
+                },
+                {
+                  key: 'quantity',
+                  header: 'Đặt',
+                  width: '100px',
+                  minWidth: '80px',
+                  align: 'right',
+                  className: 'whitespace-nowrap tabular-nums',
+                  render: (row) => row.quantity,
+                },
                 {
                   key: 'receivedQuantity',
                   header: 'Đã nhận',
+                  width: '110px',
+                  minWidth: '90px',
+                  align: 'right',
+                  className: 'whitespace-nowrap tabular-nums font-medium',
                   render: (row) => (
                     <span
                       className={
@@ -479,10 +539,22 @@ export function PurchaseOrdersPage() {
                     </span>
                   ),
                 },
-                { key: 'unitCost', header: 'Giá nhập', render: (row) => formatCurrency(row.unitCost) },
+                {
+                  key: 'unitCost',
+                  header: 'Giá nhập',
+                  width: '140px',
+                  minWidth: '120px',
+                  align: 'right',
+                  className: 'whitespace-nowrap tabular-nums text-muted',
+                  render: (row) => formatCurrency(row.unitCost),
+                },
                 {
                   key: 'lineTotal',
                   header: 'Thành tiền',
+                  width: '150px',
+                  minWidth: '130px',
+                  align: 'right',
+                  className: 'whitespace-nowrap tabular-nums font-semibold',
                   render: (row) => formatCurrency(row.quantity * row.unitCost),
                 },
               ]}

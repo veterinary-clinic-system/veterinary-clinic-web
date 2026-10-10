@@ -60,11 +60,14 @@ export function BillingListPage() {
     {
       key: 'invoiceCode',
       header: 'Mã hoá đơn',
+      width: '150px',
+      minWidth: '130px',
+      className: 'whitespace-nowrap',
       render: (invoice) => (
         <Link
           to={`/staff/billing/${invoice.id}`}
           onClick={(event) => event.stopPropagation()}
-          className="font-mono text-xs text-primary hover:underline"
+          className="font-mono text-xs font-medium text-primary hover:underline"
         >
           {invoice.invoiceCode}
         </Link>
@@ -73,24 +76,36 @@ export function BillingListPage() {
     {
       key: 'customer',
       header: 'Khách hàng',
+      width: '220px',
+      minWidth: '180px',
+      className: 'whitespace-nowrap font-medium text-foreground',
       render: (invoice) => invoice.customer?.fullName ?? 'Khách vãng lai',
     },
     {
       key: 'source',
       header: 'Nguồn',
+      width: '130px',
+      minWidth: '110px',
       hideBelow: 'md',
+      className: 'whitespace-nowrap text-muted',
       render: (invoice) => INVOICE_SOURCE_LABEL_VI[invoice.source],
     },
     {
       key: 'paidAt',
       header: 'Thanh toán lúc',
+      width: '170px',
+      minWidth: '150px',
       hideBelow: 'lg',
+      className: 'whitespace-nowrap tabular-nums text-muted',
       render: (invoice) => (invoice.paidAt ? formatDateTime(invoice.paidAt) : '—'),
     },
     {
       key: 'totalAmount',
       header: 'Thành tiền',
+      width: '150px',
+      minWidth: '130px',
       align: 'right',
+      className: 'whitespace-nowrap font-semibold',
       render: (invoice) => (
         <span className="tabular-nums">{formatCurrency(invoice.totalAmount)}</span>
       ),
@@ -98,14 +113,19 @@ export function BillingListPage() {
     {
       key: 'paymentMethod',
       header: 'Phương thức',
+      width: '140px',
+      minWidth: '120px',
       hideBelow: 'md',
+      className: 'whitespace-nowrap text-muted',
       render: (invoice) =>
         invoice.paymentMethod ? PAYMENT_METHOD_LABEL_VI[invoice.paymentMethod] : '—',
     },
     {
       key: 'status',
       header: 'Trạng thái',
-
+      width: '150px',
+      minWidth: '130px',
+      className: 'whitespace-nowrap',
       render: (invoice) => (
         <StatusBadge variant={INVOICE_STATUS_VARIANT[invoice.status]}>
           {INVOICE_STATUS_LABEL_VI[invoice.status]}
@@ -130,6 +150,7 @@ export function BillingListPage() {
       />
 
       <DataTable
+        minWidth="1050px"
         columns={columns}
         data={listQuery.data?.data ?? []}
         getRowId={(invoice) => invoice.id}

@@ -169,41 +169,78 @@ export function EmployeesPage() {
   }
 
   const columns: Column<Employee>[] = [
-    { key: 'employeeCode', header: 'Mã NV', sortable: true },
+    {
+      key: 'employeeCode',
+      header: 'Mã NV',
+      sortable: true,
+      width: '110px',
+      className: 'whitespace-nowrap font-mono text-xs text-muted',
+    },
     {
       key: 'fullName',
       header: 'Họ tên',
       sortable: true,
+      minWidth: '220px',
+      className: 'whitespace-nowrap',
       render: (row) => (
-        <span className="flex items-center gap-2">
-          <img src={row.avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
-          {row.fullName}
+        <span className="flex items-center gap-2.5 font-medium text-foreground">
+          <img src={row.avatarUrl} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
+          <span className="whitespace-nowrap">{row.fullName}</span>
         </span>
       ),
     },
-    { key: 'phone', header: 'Số điện thoại' },
-    { key: 'position', header: 'Chức danh', render: (row) => row.position ?? '—' },
-    { key: 'branch', header: 'Chi nhánh', render: (row) => row.branch?.branchName ?? '—' },
+    {
+      key: 'phone',
+      header: 'Số điện thoại',
+      width: '135px',
+      className: 'whitespace-nowrap font-mono text-sm tabular-nums',
+      render: (row) => (
+        <a href={`tel:${row.phone}`} className="hover:text-primary hover:underline">
+          {row.phone}
+        </a>
+      ),
+    },
+    {
+      key: 'position',
+      header: 'Chức danh',
+      width: '130px',
+      className: 'whitespace-nowrap text-muted',
+      render: (row) => row.position ?? '—',
+    },
+    {
+      key: 'branch',
+      header: 'Chi nhánh',
+      minWidth: '150px',
+      className: 'whitespace-nowrap text-muted',
+      render: (row) => row.branch?.branchName ?? '—',
+    },
     {
       key: 'account',
       header: 'Tài khoản',
+      width: '130px',
+      className: 'whitespace-nowrap',
       render: (row) =>
         row.user ? (
           <Badge variant="default">{ROLE_LABEL_VI[row.user.role]}</Badge>
         ) : (
-          <span className="text-muted">Không có</span>
+          <span className="text-muted text-xs">Không có</span>
         ),
     },
     {
       key: 'hireDate',
       header: 'Ngày vào làm',
       sortable: true,
+      width: '120px',
+      className: 'whitespace-nowrap tabular-nums text-muted',
       render: (row) => (row.hireDate ? formatDate(row.hireDate) : '—'),
     },
     {
       key: 'status',
       header: 'Trạng thái',
       sortable: true,
+      width: '130px',
+      align: 'center',
+      className: 'whitespace-nowrap text-center',
       render: (row) => (
         <Badge variant={statusVariant(row.status)}>{EMPLOYEE_STATUS_LABEL_VI[row.status]}</Badge>
       ),
@@ -211,6 +248,9 @@ export function EmployeesPage() {
     {
       key: 'actions',
       header: '',
+      width: '80px',
+      align: 'right',
+      className: 'whitespace-nowrap text-right',
       render: (row) => (
         <Button size="sm" variant="secondary" onClick={() => openEdit(row)}>
           Sửa
@@ -270,6 +310,7 @@ export function EmployeesPage() {
       </div>
 
       <Table
+        minWidth="1050px"
         columns={columns}
         data={data?.data ?? []}
         getRowId={(row) => row.id}

@@ -178,43 +178,81 @@ export function CustomersPage() {
     {
       key: 'customerCode',
       header: 'Mã KH',
-      render: (row) => (
-        <span className="font-mono text-xs text-muted">{row.customerCode ?? '—'}</span>
-      ),
+      width: '110px',
+      className: 'whitespace-nowrap font-mono text-xs text-muted',
+      render: (row) => row.customerCode ?? '—',
     },
     {
       key: 'fullName',
       header: 'Họ tên',
       sortable: true,
+      minWidth: '220px',
+      className: 'whitespace-nowrap',
       render: (row) => (
-        <Link to={`/staff/customers/${row.id}`} className="flex items-center gap-2 font-medium text-primary hover:underline">
-          <img src={row.avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
-          <span>{row.fullName}</span>
+        <Link
+          to={`/staff/customers/${row.id}`}
+          className="flex items-center gap-2.5 font-medium text-primary hover:underline"
+        >
+          <img src={row.avatarUrl} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
+          <span className="whitespace-nowrap font-medium text-foreground">{row.fullName}</span>
         </Link>
       ),
     },
-    { key: 'phone', header: 'Số điện thoại', sortable: true },
-    { key: 'email', header: 'Email', render: (row) => row.email ?? '—' },
-    { key: 'address', header: 'Địa chỉ', render: (row) => row.address ?? '—' },
+    {
+      key: 'phone',
+      header: 'Số điện thoại',
+      sortable: true,
+      width: '135px',
+      className: 'whitespace-nowrap font-mono text-sm tabular-nums',
+      render: (row) => (
+        <a href={`tel:${row.phone}`} className="hover:text-primary hover:underline">
+          {row.phone}
+        </a>
+      ),
+    },
+    {
+      key: 'email',
+      header: 'Email',
+      minWidth: '160px',
+      className: 'whitespace-nowrap text-muted',
+      render: (row) => (row.email ? <span title={row.email}>{row.email}</span> : '—'),
+    },
+    {
+      key: 'address',
+      header: 'Địa chỉ',
+      minWidth: '160px',
+      className: 'max-w-[200px] truncate text-muted',
+      render: (row) => (row.address ? <span title={row.address} className="truncate">{row.address}</span> : '—'),
+    },
     {
       key: 'petCount',
       header: 'Thú cưng',
-      render: (row) => <span className="tabular-nums">{row.petCount}</span>,
+      align: 'center',
+      width: '95px',
+      className: 'whitespace-nowrap text-center tabular-nums font-medium',
+      render: (row) => row.petCount,
     },
     {
       key: 'lastVisitAt',
       header: 'Lần khám gần nhất',
+      width: '150px',
+      className: 'whitespace-nowrap tabular-nums text-muted',
       render: (row) => (row.lastVisitAt ? formatDate(row.lastVisitAt) : '—'),
     },
     {
       key: 'createdAt',
       header: 'Ngày tạo',
       sortable: true,
+      width: '115px',
+      className: 'whitespace-nowrap tabular-nums text-muted',
       render: (row) => formatDate(row.createdAt),
     },
     {
       key: 'active',
       header: 'Trạng thái',
+      width: '120px',
+      align: 'center',
+      className: 'whitespace-nowrap text-center',
       render: (row) => (
         <Badge variant={row.active ? 'success' : 'destructive'}>
           {row.active ? 'Hoạt động' : 'Đã ngưng'}
@@ -224,8 +262,11 @@ export function CustomersPage() {
     {
       key: 'actions',
       header: '',
+      width: '145px',
+      align: 'right',
+      className: 'whitespace-nowrap text-right',
       render: (row) => (
-        <div className="flex gap-2">
+        <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
           <Button size="sm" variant="secondary" onClick={() => openEdit(row)}>
             Sửa
           </Button>
@@ -250,79 +291,88 @@ export function CustomersPage() {
         <Button onClick={openCreate}>Thêm khách hàng</Button>
       </div>
 
-      <div className="flex flex-wrap items-end gap-4 rounded border border-border bg-surface p-4">
-        <Input
-          label="Tìm kiếm"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-          placeholder="Mã KH, họ tên, số điện thoại hoặc email…"
-          className="w-72"
-        />
-        <Select
-          label="Trạng thái"
-          value={activeFilter}
-          onChange={(value) => {
-            setActiveFilter(value as ActiveFilter);
-            setPage(1);
-          }}
-          options={[
-            { value: '', label: 'Tất cả' },
-            { value: 'true', label: 'Đang hoạt động' },
-            { value: 'false', label: 'Đã ngưng hoạt động' },
-          ]}
-        />
-        <Select
-          label="Thú cưng"
-          value={petsFilter}
-          onChange={(value) => {
-            setPetsFilter(value as PetsFilter);
-            setPage(1);
-          }}
-          options={[
-            { value: '', label: 'Tất cả' },
-            { value: 'true', label: 'Đã có thú cưng' },
-            { value: 'false', label: 'Chưa có thú cưng' },
-          ]}
-        />
-        <Select
-          label="Từng khám tại chi nhánh"
-          value={branchFilter}
-          onChange={(value) => {
-            setBranchFilter(value);
-            setPage(1);
-          }}
-          options={[
-            { value: '', label: 'Tất cả' },
-            ...(branchesQuery.data ?? []).map((b) => ({ value: b.id, label: b.branchName })),
-          ]}
-        />
-        <Input
-          label="Tạo từ ngày"
-          type="date"
-          value={createdFrom}
-          onChange={(e) => {
-            setCreatedFrom(e.target.value);
-            setPage(1);
-          }}
-        />
-        <Input
-          label="Đến ngày"
-          type="date"
-          value={createdTo}
-          onChange={(e) => {
-            setCreatedTo(e.target.value);
-            setPage(1);
-          }}
-        />
-        <Button variant="ghost" onClick={resetFilters}>
-          Xóa bộ lọc
-        </Button>
+      <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 items-end">
+          <Input
+            label="Tìm kiếm"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Mã KH, họ tên, số điện thoại..."
+            className="w-full"
+          />
+          <Select
+            label="Trạng thái"
+            value={activeFilter}
+            onChange={(value) => {
+              setActiveFilter(value as ActiveFilter);
+              setPage(1);
+            }}
+            options={[
+              { value: '', label: 'Tất cả' },
+              { value: 'true', label: 'Đang hoạt động' },
+              { value: 'false', label: 'Đã ngưng hoạt động' },
+            ]}
+          />
+          <Select
+            label="Thú cưng"
+            value={petsFilter}
+            onChange={(value) => {
+              setPetsFilter(value as PetsFilter);
+              setPage(1);
+            }}
+            options={[
+              { value: '', label: 'Tất cả' },
+              { value: 'true', label: 'Đã có thú cưng' },
+              { value: 'false', label: 'Chưa có thú cưng' },
+            ]}
+          />
+          <Select
+            label="Từng khám tại chi nhánh"
+            value={branchFilter}
+            onChange={(value) => {
+              setBranchFilter(value);
+              setPage(1);
+            }}
+            options={[
+              { value: '', label: 'Tất cả' },
+              ...(branchesQuery.data ?? []).map((b) => ({ value: b.id, label: b.branchName })),
+            ]}
+          />
+          <Input
+            label="Tạo từ ngày"
+            type="date"
+            value={createdFrom}
+            onChange={(e) => {
+              setCreatedFrom(e.target.value);
+              setPage(1);
+            }}
+          />
+          <div className="flex items-end gap-2">
+            <div className="flex-1">
+              <Input
+                label="Đến ngày"
+                type="date"
+                value={createdTo}
+                onChange={(e) => {
+                  setCreatedTo(e.target.value);
+                  setPage(1);
+                }}
+              />
+            </div>
+            {(search || activeFilter || petsFilter || branchFilter || createdFrom || createdTo) && (
+              <Button variant="ghost" onClick={resetFilters} className="shrink-0 text-xs">
+                Xóa lọc
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
 
       <Table
+        minWidth="1100px"
         columns={columns}
         data={data?.data ?? []}
         getRowId={(row) => row.id}

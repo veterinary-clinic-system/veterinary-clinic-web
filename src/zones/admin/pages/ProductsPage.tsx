@@ -155,43 +155,85 @@ export function ProductsPage() {
     {
       key: 'code',
       header: 'Mã',
-      render: (row) => <span className="font-mono text-xs text-muted">{row.item.code}</span>,
+      width: '90px',
+      className: 'whitespace-nowrap font-mono text-xs text-muted',
+      render: (row) => row.item.code,
     },
-    { key: 'sku', header: 'SKU', sortable: true, render: (row) => <span className="font-mono text-xs">{row.sku}</span> },
+    {
+      key: 'sku',
+      header: 'SKU',
+      sortable: true,
+      width: '110px',
+      className: 'whitespace-nowrap font-mono text-xs',
+      render: (row) => row.sku,
+    },
     {
       key: 'itemName',
       header: 'Tên sản phẩm',
       sortable: true,
-      render: (row) => <span className="flex items-center gap-2"><img src={row.item.imageUrl} alt="" className="h-10 w-10 rounded object-cover" />{row.item.itemName}</span>,
+      minWidth: '220px',
+      className: 'whitespace-nowrap',
+      render: (row) => (
+        <span className="flex items-center gap-2.5 font-medium">
+          <img src={row.item.imageUrl} alt="" className="h-8 w-8 shrink-0 rounded object-cover" />
+          <span className="whitespace-nowrap">{row.item.itemName}</span>
+        </span>
+      ),
     },
-    { key: 'brand', header: 'Thương hiệu', render: (row) => row.brand ?? '—' },
+    {
+      key: 'brand',
+      header: 'Thương hiệu',
+      width: '120px',
+      className: 'whitespace-nowrap text-muted',
+      render: (row) => row.brand ?? '—',
+    },
     {
       key: 'category',
       header: 'Danh mục',
+      width: '130px',
+      className: 'whitespace-nowrap',
       render: (row) =>
         row.item.category ? <Badge variant="outline">{row.item.category.categoryName}</Badge> : '—',
     },
-    { key: 'unit', header: 'Đơn vị' },
+    {
+      key: 'unit',
+      header: 'Đơn vị',
+      width: '80px',
+      className: 'whitespace-nowrap text-muted',
+      render: (row) => row.unit,
+    },
     {
       key: 'unitPrice',
       header: 'Giá bán',
       sortable: true,
-      render: (row) => <span className="tabular-nums">{formatCurrency(row.item.unitPrice)}</span>,
+      width: '120px',
+      align: 'right',
+      className: 'whitespace-nowrap tabular-nums font-semibold text-foreground',
+      render: (row) => formatCurrency(row.item.unitPrice),
     },
     {
       key: 'costPrice',
       header: 'Giá vốn',
       sortable: true,
-      render: (row) => <span className="tabular-nums text-muted">{formatCurrency(row.costPrice)}</span>,
+      width: '120px',
+      align: 'right',
+      className: 'whitespace-nowrap tabular-nums text-muted',
+      render: (row) => formatCurrency(row.costPrice),
     },
     {
       key: 'minimumStock',
       header: 'Tồn tối thiểu',
-      render: (row) => <span className="tabular-nums">{row.minimumStock}</span>,
+      width: '110px',
+      align: 'center',
+      className: 'whitespace-nowrap text-center tabular-nums',
+      render: (row) => row.minimumStock,
     },
     {
       key: 'active',
       header: 'Trạng thái',
+      width: '120px',
+      align: 'center',
+      className: 'whitespace-nowrap text-center',
       render: (row) => (
         <Badge variant={row.active ? 'success' : 'destructive'}>
           {row.active ? 'Đang bán' : 'Ngưng bán'}
@@ -201,8 +243,11 @@ export function ProductsPage() {
     {
       key: 'actions',
       header: '',
+      width: '145px',
+      align: 'right',
+      className: 'whitespace-nowrap text-right',
       render: (row) => (
-        <div className="flex gap-2">
+        <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
           <Button size="sm" variant="secondary" onClick={() => openEdit(row)}>
             Sửa
           </Button>
@@ -274,6 +319,7 @@ export function ProductsPage() {
       </div>
 
       <Table
+        minWidth="1200px"
         columns={columns}
         data={data?.data ?? []}
         getRowId={(row) => row.id}

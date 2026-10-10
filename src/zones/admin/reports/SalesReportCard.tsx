@@ -105,7 +105,7 @@ export function SalesReportCard({ data, loading, exporting, onExport }: SalesRep
 
           <Button
             variant="secondary"
-            
+            size="sm"
             loading={exporting}
             onClick={onExport}
             className="text-xs"
@@ -213,7 +213,6 @@ export function SalesReportCard({ data, loading, exporting, onExport }: SalesRep
                 placeholder="Tìm theo mã hoặc tên sản phẩm..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                
               />
             </div>
 

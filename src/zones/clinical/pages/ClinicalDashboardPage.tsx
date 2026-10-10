@@ -22,7 +22,7 @@ import { formatTime } from '@/utils/format';
 import { TodaySchedule } from '../dashboard/TodaySchedule';
 import { WaitingList } from '../dashboard/WaitingList';
 
-const QUEUE_POLL_MS = 5_000;
+const QUEUE_POLL_MS = 30_000;
 
 const VACCINATION_DUE_DAYS = 7;
 
@@ -50,7 +50,6 @@ export function ClinicalDashboardPage() {
         sortBy: 'startAt',
         sortOrder: 'ASC',
       }),
-    refetchInterval: QUEUE_POLL_MS,
   });
 
   const vaccinationQuery = useQuery({

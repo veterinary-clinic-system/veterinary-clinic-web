@@ -28,14 +28,14 @@ export function SlotGrid({
         </caption>
         <thead>
           <tr>
-            <th scope="col" className="border-b border-border p-2 text-left text-muted">
+            <th scope="col" className="border-b border-border p-2 text-left text-muted whitespace-nowrap">
               Giờ
             </th>
             {days.map((day) => (
               <th
                 key={day.date}
                 scope="col"
-                className="border-b border-border p-2 text-center font-medium text-foreground"
+                className="border-b border-border p-2 text-center font-medium text-foreground whitespace-nowrap"
               >
                 {format(parseISO(day.date), 'EEEE dd/MM', { locale: vi })}
                 {!day.isBranchOpen && (
