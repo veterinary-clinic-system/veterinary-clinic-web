@@ -1062,18 +1062,14 @@
   border-radius: 20px 20px 20px 5px;
 }
 .garden-experience .pet-chat form {
-  padding: 12px;
-  background: white;
-  border-radius: 99px;
-  border: 1px solid #dce5d1;
-  box-shadow: 0 10px 25px #2d472209;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
 }
 .garden-experience .pet-chat form input {
   background: transparent;
-}
-.garden-experience .pet-chat form button {
-  border-radius: 99px;
-  padding-inline: 24px;
 }
 .garden-experience .pet-chat ul {
   display: grid;
@@ -1611,13 +1607,10 @@
     grid-template-columns: 1fr;
   }
   .garden-experience .pet-chat form {
-    padding: 8px;
+    padding: 0;
   }
   .garden-experience .pet-chat form input {
     min-width: 0;
-  }
-  .garden-experience .pet-chat form button {
-    padding-inline: 17px;
   }
   .garden-motion-control {
     right: 12px;

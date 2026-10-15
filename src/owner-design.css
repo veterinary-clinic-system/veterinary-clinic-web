@@ -107,9 +107,9 @@
 .doctor-profile-details summary { font-size: 1rem; }
 .doctor-profile-expanded dd { font-size: 1rem; }
 .pet-chat { max-width: 960px; padding-block: 52px; }
-.pet-chat h1 { font-size: 38px; font-weight: 500; }
+.pet-chat h1 { font-size: 26px; line-height: 1.4; font-weight: 700; }
 .pet-chat [role='log'] { padding: 24px; border-radius: 22px; min-height: 390px; background: #fff; }
-.pet-chat form { background: white; padding: 10px; border: 1px solid #dce2d6; border-radius: 16px; }
+.pet-chat form { background: transparent; padding: 0; border: none; }
 .pet-chat form input { border: 0; }
 .pet-footer { background: #edf0e7; }
 .pet-footer > div:first-child { padding-top: 60px; padding-bottom: 48px; gap: 40px; }
@@ -148,7 +148,7 @@
   .owner-navigation nav { width: 100%; border-radius: 14px; }
   .owner-navigation nav a { padding-inline: 10px; font-size: 1rem; }
   .pet-chat { padding-block: 30px; }
-  .pet-chat h1 { font-size: 30px; }
+  .pet-chat h1 { font-size: 22px; line-height: 1.4; }
   .pet-chat [role='log'] { padding: 16px; }
 }
 @media(prefers-reduced-motion: reduce) {
