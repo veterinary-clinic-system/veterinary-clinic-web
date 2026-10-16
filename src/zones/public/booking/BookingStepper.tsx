@@ -3,7 +3,7 @@ import { STEP_LABELS, Step } from './types';
 
 export interface BookingStepperProps {
   current: Step;
-  
+
   onGoToStep?: (step: Step) => void;
 }
 

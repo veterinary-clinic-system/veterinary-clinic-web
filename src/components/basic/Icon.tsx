@@ -52,7 +52,15 @@ export type IconName =
   | 'user'
   | 'edit'
   | 'trash'
-  | 'sparkles';
+  | 'sparkles'
+  | 'message'
+  | 'send'
+  | 'image'
+  | 'video'
+  | 'video-off'
+  | 'mic'
+  | 'mic-off'
+  | 'phone-off';
 
 const PATHS: Record<IconName, JSX.Element> = {
   dashboard: (
@@ -329,6 +337,50 @@ const PATHS: Record<IconName, JSX.Element> = {
     <>
       <path d="M12 3.5 13.6 8 18 9.5 13.6 11 12 15.5 10.4 11 6 9.5 10.4 8 12 3.5Z" />
       <path d="M18 15.5 18.8 18l2.2.8-2.2.8-.8 2.4-.8-2.4-2.2-.8 2.2-.8.8-2.5Z" />
+    </>
+  ),
+  message: (
+    <>
+      <path d="M4 5h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H9l-5 3.5V6a1 1 0 0 1 1-1Z" />
+      <path d="M8 10h8M8 13.5h5" />
+    </>
+  ),
+  send: <path d="M21 3 10 14M21 3l-7 18-4-7-7-4 18-7Z" />,
+  image: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <circle cx="9" cy="9.5" r="1.8" />
+      <path d="m21 16-5-5-9 9" />
+    </>
+  ),
+  video: (
+    <>
+      <rect x="2.5" y="6" width="13" height="12" rx="2" />
+      <path d="m15.5 10.5 6-3.5v10l-6-3.5" />
+    </>
+  ),
+  'video-off': (
+    <>
+      <path d="M15.5 13.5v2.5a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2.5M10.5 6h3a2 2 0 0 1 2 2v2.5l6-3.5v10" />
+      <path d="M3 3l18 18" />
+    </>
+  ),
+  mic: (
+    <>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7" />
+    </>
+  ),
+  'mic-off': (
+    <>
+      <path d="M15 10V6a3 3 0 0 0-5.8-1.1M9 9v2a3 3 0 0 0 4.6 2.5" />
+      <path d="M5.5 11a6.5 6.5 0 0 0 10.6 5M18.5 11c0 .8-.1 1.5-.4 2.2M12 17.5V21M8.5 21h7M3 3l18 18" />
+    </>
+  ),
+  'phone-off': (
+    <>
+      <path d="M10.7 13.3a13 13 0 0 1-2.4-3.4l1.6-1.6a1 1 0 0 0 .2-1.1L8.6 3.8A1 1 0 0 0 7.4 3.2L4 4a1 1 0 0 0-.8 1 16 16 0 0 0 4.4 10.2M13.2 15.6a13 13 0 0 0 1.5.9l1.6-1.6a1 1 0 0 1 1.1-.2l3.4 1.5a1 1 0 0 1 .6 1.2L20.6 20a1 1 0 0 1-1 .8 16 16 0 0 1-8-3.3" />
+      <path d="M3 3l18 18" />
     </>
   ),
 };

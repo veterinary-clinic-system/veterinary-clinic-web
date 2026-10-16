@@ -2,11 +2,7 @@ import { FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { branchesApi } from '@/api/branches.api';
-import {
-  CreateCustomerPayload,
-  CustomerListParams,
-  customersApi,
-} from '@/api/customers.api';
+import { CreateCustomerPayload, CustomerListParams, customersApi } from '@/api/customers.api';
 import { Badge, Button, Input, Modal, Select, Table, useToast } from '@/components/basic';
 import type { Column, SortOrder } from '@/components/basic';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -125,7 +121,10 @@ export function CustomersPage() {
     mutationFn: (customer: Customer) =>
       customer.active ? customersApi.deactivate(customer.id) : customersApi.activate(customer.id),
     onSuccess: (updated) => {
-      toast.show(updated.active ? 'Đã kích hoạt lại khách hàng.' : 'Đã ngưng hoạt động.', 'success');
+      toast.show(
+        updated.active ? 'Đã kích hoạt lại khách hàng.' : 'Đã ngưng hoạt động.',
+        'success',
+      );
       setConfirmTarget(null);
       invalidate();
     },
@@ -222,7 +221,14 @@ export function CustomersPage() {
       header: 'Địa chỉ',
       minWidth: '160px',
       className: 'max-w-[200px] truncate text-muted',
-      render: (row) => (row.address ? <span title={row.address} className="truncate">{row.address}</span> : '—'),
+      render: (row) =>
+        row.address ? (
+          <span title={row.address} className="truncate">
+            {row.address}
+          </span>
+        ) : (
+          '—'
+        ),
     },
     {
       key: 'petCount',
@@ -292,7 +298,7 @@ export function CustomersPage() {
       </div>
 
       <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 items-end">
+        <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
           <Input
             label="Tìm kiếm"
             value={search}
@@ -411,7 +417,13 @@ export function CustomersPage() {
         }
       >
         <form id="customer-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <ImageUpload label="Ảnh khách hàng" category="user-avatars" value={form.avatarUrl} onChange={(avatarUrl) => setForm({ ...form, avatarUrl })} required />
+          <ImageUpload
+            label="Ảnh khách hàng"
+            category="user-avatars"
+            value={form.avatarUrl}
+            onChange={(avatarUrl) => setForm({ ...form, avatarUrl })}
+            required
+          />
           <Input
             label="Số điện thoại"
             type="tel"
@@ -437,6 +449,7 @@ export function CustomersPage() {
           <Input
             label="Ngày sinh (tùy chọn)"
             type="date"
+            max={new Date().toLocaleDateString('en-CA')}
             value={form.dateOfBirth}
             onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
           />
@@ -483,14 +496,14 @@ export function CustomersPage() {
       >
         {confirmTarget?.active ? (
           <p className="text-sm">
-            <strong>{confirmTarget.fullName}</strong> sẽ không đăng nhập được và không nên được
-            đặt lịch mới. Toàn bộ hồ sơ khám, hóa đơn và lịch sử giao dịch vẫn được giữ nguyên và
-            tra cứu được — hệ thống không xóa dữ liệu y tế.
+            <strong>{confirmTarget.fullName}</strong> sẽ không đăng nhập được và không nên được đặt
+            lịch mới. Toàn bộ hồ sơ khám, hóa đơn và lịch sử giao dịch vẫn được giữ nguyên và tra
+            cứu được — hệ thống không xóa dữ liệu y tế.
           </p>
         ) : (
           <p className="text-sm">
-            Kích hoạt lại <strong>{confirmTarget?.fullName}</strong>? Khách sẽ đăng nhập và đặt
-            lịch bình thường trở lại.
+            Kích hoạt lại <strong>{confirmTarget?.fullName}</strong>? Khách sẽ đăng nhập và đặt lịch
+            bình thường trở lại.
           </p>
         )}
       </Modal>

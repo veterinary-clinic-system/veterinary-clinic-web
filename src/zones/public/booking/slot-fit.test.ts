@@ -60,7 +60,7 @@ describe('slotFitsService', () => {
 
   it('từ chối dịch vụ dài nhảy QUA khe hở nghỉ trưa rồi đếm tiếp buổi chiều', () => {
     const slots = grid();
-    
+
     expect(slotFitsService(slots, at('10:30', slots), 240)).toBe(false);
   });
 

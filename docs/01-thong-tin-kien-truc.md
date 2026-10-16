@@ -8,7 +8,7 @@
 
 ## 1. Bản đồ tổng thể
 
-Hệ thống có **2 khung hiển thị**, **4 ranh giới code**, **42 màn hình**, **7 vai trò
+Hệ thống có **2 khung hiển thị**, **4 ranh giới code**, **44 màn hình**, **7 vai trò
 đăng nhập** và **1 nhóm khách vãng lai**.
 
 ```
@@ -22,7 +22,7 @@ Hệ thống có **2 khung hiển thị**, **4 ranh giới code**, **42 màn hì
        +------+------+               +------+------+
        |             |               |             |
      public        owner          clinical       admin
-    8 màn hình   4 màn hình     11 màn hình   19 màn hình
+    8 màn hình   5 màn hình     12 màn hình   19 màn hình
       GUEST       PET_OWNER    DOCTOR         ADMIN
                                RECEPTIONIST   MANAGER
                                               PHARMACIST
@@ -64,7 +64,7 @@ Thứ tự ưu tiên nội dung của zone này là **dịch vụ, bác sĩ, chi
 tự câu hỏi trong đầu người đang tìm phòng khám. Không phải "về chúng tôi, tầm nhìn, sứ
 mệnh".
 
-### 2.2 Zone `owner` — 4 màn hình · PET_OWNER
+### 2.2 Zone `owner` — 5 màn hình · PET_OWNER
 
 Nằm **trong `PublicLayout`**. Chủ nuôi đi qua lại giữa trang giới thiệu và khu của mình
 liên tục (xem dịch vụ, rồi đặt lịch cho bé đã có hồ sơ); đổi khung giữa chừng làm họ
@@ -76,6 +76,7 @@ tưởng đã rời khỏi trang.
 | 10 | Hồ sơ thú cưng | `/my/pets/:id` | Tất cả những gì hệ thống biết về một bé |
 | 11 | Lịch hẹn của tôi | `/my/appointments` | Sắp tới / đã xong / đã huỷ |
 | 12 | Chi tiết lịch hẹn | `/my/appointments/:id` | Trạng thái và hành động theo trạng thái |
+| 12a | Tin nhắn | `/my/messages/:conversationId?` | Nhắn tin, gửi ảnh, gọi thoại/video với bác sĩ đã khám cho bé |
 
 **Hồ sơ thú cưng có BỐN tab, không phải sáu.** Đặc tả ban đầu liệt kê thêm "Tiêm phòng"
 và "Đơn thuốc", nhưng backend không mở hai khối đó cho `PET_OWNER`:
@@ -92,7 +93,7 @@ khối rỗng dựng sẵn. Muốn có đủ sáu tab thì phải mở route ph�
 Đây là trải nghiệm khách hàng: thẻ lớn, ảnh thật, chữ dễ đọc, thuật ngữ y khoa được
 dịch sang tiếng người.
 
-### 2.3 Zone `clinical` — 11 màn hình · DOCTOR + RECEPTIONIST
+### 2.3 Zone `clinical` — 12 màn hình · DOCTOR + RECEPTIONIST
 
 Đây là zone được mở **cả ngày, mỗi ngày**. Một bác sĩ mở máy lúc 7h và ở trong bốn năm
 màn hình này tới lúc về. Tối ưu ở đây là tối ưu *số lần bấm chuột trên mỗi ca khám*,
@@ -111,10 +112,29 @@ không phải tối ưu ấn tượng đầu tiên.
 | 21 | Hồ sơ bệnh nhân | `/staff/patients/:id` | Bác sĩ |
 | 22 | Xét nghiệm | `/staff/laboratory` | Bác sĩ |
 | 23 | Nhắc lịch tiêm | `/staff/vaccinations/due` | Lễ tân |
+| 23a | Tin nhắn | `/staff/messages/:conversationId?` | Bác sĩ (chỉ DOCTOR) |
 
 Nguyên tắc mật độ: **compact**. Hàng bảng 36px thay vì 48px, khoảng đệm thẻ 16px thay
 vì 24px, chữ 13–14px cho dữ liệu bảng. Chỗ nào trống một cách "thoáng đãng" trong admin
 thì trong clinical là một hàng bệnh nhân bị đẩy xuống dưới màn hình.
+
+### 2.3a Tin nhắn và gọi điện (chủ nuôi ↔ bác sĩ)
+
+Một màn hình, hai cửa vào: `/my/messages` (owner) và `/staff/messages` (clinical, chỉ
+`DOCTOR`). Cả hai trang chỉ bọc `MessagingWorkspace` trong `src/components/messaging/` —
+phần giao diện dùng chung phải nằm ở thư mục shared, vì đặt trong một zone sẽ tạo cạnh
+`owner → clinical` giữa hai chunk.
+
+- **Ai nhắn được với ai do backend quyết định**: chủ nuôi chỉ thấy bác sĩ có lịch hẹn đã
+  xác nhận trở đi (CONFIRMED → COMPLETED) với bé của mình; bác sĩ chỉ thấy chủ của các bé
+  đó. Nút "Nhắn tin cho bác sĩ" ở chi tiết lịch hẹn chỉ hiện với các trạng thái này.
+- **Cuộc gọi đến hiện ở mọi trang**, không chỉ trang tin nhắn: `MessagingProvider` (bọc
+  trong `App.tsx`) mở socket `/messaging` cho PET_OWNER/DOCTOR và gắn `CallProvider` +
+  `CallOverlay` (`src/components/calls/`). Vai trò khác không mở kết nối nào.
+- **Không có micro/camera vẫn gọi được**: kết nối WebRTC chuyển sang chỉ nhận, giao diện
+  nói rõ lý do thay vì báo lỗi.
+- Huy hiệu số tin chưa đọc: mục "Tin nhắn" ở header/OwnerSpace (owner) và nút tin nhắn ở
+  topbar (bác sĩ).
 
 ### 2.4 Zone `admin` — 19 màn hình · ADMIN + MANAGER + PHARMACIST + STAFF
 

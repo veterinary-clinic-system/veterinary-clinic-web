@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Avatar, Drawer, DropdownMenu, Icon, cn } from '@/components/basic';
 import { useAuth } from '@/context/AuthContext';
+import { UnreadMessagesBadge } from '@/components/messaging/UnreadMessagesBadge';
 import { Role } from '@/types/enums';
 
 interface NavItem {
@@ -21,6 +22,7 @@ const PUBLIC_NAV: NavItem[] = [
 const OWNER_NAV: NavItem[] = [
   { to: '/my/pets', label: 'Thú cưng của tôi' },
   { to: '/my/appointments', label: 'Lịch hẹn' },
+  { to: '/my/messages', label: 'Tin nhắn' },
 ];
 
 function desktopNavClass({ isActive }: { isActive: boolean }): string {
@@ -83,6 +85,7 @@ export function PublicHeader() {
               {OWNER_NAV.map((item) => (
                 <NavLink key={item.to} to={item.to} className={desktopNavClass}>
                   {item.label}
+                  {item.to === '/my/messages' && <UnreadMessagesBadge className="ml-1" />}
                 </NavLink>
               ))}
             </>
@@ -107,6 +110,7 @@ export function PublicHeader() {
                   icon: 'appointments',
                   to: '/my/appointments',
                 },
+                { id: 'messages', label: 'Tin nhắn', icon: 'message', to: '/my/messages' },
                 { id: 'logout', label: 'Đăng xuất', icon: 'logout', onSelect: () => void logout() },
               ]}
               trigger={({ ref, onClick, ...aria }) => (

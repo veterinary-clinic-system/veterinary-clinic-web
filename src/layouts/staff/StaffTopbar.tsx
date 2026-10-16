@@ -1,7 +1,9 @@
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { branchesApi } from '@/api/branches.api';
 import { Avatar, Breadcrumb, DropdownMenu, Icon, cn } from '@/components/basic';
 import { NotificationBell } from '@/components/NotificationBell';
+import { UnreadMessagesBadge } from '@/components/messaging/UnreadMessagesBadge';
 import { useAuth } from '@/context/AuthContext';
 import { Role } from '@/types/enums';
 import { ROLE_LABEL_VI } from '@/utils/labels';
@@ -55,6 +57,18 @@ export function StaffTopbar({ onOpenMobileNav }: StaffTopbarProps) {
           <Icon name="building" className="h-4 w-4" />
           <span className="max-w-[12rem] truncate">{branchName}</span>
         </span>
+
+        {user?.role === Role.DOCTOR && (
+          <Link
+            to="/staff/messages"
+            aria-label="Tin nhắn"
+            title="Tin nhắn"
+            className="relative flex h-10 w-10 items-center justify-center rounded-lg text-foreground hover:bg-surface-muted"
+          >
+            <Icon name="message" />
+            <UnreadMessagesBadge className="absolute -right-0.5 -top-0.5" />
+          </Link>
+        )}
 
         <NotificationBell />
 

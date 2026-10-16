@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { Icon } from '@/components/basic';
+import { UnreadMessagesBadge } from '@/components/messaging/UnreadMessagesBadge';
 
 export function OwnerSpace() {
   return (
@@ -14,6 +15,9 @@ export function OwnerSpace() {
         <nav aria-label="Khu vực chủ thú cưng">
           <NavLink to="/my/pets">Hồ sơ thú cưng</NavLink>
           <NavLink to="/my/appointments">Lịch hẹn của tôi</NavLink>
+          <NavLink to="/my/messages">
+            Tin nhắn <UnreadMessagesBadge className="ml-1" />
+          </NavLink>
           <NavLink to="/booking">Đặt lịch mới ↗</NavLink>
         </nav>
       </div>

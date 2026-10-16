@@ -42,6 +42,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { to: '/staff/calendar', label: 'Lịch làm việc', icon: 'calendar', roles: CLINIC_ROLES },
       { to: '/staff/appointments', label: 'Lịch hẹn', icon: 'appointments', roles: CLINIC_ROLES },
       { to: '/staff/patients', label: 'Hồ sơ thú cưng', icon: 'paw', roles: CLINIC_ROLES },
+      { to: '/staff/messages', label: 'Tin nhắn', icon: 'message', roles: [Role.DOCTOR] },
       { to: '/staff/laboratory', label: 'Xét nghiệm', icon: 'flask', roles: CLINIC_ROLES },
       {
         to: '/staff/vaccinations/due',
@@ -141,6 +142,7 @@ const CLINICAL_PATH_PREFIXES = [
   '/staff/customers',
   '/staff/laboratory',
   '/staff/vaccinations',
+  '/staff/messages',
 ];
 
 export function isClinicalPath(pathname: string, role?: Role): boolean {

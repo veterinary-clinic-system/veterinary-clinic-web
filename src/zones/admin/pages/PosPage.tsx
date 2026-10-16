@@ -30,6 +30,8 @@ export function PosPage() {
   const [cartId, setCartId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [payOpen, setPayOpen] = useState(false);
+  // Tăng khi đổi số lượng thất bại để ô nhập (uncontrolled) được dựng lại về số lượng thật.
+  const [quantityResetKey, setQuantityResetKey] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
   const debouncedSearch = useDebouncedValue(search, 250);
 
@@ -127,7 +129,10 @@ export function PosPage() {
         ? posApi.removeItem(cartId!, itemId)
         : posApi.setQuantity(cartId!, itemId, quantity),
     onSuccess: onCartChanged,
-    onError: failed,
+    onError: (error) => {
+      setQuantityResetKey((k) => k + 1);
+      failed(error);
+    },
   });
 
   const removeItem = useMutation({
@@ -245,7 +250,7 @@ export function PosPage() {
                       type="number"
                       min={1}
                       defaultValue={line.quantity}
-                      key={`${line.id}-${line.quantity}`}
+                      key={`${line.id}-${line.quantity}-${quantityResetKey}`}
                       onKeyDown={(e) => {
                         if (e.key !== 'Enter') return;
                         e.preventDefault();
@@ -370,7 +375,7 @@ function ProductGrid({
   if (loading) {
     return <SkeletonCards count={6} label="Đang tải danh sách sản phẩm" />;
   }
-  
+
   if (error) {
     return (
       <ErrorState
@@ -538,8 +543,8 @@ function PaymentModal({
         )}
         {usesSepay && (
           <p className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm text-foreground">
-            Sau khi tạo hóa đơn, hệ thống sẽ hiển thị VietQR và tự xác nhận khi SePay gửi
-            webhook báo tiền về.
+            Sau khi tạo hóa đơn, hệ thống sẽ hiển thị VietQR và tự xác nhận khi SePay gửi webhook
+            báo tiền về.
           </p>
         )}
       </div>

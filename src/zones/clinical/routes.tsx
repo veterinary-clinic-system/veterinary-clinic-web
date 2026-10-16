@@ -1,6 +1,7 @@
 import { lazy } from 'react';
 import { Route } from 'react-router-dom';
 import { RequireAuth } from '@/routes/RequireAuth';
+import { Role } from '@/types/enums';
 import { CLINIC_ROLES, CUSTOMER_ROLES } from '@/types/permission-groups';
 
 const StaffCalendarPage = lazy(() =>
@@ -31,6 +32,9 @@ const ExamEntryPage = lazy(() =>
 const LaboratoryQueuePage = lazy(() =>
   import('./pages/LaboratoryQueuePage').then((m) => ({ default: m.LaboratoryQueuePage })),
 );
+const StaffMessagesPage = lazy(() =>
+  import('./pages/StaffMessagesPage').then((m) => ({ default: m.StaffMessagesPage })),
+);
 const VaccinationDuePage = lazy(() =>
   import('./pages/VaccinationDuePage').then((m) => ({ default: m.VaccinationDuePage })),
 );
@@ -49,6 +53,12 @@ export function clinicalRoutes() {
       {}
       <Route path="/staff/laboratory" element={<LaboratoryQueuePage />} />
       <Route path="/staff/vaccinations/due" element={<VaccinationDuePage />} />
+    </Route>,
+
+    // Nhắn tin/gọi điện chỉ giữa bác sĩ và chủ nuôi - lễ tân không có cuộc trò chuyện nào.
+    <Route key="messages" element={<RequireAuth allow={[Role.DOCTOR]} />}>
+      <Route path="/staff/messages" element={<StaffMessagesPage />} />
+      <Route path="/staff/messages/:conversationId" element={<StaffMessagesPage />} />
     </Route>,
 
     <Route key="customers" element={<RequireAuth allow={CUSTOMER_ROLES} />}>

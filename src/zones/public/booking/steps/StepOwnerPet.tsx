@@ -1,3 +1,4 @@
+import { format } from 'date-fns';
 import { Input, Select } from '@/components/basic';
 import { Gender } from '@/types/enums';
 import { GENDER_LABEL_VI } from '@/utils/display';
@@ -137,7 +138,7 @@ function ExistingPetPicker({ pet }: { pet: BookingForm['pet'] }) {
 }
 
 function NewPetFields({ pet }: { pet: BookingForm['pet'] }) {
-  const { newPet, updateNewPet } = pet;
+  const { newPet, newPetErrors, updateNewPet } = pet;
 
   return (
     <div className="mt-3 grid gap-4 sm:grid-cols-2">
@@ -159,7 +160,7 @@ function NewPetFields({ pet }: { pet: BookingForm['pet'] }) {
       <Select
         label="Loài"
         value={newPet.speciesId}
-        
+
         onChange={(value) => updateNewPet({ speciesId: value, breedId: '' })}
         options={[
           { value: '', label: '-- Chọn loài --' },
@@ -187,6 +188,7 @@ function NewPetFields({ pet }: { pet: BookingForm['pet'] }) {
         min="0"
         step="0.1"
         value={newPet.weight}
+        error={newPetErrors.weight}
         onChange={(e) => updateNewPet({ weight: e.target.value })}
         className="w-full"
       />
@@ -194,7 +196,9 @@ function NewPetFields({ pet }: { pet: BookingForm['pet'] }) {
       <Input
         type="date"
         label="Ngày sinh"
+        max={format(new Date(), 'yyyy-MM-dd')}
         value={newPet.birthDate}
+        error={newPetErrors.birthDate}
         onChange={(e) => updateNewPet({ birthDate: e.target.value })}
         className="w-full"
       />

@@ -21,6 +21,8 @@ import {
   TriageBadge,
 } from '@/components/basic';
 import { QueryErrorState } from '@/components/QueryErrorState';
+import { MessageDoctorButton } from '@/components/messaging/MessageDoctorButton';
+import { MESSAGEABLE_APPOINTMENT_STATUSES } from '@/components/messaging/messaging-shared';
 import { AppointmentStatus, COMMON_SYMPTOM_LABEL_VI } from '@/types/enums';
 import { Appointment } from '@/types/models';
 import { APPOINTMENT_STATUS_TONE, canCancel } from '@/utils/appointment-status';
@@ -161,6 +163,9 @@ export function MyAppointmentDetailPage() {
             <Icon name="close" className="h-4 w-4" />
             Huỷ lịch hẹn
           </Button>
+        )}
+        {MESSAGEABLE_APPOINTMENT_STATUSES.includes(status) && appointment.doctorId && (
+          <MessageDoctorButton doctorId={appointment.doctorId} />
         )}
         {rebookable && (
           <Button onClick={() => navigate('/booking', { state: { petId: appointment.petId } })}>

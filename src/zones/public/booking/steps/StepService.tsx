@@ -20,7 +20,10 @@ export function StepService({ service }: { service: BookingForm['service'] }) {
           className="mt-4 space-y-3"
         >
           {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="flex items-center justify-between gap-4 rounded-xl border border-border p-4">
+            <div
+              key={index}
+              className="flex items-center justify-between gap-4 rounded-xl border border-border p-4"
+            >
               <div className="flex-1">
                 <Skeleton className="h-5 w-1/3" />
                 <Skeleton className="mt-2 h-4 w-2/3" />
@@ -47,7 +50,9 @@ export function StepService({ service }: { service: BookingForm['service'] }) {
           >
             <div>
               <p className="font-medium text-foreground">{item.item.itemName}</p>
-              {item.item.describe && <p className="mt-0.5 text-sm text-muted">{item.item.describe}</p>}
+              {item.item.describe && (
+                <p className="mt-0.5 text-sm text-muted">{item.item.describe}</p>
+              )}
               <p className="mt-0.5 text-xs text-muted">{item.durationMinutes} phút</p>
             </div>
             <p className="whitespace-nowrap font-semibold text-primary">

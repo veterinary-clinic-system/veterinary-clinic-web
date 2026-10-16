@@ -16,7 +16,6 @@ export function SlotGrid({
   selectedSlot: SelectedSlot | null;
   onSelect: (slot: SelectedSlot) => void;
 }) {
-  
   const rowTimes = Array.from(new Set(days.flatMap((d) => d.slots.map((s) => s.start)))).sort();
 
   return (
@@ -28,14 +27,17 @@ export function SlotGrid({
         </caption>
         <thead>
           <tr>
-            <th scope="col" className="border-b border-border p-2 text-left text-muted whitespace-nowrap">
+            <th
+              scope="col"
+              className="whitespace-nowrap border-b border-border p-2 text-left text-muted"
+            >
               Giờ
             </th>
             {days.map((day) => (
               <th
                 key={day.date}
                 scope="col"
-                className="border-b border-border p-2 text-center font-medium text-foreground whitespace-nowrap"
+                className="whitespace-nowrap border-b border-border p-2 text-center font-medium text-foreground"
               >
                 {format(parseISO(day.date), 'EEEE dd/MM', { locale: vi })}
                 {!day.isBranchOpen && (
@@ -48,7 +50,10 @@ export function SlotGrid({
         <tbody>
           {rowTimes.map((time) => (
             <tr key={time}>
-              <th scope="row" className="border-b border-border p-2 text-left font-normal text-muted">
+              <th
+                scope="row"
+                className="border-b border-border p-2 text-left font-normal text-muted"
+              >
                 {time}
               </th>
               {days.map((day) => (
@@ -58,7 +63,8 @@ export function SlotGrid({
                   slot={day.slots.find((s) => s.start === time)}
                   serviceDuration={serviceDuration}
                   isSelected={
-                    !!selectedSlot && selectedSlot.startAt === day.slots.find((s) => s.start === time)?.startAt
+                    !!selectedSlot &&
+                    selectedSlot.startAt === day.slots.find((s) => s.start === time)?.startAt
                   }
                   onSelect={onSelect}
                 />
@@ -93,7 +99,7 @@ function SlotCell({
   }
 
   const isPast = slot.status === SlotStatus.PAST;
-  
+
   const fits = slotFitsService(day.slots, slot, serviceDuration);
   const isFree = slot.status === SlotStatus.FREE && fits;
   const tooShort = slot.status === SlotStatus.FREE && !fits;

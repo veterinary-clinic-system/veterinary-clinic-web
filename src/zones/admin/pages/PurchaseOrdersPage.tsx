@@ -19,13 +19,9 @@ import {
 } from '@/components/basic';
 import type { BadgeVariant, Column, SortOrder } from '@/components/basic';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import {
-  PURCHASE_ORDER_STATUS_LABEL_VI,
-  PurchaseOrder,
-  PurchaseOrderStatus,
-} from '@/types/models';
+import { PURCHASE_ORDER_STATUS_LABEL_VI, PurchaseOrder, PurchaseOrderStatus } from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';
-import { formatCurrency, formatDate } from '@/utils/format';
+import { formatCurrency, formatDate, todayLocalIso } from '@/utils/format';
 
 const LIMIT = 20;
 
@@ -46,7 +42,7 @@ interface DraftLine {
 const EMPTY_LINE: DraftLine = { itemId: '', quantity: '1', unitCost: '0' };
 
 function today(): string {
-  return new Date().toISOString().slice(0, 10);
+  return todayLocalIso();
 }
 
 export function PurchaseOrdersPage() {
@@ -137,7 +133,10 @@ export function PurchaseOrdersPage() {
     mutationFn: ({ id, status }: { id: string; status: PurchaseOrderStatus }) =>
       purchaseOrdersApi.update(id, { status }),
     onSuccess: (order) => {
-      toast.show(`Đơn ${order.poCode}: ${PURCHASE_ORDER_STATUS_LABEL_VI[order.status]}.`, 'success');
+      toast.show(
+        `Đơn ${order.poCode}: ${PURCHASE_ORDER_STATUS_LABEL_VI[order.status]}.`,
+        'success',
+      );
       void queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
       void queryClient.invalidateQueries({ queryKey: ['purchase-order'] });
     },
@@ -159,7 +158,15 @@ export function PurchaseOrdersPage() {
     0,
   );
   const canSubmit =
-    form.supplierId !== '' && lines.length > 0 && lines.every((line) => line.itemId !== '');
+    form.supplierId !== '' &&
+    lines.length > 0 &&
+    lines.every(
+      (line) =>
+        line.itemId !== '' &&
+        Number.isInteger(Number(line.quantity)) &&
+        Number(line.quantity) >= 1 &&
+        Number(line.unitCost) >= 0,
+    );
 
   const columns: Column<PurchaseOrder>[] = [
     {
@@ -172,7 +179,7 @@ export function PurchaseOrdersPage() {
         <button
           type="button"
           onClick={() => setDetailId(row.id)}
-          className="font-mono text-primary hover:underline font-semibold"
+          className="font-mono font-semibold text-primary hover:underline"
         >
           {row.poCode}
         </button>
@@ -234,7 +241,7 @@ export function PurchaseOrdersPage() {
       align: 'right',
       className: 'whitespace-nowrap',
       render: (row) => (
-        <div className="flex items-center justify-end flex-nowrap gap-2 whitespace-nowrap">
+        <div className="flex flex-nowrap items-center justify-end gap-2 whitespace-nowrap">
           {row.status === PurchaseOrderStatus.DRAFT && (
             <Button
               size="sm"
@@ -247,10 +254,7 @@ export function PurchaseOrdersPage() {
           )}
           {(row.status === PurchaseOrderStatus.ORDERED ||
             row.status === PurchaseOrderStatus.PARTIALLY_RECEIVED) && (
-            <Button
-              size="sm"
-              onClick={() => navigate(`/staff/goods-receipts?po=${row.id}`)}
-            >
+            <Button size="sm" onClick={() => navigate(`/staff/goods-receipts?po=${row.id}`)}>
               Nhận hàng
             </Button>
           )}
@@ -407,7 +411,10 @@ export function PurchaseOrdersPage() {
               </Button>
             </div>
             {lines.map((line, index) => (
-              <div key={index} className="flex flex-wrap items-end gap-3 rounded border border-border p-3">
+              <div
+                key={index}
+                className="flex flex-wrap items-end gap-3 rounded border border-border p-3"
+              >
                 <Combobox
                   label="Mặt hàng"
                   className="w-64"

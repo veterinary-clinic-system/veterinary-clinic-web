@@ -1,5 +1,6 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { authApi } from '@/api/auth.api';
+import { refreshAccessToken } from '@/api/client';
 import { tokenStore } from '@/api/token-store';
 import { AccessTokenPayload, decodeAccessToken, isTokenExpired } from '@/utils/jwt';
 
@@ -24,14 +25,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const bootstrap = async () => {
-      const refreshToken = tokenStore.getRefreshToken();
-      if (!refreshToken) {
+      if (!tokenStore.getRefreshToken()) {
         setIsLoading(false);
         return;
       }
       try {
-        const tokens = await authApi.refresh(refreshToken);
-        applyTokens(tokens.accessToken, tokens.refreshToken);
+        // Dùng chung promise refresh cấp module: StrictMode (dev) chạy effect 2 lần,
+        // gọi /auth/refresh hai lần với cùng refresh token sẽ bị backend xoay vòng → 401.
+        // refreshAccessToken() đã lưu cặp token mới vào tokenStore.
+        setUserFromAccessToken(await refreshAccessToken());
       } catch {
         tokenStore.clear();
       } finally {
@@ -44,6 +46,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   function applyTokens(accessToken: string, refreshToken: string) {
     tokenStore.setAccessToken(accessToken);
     tokenStore.setRefreshToken(refreshToken);
+    setUserFromAccessToken(accessToken);
+  }
+
+  function setUserFromAccessToken(accessToken: string) {
     const payload = decodeAccessToken(accessToken);
     setUser(payload && !isTokenExpired(payload) ? payload : null);
   }

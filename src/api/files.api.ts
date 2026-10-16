@@ -9,7 +9,8 @@ export type FileCategory =
   | 'symptom-photos'
   | 'symptom-videos'
   | 'exam-attachments'
-  | 'lab-results';
+  | 'lab-results'
+  | 'chat-images';
 
 export const filesApi = {
   upload: async (category: FileCategory, file: File): Promise<{ url: string; path: string }> => {

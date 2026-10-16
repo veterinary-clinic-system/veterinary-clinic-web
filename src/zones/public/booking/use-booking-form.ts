@@ -126,7 +126,10 @@ export function useBookingForm() {
 
     // Route state is controlled by the browser and must not be trusted. Keep the
     // handoff only when the pet really belongs to the signed-in owner.
-    const safePetId = resolveOwnedPetId(petId, myPets.map((pet) => pet.id));
+    const safePetId = resolveOwnedPetId(
+      petId,
+      myPets.map((pet) => pet.id),
+    );
     if (safePetId !== petId) setPetId(safePetId);
   }, [isOwner, myPets, petId]);
 
@@ -184,6 +187,15 @@ export function useBookingForm() {
   const earliestBookable = startOfDay(new Date(Date.now() + 24 * 60 * 60 * 1000));
   const canGoPrevWeek = subWeeks(parseISO(weekOf), 1) >= startOfDay(new Date());
 
+  // Chặn số liệu vô lý trước khi gửi (backend cũng kiểm lại).
+  const newPetErrors: { weight?: string; birthDate?: string } = {};
+  if (newPet.weight !== '' && !(Number(newPet.weight) > 0)) {
+    newPetErrors.weight = 'Cân nặng phải lớn hơn 0';
+  }
+  if (newPet.birthDate && newPet.birthDate > format(new Date(), 'yyyy-MM-dd')) {
+    newPetErrors.birthDate = 'Ngày sinh không được sau hôm nay';
+  }
+
   const canProceed = (() => {
     switch (step) {
       case 1:
@@ -197,7 +209,12 @@ export function useBookingForm() {
       case 5:
         if (!phone.trim() || !ownerFullName.trim()) return false;
         if (effectivePetMode === 'existing') return !!selectedExistingPet;
-        return newPet.name.trim().length > 0 && !!newPet.breedId;
+        return (
+          newPet.name.trim().length > 0 &&
+          !!newPet.breedId &&
+          !newPetErrors.weight &&
+          !newPetErrors.birthDate
+        );
       case 6:
         return ![...photoItems, ...videoItems].some((item) => item.status === 'uploading');
       default:
@@ -434,6 +451,7 @@ export function useBookingForm() {
       setId: setPetId,
       selectedExisting: selectedExistingPet,
       newPet,
+      newPetErrors,
       updateNewPet,
       speciesList,
       breeds,

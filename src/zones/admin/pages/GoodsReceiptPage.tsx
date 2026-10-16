@@ -2,11 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { branchesApi } from '@/api/branches.api';
-import {
-  GoodsReceiptListParams,
-  goodsReceiptsApi,
-  purchaseOrdersApi,
-} from '@/api/inventory.api';
+import { GoodsReceiptListParams, goodsReceiptsApi, purchaseOrdersApi } from '@/api/inventory.api';
 import {
   Badge,
   Button,
@@ -22,8 +18,13 @@ import {
 import type { Column, SortOrder } from '@/components/basic';
 import { GoodsReceipt, PurchaseOrderStatus } from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';
-import { formatCurrency, formatDate } from '@/utils/format';
+import { formatCurrency, formatDate, todayLocalIso } from '@/utils/format';
 import { EXPIRY_BADGE_VARIANT, expiryLabel, expiryLevel } from '@/utils/inventory';
+
+/** Khớp quy tắc backend: hạn dùng phải sau ngày nhận. */
+function isExpiredOnArrival(expiryDate: string, receivedDate: string): boolean {
+  return expiryDate !== '' && expiryDate.slice(0, 10) <= receivedDate;
+}
 
 const LIMIT = 20;
 
@@ -34,7 +35,7 @@ interface ReceivingLine {
   ordered: number;
   alreadyReceived: number;
   unitCost: number;
-  
+
   quantity: string;
   batchNo: string;
   expiryDate: string;
@@ -52,7 +53,7 @@ export function GoodsReceiptPage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [selectedPoId, setSelectedPoId] = useState<string | null>(searchParams.get('po'));
-  const [receivedDate, setReceivedDate] = useState(new Date().toISOString().slice(0, 10));
+  const [receivedDate, setReceivedDate] = useState(todayLocalIso);
   const [note, setNote] = useState('');
   const [receivingLines, setReceivingLines] = useState<ReceivingLine[]>([]);
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -165,7 +166,7 @@ export function GoodsReceiptPage() {
   });
 
   function openForm() {
-    setReceivedDate(new Date().toISOString().slice(0, 10));
+    setReceivedDate(todayLocalIso());
     setNote('');
     setFormOpen(true);
   }
@@ -182,11 +183,12 @@ export function GoodsReceiptPage() {
       setSelectedPoId(searchParams.get('po'));
       setFormOpen(true);
     }
-
   }, [formOpen, searchParams]);
 
   function updateLine(index: number, patch: Partial<ReceivingLine>) {
-    setReceivingLines(receivingLines.map((line, i) => (i === index ? { ...line, ...patch } : line)));
+    setReceivingLines(
+      receivingLines.map((line, i) => (i === index ? { ...line, ...patch } : line)),
+    );
   }
 
   const activeLines = receivingLines.filter((line) => Number(line.quantity) > 0);
@@ -196,6 +198,7 @@ export function GoodsReceiptPage() {
     activeLines.every(
       (line) =>
         line.batchNo.trim() !== '' &&
+        !isExpiredOnArrival(line.expiryDate, receivedDate) &&
         Number(line.quantity) > 0 &&
         Number(line.quantity) <= line.ordered - line.alreadyReceived,
     );
@@ -215,7 +218,7 @@ export function GoodsReceiptPage() {
         <button
           type="button"
           onClick={() => setDetailId(row.id)}
-          className="font-mono text-primary hover:underline font-semibold"
+          className="font-mono font-semibold text-primary hover:underline"
         >
           {row.receiptCode}
         </button>
@@ -281,8 +284,8 @@ export function GoodsReceiptPage() {
           options={(branchesQuery.data ?? []).map((b) => ({ value: b.id, label: b.branchName }))}
         />
         <p className="text-sm text-muted">
-          Phiếu nhập không sửa và không xóa được: nó đã tăng tồn thật và đã ghi sổ cái. Nhập sai
-          thì lập phiếu kiểm kê có ghi lý do.
+          Phiếu nhập không sửa và không xóa được: nó đã tăng tồn thật và đã ghi sổ cái. Nhập sai thì
+          lập phiếu kiểm kê có ghi lý do.
         </p>
       </div>
 
@@ -360,7 +363,10 @@ export function GoodsReceiptPage() {
           )}
 
           {receivingLines.map((line, index) => (
-            <div key={line.purchaseOrderItemId} className="flex flex-col gap-3 rounded border border-border p-3">
+            <div
+              key={line.purchaseOrderItemId}
+              className="flex flex-col gap-3 rounded border border-border p-3"
+            >
               <div className="flex items-baseline justify-between">
                 <span className="font-medium">{line.itemLabel}</span>
                 <span className="text-sm text-muted">
@@ -389,9 +395,7 @@ export function GoodsReceiptPage() {
                   value={line.batchNo}
                   onChange={(e) => updateLine(index, { batchNo: e.target.value })}
                   error={
-                    Number(line.quantity) > 0 && line.batchNo.trim() === ''
-                      ? 'Bắt buộc'
-                      : undefined
+                    Number(line.quantity) > 0 && line.batchNo.trim() === '' ? 'Bắt buộc' : undefined
                   }
                 />
                 <DatePicker
@@ -399,6 +403,11 @@ export function GoodsReceiptPage() {
                   value={line.expiryDate || null}
                   onChange={(value) => updateLine(index, { expiryDate: value ?? '' })}
                   hint="Bỏ trống nếu hàng không có hạn."
+                  error={
+                    isExpiredOnArrival(line.expiryDate, receivedDate)
+                      ? 'Lô đã hết hạn tại ngày nhận'
+                      : undefined
+                  }
                 />
                 <span className="pb-2 text-sm text-muted">
                   {formatCurrency(Number(line.quantity) * line.unitCost)}
@@ -411,7 +420,12 @@ export function GoodsReceiptPage() {
             <p className="text-right font-medium">Giá trị phiếu: {formatCurrency(receiptTotal)}</p>
           )}
 
-          <Textarea label="Ghi chú" rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
+          <Textarea
+            label="Ghi chú"
+            rows={2}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
           <p className="text-sm text-muted">
             Toàn bộ phiếu vào kho trong một lần: hoặc mọi dòng đều được ghi, hoặc không dòng nào.
           </p>
@@ -468,7 +482,9 @@ export function GoodsReceiptPage() {
                   className: 'whitespace-nowrap',
                   render: (row) => (
                     <div className="flex items-center gap-2 whitespace-nowrap">
-                      <span className="tabular-nums text-muted">{row.expiryDate ? formatDate(row.expiryDate) : '—'}</span>
+                      <span className="tabular-nums text-muted">
+                        {row.expiryDate ? formatDate(row.expiryDate) : '—'}
+                      </span>
                       <Badge variant={EXPIRY_BADGE_VARIANT[expiryLevel(row.expiryDate)]}>
                         {expiryLabel(row.expiryDate)}
                       </Badge>

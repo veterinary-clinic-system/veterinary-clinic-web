@@ -19,7 +19,7 @@ interface RetriableConfig extends InternalAxiosRequestConfig {
 
 let refreshPromise: Promise<string> | null = null;
 
-async function refreshAccessToken(): Promise<string> {
+export async function refreshAccessToken(): Promise<string> {
   const refreshToken = tokenStore.getRefreshToken();
   if (!refreshToken) {
     throw new Error('No refresh token available');

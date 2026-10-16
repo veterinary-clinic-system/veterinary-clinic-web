@@ -13,6 +13,9 @@ const PetProfilePage = lazy(() =>
 const MyAppointmentsPage = lazy(() =>
   import('./pages/MyAppointmentsPage').then((m) => ({ default: m.MyAppointmentsPage })),
 );
+const MyMessagesPage = lazy(() =>
+  import('./pages/MyMessagesPage').then((m) => ({ default: m.MyMessagesPage })),
+);
 const MyAppointmentDetailPage = lazy(() =>
   import('./pages/MyAppointmentDetailPage').then((m) => ({ default: m.MyAppointmentDetailPage })),
 );
@@ -25,6 +28,8 @@ export function ownerRoutes() {
         <Route path="/my/pets/:id" element={<PetProfilePage />} />
         <Route path="/my/appointments" element={<MyAppointmentsPage />} />
         <Route path="/my/appointments/:id" element={<MyAppointmentDetailPage />} />
+        <Route path="/my/messages" element={<MyMessagesPage />} />
+        <Route path="/my/messages/:conversationId" element={<MyMessagesPage />} />
       </Route>
     </Route>
   );

@@ -23,7 +23,12 @@ export function BookingSummary({ form }: { form: BookingForm }) {
   return (
     <aside className="booking-summary" aria-label="Tóm tắt lịch khám">
       <div className="booking-summary-photo">
-        <img src={cloudinaryImage('images/pets-photoreal-v1.png')} alt="" width="1254" height="1254" />
+        <img
+          src={cloudinaryImage('images/pets-photoreal-v1.png')}
+          alt=""
+          width="1254"
+          height="1254"
+        />
         <span>
           Một cuộc hẹn.
           <br />

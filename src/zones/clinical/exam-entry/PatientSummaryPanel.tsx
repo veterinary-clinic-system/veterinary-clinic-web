@@ -27,7 +27,7 @@ export function PatientSummaryPanel({ appointment }: { appointment: Appointment 
   const pet = petQuery.data;
 
   return (
-    <div className="flex flex-col gap-4 lg:sticky lg:top-20">
+    <div className="flex flex-col gap-4 xl:sticky xl:top-20">
       <Card as="section">
         <CardBody className="p-card">
           {petQuery.isLoading ? (

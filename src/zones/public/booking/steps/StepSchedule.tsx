@@ -50,7 +50,12 @@ export function StepSchedule({
       </div>
 
       {schedule.isLoading && (
-        <div role="status" aria-busy="true" aria-label="Đang tải lịch khám" className="mt-4 space-y-2">
+        <div
+          role="status"
+          aria-busy="true"
+          aria-label="Đang tải lịch khám"
+          className="mt-4 space-y-2"
+        >
           {Array.from({ length: 8 }).map((_, index) => (
             <Skeleton key={index} className="h-8 w-full" />
           ))}
@@ -97,7 +102,8 @@ export function StepSchedule({
 
       <ul className="mt-3 flex flex-wrap gap-4 text-xs text-muted">
         <li className="flex items-center gap-1.5">
-          <span aria-hidden="true" className="inline-block h-3 w-3 rounded bg-primary/20" /> Còn trống
+          <span aria-hidden="true" className="inline-block h-3 w-3 rounded bg-primary/20" /> Còn
+          trống
         </li>
         <li className="flex items-center gap-1.5">
           <span
@@ -120,7 +126,9 @@ export function StepSchedule({
         {schedule.selectedSlot && (
           <span className="inline-block rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
             Đã chọn:{' '}
-            {format(parseISO(schedule.selectedSlot.startAt), 'HH:mm, EEEE dd/MM/yyyy', { locale: vi })}
+            {format(parseISO(schedule.selectedSlot.startAt), 'HH:mm, EEEE dd/MM/yyyy', {
+              locale: vi,
+            })}
           </span>
         )}
       </p>

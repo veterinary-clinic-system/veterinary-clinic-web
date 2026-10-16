@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { isAxiosError } from 'axios';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { tokenStore } from '@/api/token-store';
 import { Alert, Button, Input } from '@/components/basic';
@@ -44,7 +45,12 @@ export function LoginPage() {
       const target = from && !isStaff ? `${from.pathname}${from.search ?? ''}` : roleHome;
       navigate(target, { replace: true });
     } catch (error) {
-      setServerError(getErrorMessage(error, 'Số điện thoại hoặc mật khẩu không đúng.'));
+      // Backend trả thông điệp tiếng Anh cho 401 — hiện câu tiếng Việt thay vào đó.
+      setServerError(
+        isAxiosError(error) && error.response?.status === 401
+          ? 'Số điện thoại hoặc mật khẩu không đúng.'
+          : getErrorMessage(error, 'Số điện thoại hoặc mật khẩu không đúng.'),
+      );
     }
   };
 

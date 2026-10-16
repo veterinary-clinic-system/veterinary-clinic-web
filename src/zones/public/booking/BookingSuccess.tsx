@@ -46,7 +46,12 @@ export function BookingSuccess({
       <h1 role="status" className="mt-4 text-2xl font-semibold text-foreground">
         Đặt lịch thành công
       </h1>
-      <p className="mt-2 text-muted">Mã lịch hẹn: {appointment.id}</p>
+      <p className="mt-2 text-muted">
+        Mã lịch hẹn:{' '}
+        <span className="font-mono font-semibold text-foreground">
+          #{appointment.id.slice(0, 8).toUpperCase()}
+        </span>
+      </p>
 
       <dl className="mt-6 rounded-xl border border-border bg-surface p-6 text-left text-sm">
         <SummaryRow

@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { medicalRecordsApi } from '@/api/medical-records.api';
 import { Badge, Button, Input, Textarea, useToast } from '@/components/basic';
 import { MedicalRecord, Treatment } from '@/types/models';
-import { formatDate } from '@/utils/format';
+import { formatDate, todayLocalIso } from '@/utils/format';
 import { extractApiMessage } from '../api-utils';
 import { Section } from '../Section';
 
@@ -20,7 +20,7 @@ export function TreatmentsSection({
 
   const [method, setMethod] = useState('');
   const [description, setDescription] = useState('');
-  const [startDate, setStartDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [startDate, setStartDate] = useState(todayLocalIso);
   const [endDate, setEndDate] = useState('');
   const [instruction, setInstruction] = useState('');
 
@@ -144,9 +144,7 @@ function TreatmentRow({
           </Badge>
         </p>
         {treatment.description && <p className="text-muted">{treatment.description}</p>}
-        {treatment.instruction && (
-          <p className="text-muted">Hướng dẫn: {treatment.instruction}</p>
-        )}
+        {treatment.instruction && <p className="text-muted">Hướng dẫn: {treatment.instruction}</p>}
       </div>
       {!readOnly && (
         <Button type="button" variant="ghost" size="sm" onClick={onRemove}>

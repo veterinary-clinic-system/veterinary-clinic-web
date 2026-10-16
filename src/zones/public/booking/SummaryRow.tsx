@@ -1,4 +1,3 @@
-
 export function SummaryRow({ label, value }: { label: string; value?: string }) {
   if (!value) return null;
 
