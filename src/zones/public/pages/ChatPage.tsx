@@ -99,6 +99,11 @@ function formatDateTime(iso: string): string {
   });
 }
 
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
 const CHANNEL_LABEL: Record<string, string> = { ZALO: 'Zalo', EMAIL: 'Gmail', SMS: 'SMS' };
 
 function BookingCard({ booking, notifications }: { booking: AiChatBooking; notifications: AiChatResponse['notifications'] }) {
@@ -496,7 +501,7 @@ export function ChatPage() {
                 <span className="flex max-w-[160px] flex-col">
                   <span className="truncate font-medium text-foreground">{att.file.name}</span>
                   <span className="text-[10px] text-muted">
-                    {(att.file.size / 1024 / 1024).toFixed(1)} MB · {att.type === 'image' ? 'Ảnh' : 'Video'}
+                    {formatFileSize(att.file.size)} · {att.type === 'image' ? 'Ảnh' : 'Video'}
                   </span>
                 </span>
                 <button
