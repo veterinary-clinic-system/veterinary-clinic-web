@@ -95,7 +95,7 @@ export function CallOverlay() {
         role="alertdialog"
         aria-modal="false"
         aria-labelledby="incoming-call-title"
-        className="fixed inset-x-4 bottom-4 z-[60] mx-auto max-w-sm rounded-xl border border-border bg-surface p-5 shadow-lg sm:inset-x-auto sm:bottom-6 sm:right-6"
+        className="fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-[60] mx-auto max-w-sm rounded-xl border border-border bg-surface p-5 shadow-lg sm:inset-x-auto sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom))] sm:right-6"
       >
         <div className="flex items-center gap-3">
           <Avatar name={state.peer.fullName} src={state.peer.avatarUrl} size="lg" />

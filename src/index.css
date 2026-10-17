@@ -38,6 +38,13 @@ body {
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
+/* Installed app (PWA): no browser pull-to-refresh bounce. */
+@media (display-mode: standalone) {
+  body {
+    overscroll-behavior-y: none;
+  }
+}
+
 @layer base {
   :where(a, button, input, select, textarea, [tabindex]):focus-visible {
     @apply outline-none ring-2 ring-primary/40 ring-offset-2 ring-offset-surface;
