@@ -27,7 +27,7 @@ export interface AiChatBooking {
 }
 
 export interface AiChatDelivery {
-  channel: 'ZALO' | 'EMAIL' | 'SMS';
+  channel: 'ZALO' | 'EMAIL' | 'SMS' | 'PUSH';
   recipient: string;
   status: 'PENDING' | 'SENT' | 'FAILED';
   error: string | null;

@@ -104,7 +104,7 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-const CHANNEL_LABEL: Record<string, string> = { ZALO: 'Zalo', EMAIL: 'Gmail', SMS: 'SMS' };
+const CHANNEL_LABEL: Record<string, string> = { ZALO: 'Zalo', EMAIL: 'Gmail', SMS: 'SMS', PUSH: 'Thông báo app' };
 
 function BookingCard({ booking, notifications }: { booking: AiChatBooking; notifications: AiChatResponse['notifications'] }) {
   return (
