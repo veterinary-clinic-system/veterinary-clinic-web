@@ -1,5 +1,5 @@
 import { ChangeEvent, FormEvent, Fragment, ReactNode, useEffect, useRef, useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { aiChatApi, AiChatBooking, AiChatDraft, AiChatResponse } from '@/api/prescreening.api';
 import { filesApi } from '@/api/files.api';
@@ -132,6 +132,12 @@ function BookingCard({ booking, notifications }: { booking: AiChatBooking; notif
           <dt className="inline text-muted">Dịch vụ: </dt>
           <dd className="inline font-semibold">{booking.serviceName}</dd>
         </div>
+        {booking.doctorName && (
+          <div>
+            <dt className="inline text-muted">Bác sĩ khám: </dt>
+            <dd className="inline font-semibold">{booking.doctorName}</dd>
+          </div>
+        )}
         <div>
           <dt className="inline text-muted">Mã lịch hẹn: </dt>
           <dd className="inline font-mono font-semibold">#{booking.code}</dd>
@@ -190,6 +196,7 @@ export function ChatPage() {
   // Giải phóng ảnh xem trước còn treo khi rời trang.
   useEffect(() => () => attachmentsRef.current.forEach((a) => URL.revokeObjectURL(a.previewUrl)), []);
 
+  const queryClient = useQueryClient();
   const mutation = useMutation({ mutationFn: aiChatApi.send });
   const busy = mutation.isPending || isUploadingFiles;
 
@@ -300,6 +307,12 @@ export function ChatPage() {
         onSuccess: (response) => {
           setSessionId(response.sessionId);
           setDraft(response.draft);
+          if (response.booking) {
+            // Trợ lý vừa tạo lịch (và có thể cả hồ sơ bé mới): danh sách lịch/bé đang cache phải
+            // tải lại, nếu không khách mở "Lịch hẹn" sẽ không thấy lịch vừa đặt.
+            void queryClient.invalidateQueries({ queryKey: ['appointments'] });
+            void queryClient.invalidateQueries({ queryKey: ['pets', 'mine'] });
+          }
           setMessages((prev) => [
             ...prev,
             { id: crypto.randomUUID(), role: 'assistant', content: response.reply, response },

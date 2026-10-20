@@ -22,6 +22,7 @@ export interface AiChatBooking {
   branchName: string;
   branchAddress: string;
   serviceName: string;
+  doctorName?: string | null;
   startAt: string;
   status: string;
 }
