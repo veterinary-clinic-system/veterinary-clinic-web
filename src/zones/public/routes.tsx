@@ -19,6 +19,12 @@ const LoginPage = lazy(() => import('./pages/LoginPage').then((m) => ({ default:
 const RegisterPage = lazy(() =>
   import('./pages/RegisterPage').then((m) => ({ default: m.RegisterPage })),
 );
+const ForgotPasswordPage = lazy(() =>
+  import('./pages/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage })),
+);
+const PrivacyPage = lazy(() =>
+  import('./pages/PrivacyPage').then((m) => ({ default: m.PrivacyPage })),
+);
 
 export function publicRoutes() {
   return [
@@ -30,5 +36,7 @@ export function publicRoutes() {
     <Route key="chat" path="/chat" element={<ChatPage />} />,
     <Route key="login" path="/login" element={<LoginPage />} />,
     <Route key="register" path="/register" element={<RegisterPage />} />,
+    <Route key="forgot-password" path="/forgot-password" element={<ForgotPasswordPage />} />,
+    <Route key="privacy" path="/privacy" element={<PrivacyPage />} />,
   ];
 }

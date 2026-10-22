@@ -111,6 +111,7 @@ export function PublicHeader() {
                   to: '/my/appointments',
                 },
                 { id: 'messages', label: 'Tin nhắn', icon: 'message', to: '/my/messages' },
+                { id: 'account', label: 'Tài khoản của tôi', icon: 'user', to: '/my/account' },
                 { id: 'logout', label: 'Đăng xuất', icon: 'logout', onSelect: () => void logout() },
               ]}
               trigger={({ ref, onClick, ...aria }) => (
@@ -164,13 +165,20 @@ export function PublicHeader() {
 
           <div className="mt-4 border-t border-border pt-4">
             {user ? (
-              <button
-                type="button"
-                onClick={() => void logout()}
-                className="flex min-h-touch w-full items-center rounded-lg px-3 text-left text-sm text-muted hover:bg-surface-muted hover:text-foreground"
-              >
-                Đăng xuất
-              </button>
+              <>
+                {isOwner && (
+                  <NavLink to="/my/account" className={drawerNavClass}>
+                    Tài khoản của tôi
+                  </NavLink>
+                )}
+                <button
+                  type="button"
+                  onClick={() => void logout()}
+                  className="flex min-h-touch w-full items-center rounded-lg px-3 text-left text-sm text-muted hover:bg-surface-muted hover:text-foreground"
+                >
+                  Đăng xuất
+                </button>
+              </>
             ) : (
               <>
                 <NavLink to="/login" className={drawerNavClass}>

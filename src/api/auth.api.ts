@@ -16,4 +16,20 @@ export const authApi = {
     apiClient.post<TokenPair>('/auth/refresh', { refreshToken }).then((r) => r.data),
 
   logout: (refreshToken: string) => apiClient.post('/auth/logout', { refreshToken }),
+
+  /** Gửi mã khôi phục qua Zalo/Gmail; trả cùng một kết quả dù SĐT có tài khoản hay không. */
+  forgotPassword: (phone: string) =>
+    apiClient
+      .post<ForgotPasswordResult>('/auth/password/forgot', { phone })
+      .then((r) => r.data),
+
+  resetPassword: (payload: { phone: string; code: string; newPassword: string }) =>
+    apiClient.post('/auth/password/reset', payload),
 };
+
+export interface ForgotPasswordResult {
+  sent: true;
+  /** Máy chủ dev (NOTIFICATION_PROVIDER=log): mã chỉ nằm trong log, không tới tay khách. */
+  simulated: boolean;
+  expiresInSeconds: number;
+}

@@ -18,6 +18,7 @@ export function OwnerSpace() {
           <NavLink to="/my/messages">
             Tin nhắn <UnreadMessagesBadge className="ml-1" />
           </NavLink>
+          <NavLink to="/my/account">Tài khoản</NavLink>
           <NavLink to="/booking">Đặt lịch mới ↗</NavLink>
         </nav>
       </div>

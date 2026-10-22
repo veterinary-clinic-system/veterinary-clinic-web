@@ -10,6 +10,7 @@ const SERVICE_LINKS = [
 const CLINIC_LINKS = [
   { to: '/doctors', label: 'Đội ngũ bác sĩ' },
   { to: '/branches', label: 'Hệ thống chi nhánh' },
+  { to: '/privacy', label: 'Chính sách quyền riêng tư' },
 ];
 
 export function PublicFooter() {

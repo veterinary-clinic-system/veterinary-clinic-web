@@ -19,6 +19,9 @@ const MyMessagesPage = lazy(() =>
 const MyAppointmentDetailPage = lazy(() =>
   import('./pages/MyAppointmentDetailPage').then((m) => ({ default: m.MyAppointmentDetailPage })),
 );
+const MyAccountPage = lazy(() =>
+  import('./pages/MyAccountPage').then((m) => ({ default: m.MyAccountPage })),
+);
 
 export function ownerRoutes() {
   return (
@@ -30,6 +33,7 @@ export function ownerRoutes() {
         <Route path="/my/appointments/:id" element={<MyAppointmentDetailPage />} />
         <Route path="/my/messages" element={<MyMessagesPage />} />
         <Route path="/my/messages/:conversationId" element={<MyMessagesPage />} />
+        <Route path="/my/account" element={<MyAccountPage />} />
       </Route>
     </Route>
   );

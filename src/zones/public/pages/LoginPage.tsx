@@ -84,6 +84,11 @@ export function LoginPage() {
           error={errors.password?.message}
           {...register('password', { required: 'Vui lòng nhập mật khẩu' })}
         />
+        <p className="-mt-2 text-right text-sm">
+          <Link to="/forgot-password" className="font-medium text-primary hover:underline">
+            Quên mật khẩu?
+          </Link>
+        </p>
 
         {}
         {serverError && <Alert tone="danger">{serverError}</Alert>}
