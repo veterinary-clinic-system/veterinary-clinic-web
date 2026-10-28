@@ -4,15 +4,19 @@ import { Gender } from '@/types/enums';
 import { GENDER_LABEL_VI } from '@/utils/display';
 import { BookingForm } from '../use-booking-form';
 
+type Step5Errors = BookingForm['step5Errors'];
+
 export function StepOwnerPet({
   owner,
   pet,
+  errors,
 }: {
   owner: BookingForm['owner'];
   pet: BookingForm['pet'];
+  errors: Step5Errors;
 }) {
   return (
-    <section aria-labelledby="buoc-thong-tin">
+    <section aria-labelledby="buoc-thong-tin" data-booking-step="5">
       <h2 id="buoc-thong-tin" className="text-lg font-semibold text-foreground">
         Thông tin chủ nuôi và thú cưng
       </h2>
@@ -24,6 +28,7 @@ export function StepOwnerPet({
             label="Số điện thoại *"
             value={owner.phone}
             readOnly={owner.isLoggedIn}
+            error={errors.phone}
             onChange={(e) => owner.changePhone(e.target.value)}
             className="w-full read-only:bg-surface-muted"
           />
@@ -46,6 +51,7 @@ export function StepOwnerPet({
             label="Họ và tên *"
             value={owner.fullName}
             readOnly={owner.nameIsReadOnly}
+            error={errors.fullName}
             onChange={(e) => owner.setFullName(e.target.value)}
             className="w-full read-only:bg-surface-muted"
           />
@@ -105,16 +111,25 @@ export function StepOwnerPet({
           </div>
         )}
 
-        {pet.mode === 'existing' ? <ExistingPetPicker pet={pet} /> : <NewPetFields pet={pet} />}
+        {pet.mode === 'existing' ? (
+          <ExistingPetPicker pet={pet} error={errors.pet} />
+        ) : (
+          <NewPetFields pet={pet} errors={errors} />
+        )}
       </div>
     </section>
   );
 }
 
-function ExistingPetPicker({ pet }: { pet: BookingForm['pet'] }) {
+function ExistingPetPicker({ pet, error }: { pet: BookingForm['pet']; error?: string }) {
   return (
     <fieldset className="mt-3 space-y-2">
       <legend className="sr-only">Chọn thú cưng đã có trong hồ sơ</legend>
+      {error && (
+        <p role="alert" tabIndex={-1} className="text-sm text-danger">
+          {error}
+        </p>
+      )}
       {pet.myPets?.map((item) => (
         <label
           key={item.id}
@@ -137,7 +152,7 @@ function ExistingPetPicker({ pet }: { pet: BookingForm['pet'] }) {
   );
 }
 
-function NewPetFields({ pet }: { pet: BookingForm['pet'] }) {
+function NewPetFields({ pet, errors }: { pet: BookingForm['pet']; errors: Step5Errors }) {
   const { newPet, newPetErrors, updateNewPet } = pet;
 
   return (
@@ -145,6 +160,7 @@ function NewPetFields({ pet }: { pet: BookingForm['pet'] }) {
       <Input
         label="Tên thú cưng *"
         value={newPet.name}
+        error={errors.petName}
         onChange={(e) => updateNewPet({ name: e.target.value })}
         className="w-full"
       />
@@ -160,7 +176,7 @@ function NewPetFields({ pet }: { pet: BookingForm['pet'] }) {
       <Select
         label="Loài"
         value={newPet.speciesId}
-
+        error={!newPet.speciesId ? errors.breed : undefined}
         onChange={(value) => updateNewPet({ speciesId: value, breedId: '' })}
         options={[
           { value: '', label: '-- Chọn loài --' },
@@ -172,6 +188,7 @@ function NewPetFields({ pet }: { pet: BookingForm['pet'] }) {
       <Select
         label="Giống *"
         value={newPet.breedId}
+        error={newPet.speciesId ? errors.breed : undefined}
         onChange={(value) => updateNewPet({ breedId: value })}
         disabled={!newPet.speciesId}
         hint={!newPet.speciesId ? 'Chọn loài trước để hiện danh sách giống.' : undefined}

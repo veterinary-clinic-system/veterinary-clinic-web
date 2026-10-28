@@ -75,7 +75,9 @@ export function BookingPage() {
               <StepDoctor doctor={form.doctor} branchName={form.branch.selected?.branchName} />
             )}
             {step === 4 && <StepSchedule schedule={form.schedule} service={form.service} />}
-            {step === 5 && <StepOwnerPet owner={form.owner} pet={form.pet} />}
+            {step === 5 && (
+              <StepOwnerPet owner={form.owner} pet={form.pet} errors={form.step5Errors} />
+            )}
             {step === 6 && <StepSymptoms symptoms={form.symptoms} />}
             {step === LAST_STEP && <StepConfirm form={form} />}
           </div>
@@ -90,7 +92,7 @@ export function BookingPage() {
             )}
 
             {step < LAST_STEP ? (
-              <Button disabled={!canProceed} onClick={() => setStep((step + 1) as Step)}>
+              <Button disabled={!canProceed && step !== 5} onClick={form.goNext}>
                 Tiếp theo: {nextStepLabel} →
               </Button>
             ) : (

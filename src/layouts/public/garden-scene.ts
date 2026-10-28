@@ -1,10 +1,12 @@
 import * as THREE from 'three';
 
+const IDLE_AFTER_MS = 8000;
+
 /** Decorative scene; no business data or interactive controls live in WebGL. */
 export function createGardenScene(host: HTMLDivElement, initialPaused: boolean) {
   const renderer = new THREE.WebGLRenderer({
     alpha: true,
-    antialias: true,
+    antialias: window.innerWidth >= 768,
     powerPreference: 'low-power',
   });
   renderer.setClearColor(0x000000, 0);
@@ -113,11 +115,20 @@ export function createGardenScene(host: HTMLDivElement, initialPaused: boolean) 
   let paused = initialPaused;
   let lost = false;
   let disposed = false;
+  // Nền trang trí không cần chạy khi không ai nhìn/động vào: sau IDLE_AFTER_MS không có
+  // chuột, cuộn hay phím, vòng render dừng ở khung hình hiện tại và thức dậy khi có tương tác.
+  let idle = false;
+  let lastActivity = performance.now();
   let lastFrame = 0;
   let time = 0;
   const pointer = new THREE.Vector2();
   const render = () => renderer.render(scene, camera);
   const tick = (now: number) => {
+    if (now - lastActivity > IDLE_AFTER_MS) {
+      idle = true;
+      renderer.setAnimationLoop(null);
+      return;
+    }
     if (now - lastFrame < 1000 / 30) return;
     time += Math.min((now - lastFrame) / 1000, 0.05);
     lastFrame = now;
@@ -135,7 +146,7 @@ export function createGardenScene(host: HTMLDivElement, initialPaused: boolean) 
   const synchronize = () => {
     renderer.setAnimationLoop(null);
     if (disposed || lost || document.hidden) return;
-    if (paused) render();
+    if (paused || idle) render();
     else {
       lastFrame = performance.now();
       renderer.setAnimationLoop(tick);
@@ -154,7 +165,14 @@ export function createGardenScene(host: HTMLDivElement, initialPaused: boolean) 
     renderer.setSize(width, height);
     if (!lost) render();
   };
+  const wake = () => {
+    lastActivity = performance.now();
+    if (!idle) return;
+    idle = false;
+    synchronize();
+  };
   const move = (event: PointerEvent) => {
+    wake();
     if (paused || event.pointerType !== 'mouse') return;
     pointer.set(
       (event.clientX / window.innerWidth) * 2 - 1,
@@ -178,6 +196,8 @@ export function createGardenScene(host: HTMLDivElement, initialPaused: boolean) 
   observer.observe(host);
   window.addEventListener('pointermove', move, { passive: true });
   window.addEventListener('blur', reset);
+  window.addEventListener('scroll', wake, { passive: true });
+  window.addEventListener('keydown', wake);
   document.addEventListener('visibilitychange', synchronize);
   renderer.domElement.addEventListener('webglcontextlost', contextLost);
   renderer.domElement.addEventListener('webglcontextrestored', contextRestored);
@@ -188,6 +208,8 @@ export function createGardenScene(host: HTMLDivElement, initialPaused: boolean) 
   return {
     setPaused(value: boolean) {
       paused = value;
+      idle = false;
+      lastActivity = performance.now();
       synchronize();
     },
     dispose() {
@@ -196,6 +218,8 @@ export function createGardenScene(host: HTMLDivElement, initialPaused: boolean) 
       observer.disconnect();
       window.removeEventListener('pointermove', move);
       window.removeEventListener('blur', reset);
+      window.removeEventListener('scroll', wake);
+      window.removeEventListener('keydown', wake);
       document.removeEventListener('visibilitychange', synchronize);
       renderer.domElement.removeEventListener('webglcontextlost', contextLost);
       renderer.domElement.removeEventListener('webglcontextrestored', contextRestored);

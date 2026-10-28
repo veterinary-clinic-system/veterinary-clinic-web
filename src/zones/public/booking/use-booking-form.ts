@@ -114,6 +114,14 @@ export function useBookingForm() {
     enabled: !!newPet.speciesId,
   });
 
+  // Đổi loài thì giống bị xoá; chọn sẵn "giống khác / không rõ" (nếu danh mục có) để khách
+  // không bấm "Tiếp theo" với ô giống trống mà không biết. Chỉ chạy khi danh sách giống đổi.
+  useEffect(() => {
+    if (!breeds?.length) return;
+    const generic = breeds.find((b) => /kh[aá]c|kh[oô]ng r[oõ]|lai|mix/i.test(b.breedName));
+    if (generic) setNewPet((prev) => (prev.breedId ? prev : { ...prev, breedId: generic.id }));
+  }, [breeds]);
+
   useEffect(() => {
     if (!me) return;
     setOwnerFullName((prev) => prev || me.fullName);
@@ -196,6 +204,25 @@ export function useBookingForm() {
     newPetErrors.birthDate = 'Ngày sinh không được sau hôm nay';
   }
 
+  // Lỗi bước 5 chỉ hiện sau khi khách bấm "Tiếp theo" mà còn thiếu - không đỏ ngay từ đầu.
+  const [showStep5Errors, setShowStep5Errors] = useState(false);
+  const step5Errors: Partial<Record<'phone' | 'fullName' | 'petName' | 'breed' | 'pet', string>> =
+    {};
+  if (showStep5Errors) {
+    if (!phone.trim()) step5Errors.phone = 'Vui lòng nhập số điện thoại';
+    if (!ownerFullName.trim()) step5Errors.fullName = 'Vui lòng nhập họ tên';
+    if (effectivePetMode === 'existing') {
+      if (!selectedExistingPet) step5Errors.pet = 'Vui lòng chọn một bé';
+    } else {
+      if (!newPet.name.trim()) step5Errors.petName = 'Vui lòng nhập tên thú cưng';
+      if (!newPet.breedId) {
+        step5Errors.breed = newPet.speciesId
+          ? 'Vui lòng chọn giống'
+          : 'Vui lòng chọn loài rồi chọn giống';
+      }
+    }
+  }
+
   const canProceed = (() => {
     switch (step) {
       case 1:
@@ -221,6 +248,24 @@ export function useBookingForm() {
         return true;
     }
   })();
+
+  /** "Tiếp theo": bước 5 còn thiếu thì tô đỏ và đưa con trỏ tới ô đầu tiên còn thiếu. */
+  function goNext() {
+    if (canProceed) {
+      setShowStep5Errors(false);
+      setStep((step + 1) as Step);
+      return;
+    }
+    if (step !== 5) return;
+    setShowStep5Errors(true);
+    requestAnimationFrame(() => {
+      const first = document.querySelector<HTMLElement>(
+        '[data-booking-step="5"] [aria-invalid="true"], [data-booking-step="5"] [role="alert"]',
+      );
+      first?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      first?.focus({ preventScroll: true });
+    });
+  }
 
   function selectBranch(id: string) {
     setBranchId(id);
@@ -397,6 +442,8 @@ export function useBookingForm() {
     step,
     setStep,
     canProceed,
+    goNext,
+    step5Errors,
 
     branch: {
       id: branchId,

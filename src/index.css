@@ -36,6 +36,8 @@
 body {
   @apply bg-surface text-foreground antialiased;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  /* Do PwaPrompts đặt: chiều cao các thẻ cố định ở đáy màn hình (cài app, mất mạng...). */
+  padding-bottom: var(--pwa-prompts-space, 0px);
 }
 
 /* Installed app (PWA): no browser pull-to-refresh bounce. */

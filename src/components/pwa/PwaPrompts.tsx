@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Button } from '@/components/basic/Button';
 import { Icon } from '@/components/basic/Icon';
@@ -104,9 +104,29 @@ export function PwaPrompts() {
 
   const isStaff = !!user && STAFF_ROLES.includes(user.role);
 
+  // Chừa chỗ cuối trang bằng đúng chiều cao các thẻ, để nút/chân trang cuối cùng luôn cuộn
+  // lên được phía trên chúng thay vì bị che.
+  const stack = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const element = stack.current;
+    if (!element) return;
+    const root = document.documentElement;
+    const observer = new ResizeObserver(() => {
+      const height = element.offsetHeight;
+      root.style.setProperty('--pwa-prompts-space', height ? `${height + 12}px` : '0px');
+    });
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty('--pwa-prompts-space');
+    };
+  }, []);
+
   return (
     <div
-      className="pointer-events-none fixed inset-x-3 z-[90] mx-auto flex max-w-md flex-col gap-2 sm:left-4 sm:right-auto sm:mx-0 sm:w-96"
+      ref={stack}
+      // z-40: dưới Modal/Drawer (z-50) - thẻ mời cài app không được che nút trong hộp thoại.
+      className="pointer-events-none fixed inset-x-3 z-40 mx-auto flex max-w-md flex-col gap-2 sm:left-4 sm:right-auto sm:mx-0 sm:w-96"
       style={{ bottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
     >
       {!online && <OfflineBanner />}
