@@ -49,7 +49,7 @@ export function MyAppointmentsPage() {
     };
 
     (appointments ?? []).forEach((appointment) => {
-      buckets[appointmentGroupOf(appointment.status)]?.push(appointment);
+      buckets[appointmentGroupOf(appointment.status, appointment.startAt)]?.push(appointment);
     });
 
     buckets.upcoming?.sort((a, b) => a.startAt.localeCompare(b.startAt));
