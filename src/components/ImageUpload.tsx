@@ -1,7 +1,7 @@
 import { ChangeEvent, useRef, useState } from 'react';
 import { FileCategory, filesApi } from '@/api/files.api';
 import { getErrorMessage } from '@/utils/errors';
-import { DEFAULT_ITEM_IMAGE } from '@/utils/cloudinary-assets';
+import { DEFAULT_ITEM_IMAGE } from '@/utils/media-assets';
 
 interface ImageUploadProps {
   label: string;

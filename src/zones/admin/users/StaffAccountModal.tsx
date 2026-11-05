@@ -12,7 +12,7 @@ import {
   Select,
   useToast,
 } from '@/components/basic';
-import { DEFAULT_STAFF_IMAGE } from '@/utils/cloudinary-assets';
+import { DEFAULT_STAFF_IMAGE } from '@/utils/media-assets';
 import { Role, Specialization } from '@/types/enums';
 import { StaffUser } from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';

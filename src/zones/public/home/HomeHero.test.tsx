@@ -44,10 +44,10 @@ describe('Garden homepage actions', () => {
     fireEvent(container.querySelector('dialog')!, new Event('close'));
     expect(pause).toHaveBeenCalledOnce();
   });
-  it('loads pet artwork from Cloudinary instead of a local asset', () => {
+  it('loads pet artwork from the media store (Cloudinary when no S3 base is set)', () => {
     const { container } = showHero();
     const img = container.querySelector<HTMLImageElement>('.garden-photo img')!;
     expect(img.src).toContain('res.cloudinary.com');
-    expect(img.src).toContain('/vetcare/web/images/golden-retriever-walking-v1.png');
+    expect(img.src).toContain('/vetcare/web/images/golden-retriever-walking-v1.webp');
   });
 });

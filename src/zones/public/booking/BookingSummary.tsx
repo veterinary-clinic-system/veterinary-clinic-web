@@ -1,7 +1,7 @@
 import { Icon } from '@/components/basic';
 import { formatCurrency, formatDateTime } from '@/utils/format';
 import { BookingForm } from './use-booking-form';
-import { cloudinaryImage } from '@/utils/cloudinary-assets';
+import { mediaImage } from '@/utils/media-assets';
 
 export function BookingSummary({ form }: { form: BookingForm }) {
   const rows = [
@@ -24,7 +24,7 @@ export function BookingSummary({ form }: { form: BookingForm }) {
     <aside className="booking-summary" aria-label="Tóm tắt lịch khám">
       <div className="booking-summary-photo">
         <img
-          src={cloudinaryImage('images/pets-photoreal-v1.png')}
+          src={mediaImage('images/pets-photoreal-v1.webp')}
           alt=""
           width="1254"
           height="1254"

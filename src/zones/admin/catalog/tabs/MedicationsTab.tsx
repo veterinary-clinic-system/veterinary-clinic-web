@@ -8,7 +8,7 @@ import { getErrorMessage } from '@/utils/errors';
 import { formatCurrency } from '@/utils/format';
 import { CategorySelect, PAGE_SIZE, TabPagination, TabTableStates } from '../shared';
 import { ImageUpload } from '@/components/ImageUpload';
-import { DEFAULT_ITEM_IMAGE } from '@/utils/cloudinary-assets';
+import { DEFAULT_ITEM_IMAGE } from '@/utils/media-assets';
 
 interface MedicationFormState {
   imageUrl: string;

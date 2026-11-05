@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from '@/components/basic';
-import { cloudinaryImage } from '@/utils/cloudinary-assets';
+import { mediaImage } from '@/utils/media-assets';
 
 export interface AuthCardProps {
   title: string;
@@ -15,7 +15,7 @@ export function AuthCard({ title, description, children, footer }: AuthCardProps
   return (
     <div className="pet-auth mx-auto w-full px-4">
       <aside className="pet-auth-story">
-        <img src={cloudinaryImage('images/pets-photoreal-v1.png')} alt="Chó và mèo bên nhau" />
+        <img src={mediaImage('images/pets-photoreal-v1.webp')} alt="Chó và mèo bên nhau" />
         <div>
           <span className="text-xs tracking-widest">GÓC NHỎ CỦA BÉ</span>
           <h2 className="mt-3">Yêu thương gần hơn.<br />Chăm sóc dễ hơn.</h2>

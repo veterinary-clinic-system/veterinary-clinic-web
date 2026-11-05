@@ -10,7 +10,7 @@ import {
 import { Badge, Button, Input, Modal, Select, Table, useToast } from '@/components/basic';
 import type { Column, SortOrder } from '@/components/basic';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { DEFAULT_STAFF_IMAGE } from '@/utils/cloudinary-assets';
+import { DEFAULT_STAFF_IMAGE } from '@/utils/media-assets';
 import {
   EMPLOYEE_STATUS_LABEL_VI,
   EmployeeStatus,

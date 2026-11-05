@@ -1,23 +1,23 @@
 ﻿import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from '@/components/basic';
-import { cloudinaryImage } from '@/utils/cloudinary-assets';
+import { mediaImage } from '@/utils/media-assets';
 
 const MOMENTS = [
   {
-    image: 'images/golden-retriever-walking-v1.png',
+    image: 'images/golden-retriever-walking-v1.webp',
     label: 'Một cái ôm.',
     caption: 'Đủ để ngày trở nên dịu dàng.',
     className: 'garden-photo-left',
   },
   {
-    image: 'images/pets-photoreal-v1.png',
+    image: 'images/pets-photoreal-v1.webp',
     label: 'Một người bạn.',
     caption: 'Cùng bạn đi qua những ngày thật đẹp.',
     className: 'garden-photo-center',
   },
   {
-    image: 'images/british-shorthair-jumping-v1.png',
+    image: 'images/british-shorthair-jumping-v1.webp',
     label: 'Cả một gia đình.',
     caption: 'Và yêu thương luôn ở lại.',
     className: 'garden-photo-right',
@@ -77,7 +77,7 @@ export function HomeHero() {
           void video.current?.play().catch(() => undefined);
         }}
       >
-        <img src={cloudinaryImage('images/pet-companion-poster.jpg')} alt="Mèo đang chơi đùa cùng chủ" />
+        <img src={mediaImage('images/pet-companion-poster.webp')} alt="Mèo đang chơi đùa cùng chủ" />
         <span className="garden-play" aria-hidden="true">
           ▷
         </span>
@@ -94,7 +94,7 @@ export function HomeHero() {
         {MOMENTS.map((moment) => (
           <figure key={moment.image} className={`garden-photo ${moment.className}`}>
             <img
-              src={cloudinaryImage(moment.image)}
+              src={mediaImage(moment.image)}
               alt={moment.label + ' ' + moment.caption}
             />
             <figcaption>
@@ -139,7 +139,7 @@ export function HomeHero() {
           <video
             ref={video}
             src="/videos/pet-companion.mp4"
-            poster={cloudinaryImage('images/pet-companion-poster.jpg')}
+            poster={mediaImage('images/pet-companion-poster.webp')}
             controls
             playsInline
             preload="none"

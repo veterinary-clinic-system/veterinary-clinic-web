@@ -9,7 +9,7 @@ import { getErrorMessage } from '@/utils/errors';
 import { flattenCategories } from '@/utils/categories';
 import { formatCurrency } from '@/utils/format';
 import { ImageUpload } from '@/components/ImageUpload';
-import { DEFAULT_ITEM_IMAGE } from '@/utils/cloudinary-assets';
+import { DEFAULT_ITEM_IMAGE } from '@/utils/media-assets';
 
 const LIMIT = 20;
 

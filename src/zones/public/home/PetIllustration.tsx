@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { cloudinaryImage } from '@/utils/cloudinary-assets';
+import { mediaImage } from '@/utils/media-assets';
 
 /** Movement comes from real footage, never from transforming a still image. */
 export function PetIllustration() {
@@ -23,7 +23,7 @@ export function PetIllustration() {
   return (
     <figure className="pet-film">
       <video ref={videoRef} className="pet-film-video" src="/videos/pet-companion.mp4"
-        poster={cloudinaryImage('images/pet-companion-poster.jpg')} muted loop playsInline preload="metadata"
+        poster={mediaImage('images/pet-companion-poster.webp')} muted loop playsInline preload="metadata"
         aria-label="Mèo chơi đùa cùng chủ"
         onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}
         onError={() => { setFailed(true); setPlaying(false); }} />

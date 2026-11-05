@@ -8,7 +8,7 @@ import type { Column, SortOrder } from '@/components/basic';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { Customer } from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';
-import { DEFAULT_USER_IMAGE } from '@/utils/cloudinary-assets';
+import { DEFAULT_USER_IMAGE } from '@/utils/media-assets';
 import { ImageUpload } from '@/components/ImageUpload';
 import { formatDate } from '@/utils/format';
 
