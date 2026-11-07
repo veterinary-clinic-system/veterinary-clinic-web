@@ -1,9 +1,6 @@
-const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME?.trim() || 'cloudinary-not-configured';
-const rootFolder = (import.meta.env.VITE_CLOUDINARY_FOLDER ?? 'vetcare').replace(/^\/+|\/+$/g, '');
-
 /**
  * Gốc URL ảnh trên S3 (qua CloudFront). Đặt VITE_MEDIA_BASE_URL, hoặc để trống khi API chạy sau
- * CloudFront: ảnh nằm cùng tên miền ở /media/*. Không có thì dùng Cloudinary như trước.
+ * CloudFront: ảnh nằm cùng tên miền ở /media/*. Không có (máy dev) thì dùng bản trong `public/`.
  */
 function mediaBaseUrl(): string | undefined {
   const explicit = import.meta.env.VITE_MEDIA_BASE_URL?.trim();
@@ -20,11 +17,11 @@ function mediaBaseUrl(): string | undefined {
 
 const mediaBase = mediaBaseUrl();
 
-/** Ảnh tĩnh dùng chung, khoá `media/web/<path>` trên S3 (scripts/migrate-cloudinary-to-s3.mjs). */
+/** Ảnh tĩnh dùng chung: khoá `media/web/<path>` trên S3, hoặc `public/<path>` khi chạy local. */
 export function mediaImage(relativePath: string): string {
   const path = relativePath.replace(/^\/+/, '');
   if (mediaBase) return `${mediaBase}/media/web/${path}`;
-  return `https://res.cloudinary.com/${cloudName}/image/upload/f_auto,q_auto/${rootFolder}/web/${path}`;
+  return `/${path}`;
 }
 
 export const DEFAULT_USER_IMAGE = mediaImage('images/default-user.svg');

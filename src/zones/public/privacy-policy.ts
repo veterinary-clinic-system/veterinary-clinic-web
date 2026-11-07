@@ -56,7 +56,7 @@ export const PRIVACY_POLICY_SECTIONS: PrivacySection[] = [
     bullets: [
       'Zalo (Zalo Notification Service) và dịch vụ email: gửi tin xác nhận, nhắc lịch và mã khôi phục mật khẩu tới số điện thoại/email của bạn.',
       'Expo và Google Firebase Cloud Messaging: chuyển thông báo đẩy tới app trên điện thoại.',
-      'Amazon Web Services (S3, CloudFront) và Cloudinary: lưu ảnh thú cưng, ảnh đại diện và ảnh gửi trong tin nhắn.',
+      'Amazon Web Services (S3, CloudFront): lưu ảnh thú cưng, ảnh đại diện và ảnh gửi trong tin nhắn.',
       'Nhà cung cấp mô hình AI: xử lý nội dung bạn gửi cho trợ lý AI để trả lời. Không gửi kèm số điện thoại hay mật khẩu của bạn.',
       'SePay: đối soát chuyển khoản khi bạn thanh toán bằng mã QR.',
     ],
