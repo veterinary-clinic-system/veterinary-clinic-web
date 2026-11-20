@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { sepayApi } from '@/api/billing.api';
 import { Button } from '@/components/basic';
@@ -25,8 +26,12 @@ export function InvoicePayButton({ invoiceId, petId }: { invoiceId: string; petI
   });
   const paid = statusQuery.data?.status === PaymentStatus.SUCCESS;
 
+  // Làm mới hồ sơ sức khoẻ MỘT lần khi vừa thanh toán xong - không gọi trong lúc render.
+  useEffect(() => {
+    if (paid) void queryClient.invalidateQueries({ queryKey: ['pets', petId, 'owner-health-record'] });
+  }, [paid, petId, queryClient]);
+
   if (paid) {
-    void queryClient.invalidateQueries({ queryKey: ['pets', petId, 'owner-health-record'] });
     return <p className="text-sm font-semibold text-success">Đã thanh toán, cảm ơn bạn!</p>;
   }
 
