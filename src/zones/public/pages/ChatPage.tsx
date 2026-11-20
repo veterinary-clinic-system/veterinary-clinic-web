@@ -232,14 +232,17 @@ export function ChatPage() {
   const [draft, setDraft] = useState<AiChatDraft | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
 
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const logRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const attachmentsRef = useRef(attachments);
   attachmentsRef.current = attachments;
 
+  // Chỉ cuộn KHUNG CHAT tới tin mới nhất. scrollIntoView cuộn cả cửa sổ, kéo trang xuống tận
+  // footer và làm khung chat co lại trên màn hình thấp.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    const log = logRef.current;
+    if (log) log.scrollTop = log.scrollHeight;
   }, [messages, isUploadingFiles]);
 
   // Giải phóng ảnh xem trước còn treo khi rời trang.
@@ -394,7 +397,7 @@ export function ChatPage() {
   const lastMessageId = messages[messages.length - 1]?.id;
 
   return (
-    <div className="pet-chat mx-auto flex h-[calc(100dvh-4rem)] max-w-4xl flex-col px-4 py-4 sm:py-6">
+    <div className="pet-chat mx-auto flex h-[calc(100dvh-5rem)] max-w-4xl flex-col px-4 py-4 sm:py-6">
       <div className="flex items-start gap-3">
         <span
           aria-hidden="true"
@@ -428,6 +431,7 @@ export function ChatPage() {
       )}
 
       <div
+        ref={logRef}
         role="log"
         aria-live="polite"
         aria-label="Nội dung trò chuyện"
@@ -557,7 +561,6 @@ export function ChatPage() {
             {isUploadingFiles ? 'Đang tải ảnh/video lên...' : 'Trợ lý đang phân tích...'}
           </div>
         )}
-        <div ref={bottomRef} />
       </div>
 
       {error && (
