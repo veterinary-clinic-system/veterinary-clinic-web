@@ -50,12 +50,15 @@ const PRESET_LABEL: Record<Exclude<Preset, 'custom'>, string> = {
 };
 
 const TABS: TabItem<ReportTab>[] = [
-  { id: 'all', label: '📊 Toàn cảnh báo cáo' },
-  { id: 'revenue', label: '💰 Doanh thu & Dòng tiền' },
-  { id: 'clinical', label: '🩺 Lâm sàng & Bác sĩ' },
-  { id: 'sales_inventory', label: '📦 Bán hàng & Kho' },
-  { id: 'ai', label: '🤖 Phân loại AI' },
+  { id: 'all', label: 'Toàn cảnh báo cáo', icon: 'dashboard' },
+  { id: 'revenue', label: 'Doanh thu & Dòng tiền', icon: 'receipt' },
+  { id: 'clinical', label: 'Lâm sàng & Bác sĩ', icon: 'stethoscope' },
+  { id: 'sales_inventory', label: 'Bán hàng & Kho', icon: 'box' },
+  { id: 'ai', label: 'Phân loại AI', icon: 'sparkles' },
 ];
+
+/** Nút "Xuất CSV bán hàng" chỉ có nghĩa ở các tab có số liệu bán hàng. */
+const SALES_EXPORT_TABS: ReadonlySet<ReportTab> = new Set(['all', 'revenue', 'sales_inventory']);
 
 export function ReportsPage() {
   const toast = useToast();
@@ -201,6 +204,7 @@ export function ReportsPage() {
               </svg>
               Bộ lọc nâng cao {isFiltered && '(Đang lọc)'}
             </Button>
+            {SALES_EXPORT_TABS.has(activeTab) && (
             <Button
               variant="primary"
               size="sm"
@@ -213,6 +217,7 @@ export function ReportsPage() {
               </svg>
               Xuất CSV bán hàng
             </Button>
+            )}
           </div>
         }
       />

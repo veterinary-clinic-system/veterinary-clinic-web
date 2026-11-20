@@ -4,6 +4,7 @@ import { petsApi } from '@/api/pets.api';
 import type { PetPrescription } from '@/types/models';
 import { formatDateTime } from '@/utils/format';
 import { EmptyState } from '../shared';
+import { formatDoctorName } from '@/utils/doctor-name';
 
 export function PrescriptionsTab({ petId }: { petId: string }) {
   const query = useQuery({
@@ -31,7 +32,7 @@ export function PrescriptionsTab({ petId }: { petId: string }) {
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
             <div>
               <p className="font-medium">{formatDateTime(prescription.examinedAt)}</p>
-              <p className="text-sm text-muted">BS. {prescription.doctorName ?? '—'}</p>
+              <p className="text-sm text-muted">{formatDoctorName(prescription.doctorName)}</p>
             </div>
             <span className="text-sm text-muted">{prescription.items.length} loại thuốc</span>
           </div>

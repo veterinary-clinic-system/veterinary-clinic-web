@@ -1,4 +1,5 @@
 import { cn } from './utils';
+import { Icon } from './Icon';
 
 export type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
@@ -37,9 +38,11 @@ export function Avatar({ name, src, size = 'md', ring = false, className }: Avat
     return <img src={src} alt="" className={cn(base, 'bg-surface-muted object-cover')} />;
   }
 
+  const initials = initialsOf(name);
   return (
     <span aria-hidden="true" className={cn(base, 'bg-primary/10 text-primary')}>
-      {initialsOf(name)}
+      {/* Tài khoản chưa có họ tên thì "tên" là số điện thoại - chữ "0" không phải chữ cái đầu. */}
+      {/\p{L}/u.test(initials) ? initials : <Icon name="user" className="h-1/2 w-1/2" />}
     </span>
   );
 }

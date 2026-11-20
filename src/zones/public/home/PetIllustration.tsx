@@ -38,7 +38,7 @@ export function PetIllustration() {
           else video.pause();
         }}><span aria-hidden="true">{playing ? 'Ⅱ' : '▷'}</span> {playing ? 'Tạm dừng' : 'Phát video'}</button>}
       </figcaption>
-      <span className="pet-film-stamp" aria-hidden="true">WITH LOVE<br /><b>v.</b><br />VETAI HUB</span>
+      <span className="pet-film-stamp" aria-hidden="true">WITH LOVE<br /><b>v.</b><br />VETCARE</span>
     </figure>
   );
 }

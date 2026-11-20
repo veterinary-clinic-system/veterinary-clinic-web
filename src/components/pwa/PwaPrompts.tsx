@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Button } from '@/components/basic/Button';
 import { Icon } from '@/components/basic/Icon';
@@ -45,9 +46,38 @@ function UpdateBanner({ onReload, onLater }: { onReload: () => void; onLater: ()
   );
 }
 
+/** Trang có ô nhập dính đáy màn hình - thẻ mời cài app sẽ che đúng chỗ khách đang gõ. */
+const NO_INSTALL_PROMPT_PATHS = ['/chat', '/my/messages', '/booking'];
+const ENGAGE_DELAY_MS = 20_000;
+
+/**
+ * Chỉ mời cài app khi khách đã thực sự xem trang (cuộn quá nửa màn hình hoặc ở lại 20 giây) -
+ * hiện ngay lúc tải trang thì thẻ đè lên nội dung đầu tiên khách nhìn thấy (ảnh hero, hai thẻ
+ * tính năng trên điện thoại).
+ */
+function useEngaged(): boolean {
+  const [engaged, setEngaged] = useState(false);
+  useEffect(() => {
+    if (engaged) return;
+    const onScroll = () => {
+      if (window.scrollY > window.innerHeight / 2) setEngaged(true);
+    };
+    const timer = window.setTimeout(() => setEngaged(true), ENGAGE_DELAY_MS);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, [engaged]);
+  return engaged;
+}
+
 function InstallBanner() {
   const { mode, install, dismiss } = useInstallPrompt();
-  if (!mode) return null;
+  const engaged = useEngaged();
+  const { pathname } = useLocation();
+  if (!mode || !engaged) return null;
+  if (NO_INSTALL_PROMPT_PATHS.some((path) => pathname.startsWith(path))) return null;
   return (
     <div role="region" aria-label="Cài ứng dụng" className={CARD}>
       <img src="/pwa-192x192.png" alt="" className="h-10 w-10 shrink-0 rounded-lg" />

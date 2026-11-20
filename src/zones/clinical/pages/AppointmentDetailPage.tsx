@@ -36,8 +36,10 @@ export function AppointmentDetailPage() {
     enabled: !!id,
     retry: false,
   });
+  // API trả 200 + null khi chưa chạy sàng lọc (bản cũ trả 404 - vẫn hiểu như nhau).
   const prescreeningNotFound =
-    prescreeningQuery.isError && (prescreeningQuery.error as AxiosError)?.response?.status === 404;
+    (prescreeningQuery.isSuccess && !prescreeningQuery.data) ||
+    (prescreeningQuery.isError && (prescreeningQuery.error as AxiosError)?.response?.status === 404);
 
   const rerunMutation = useMutation({
     mutationFn: () => prescreeningApi.rerun(id!),
@@ -118,8 +120,13 @@ export function AppointmentDetailPage() {
     appt.status === AppointmentStatus.COMPLETED ||
     appt.status === AppointmentStatus.CANCELLED ||
     appt.status === AppointmentStatus.NO_SHOW;
+  // Đã huỷ / khách không đến: hồ sơ đóng - không chạy lại AI (ghi đè mức ưu tiên lịch sử),
+  // không đổi trạng thái, không tạo hoá đơn. Backend cũng chặn, đây chỉ để không mời bấm.
+  const isClosed =
+    appt.status === AppointmentStatus.CANCELLED || appt.status === AppointmentStatus.NO_SHOW;
   const isCheckedIn =
     appt.status === AppointmentStatus.CHECKED_IN || appt.status === AppointmentStatus.IN_PROGRESS;
+  const isKeywordFallback = prescreeningQuery.data?.modelVersion === KEYWORD_TRIAGE_MODEL_VERSION;
   const suspectedDiseaseGroups = prescreeningQuery.data?.aiSuspectedDiseaseGroups ?? [];
   const aiDiseasePredictions = prescreeningQuery.data?.rawAiResponse?.diseases ?? [];
   const extractedSymptomKeywords = prescreeningQuery.data?.extractedSymptomKeywords ?? [];
@@ -187,7 +194,8 @@ export function AppointmentDetailPage() {
             {appt.status === AppointmentStatus.NO_SHOW ? 'Khách không đến' : 'Lịch hẹn đã bị hủy'}
           </p>
           <p className="mt-1">
-            Bởi <strong>{appt.cancelledBy?.fullName ?? 'không rõ'}</strong> lúc{' '}
+            {/* Không có người huỷ = tác vụ tự động đóng lịch quá ngày. */}
+            Bởi <strong>{appt.cancelledBy?.fullName ?? 'Hệ thống (tự động)'}</strong> lúc{' '}
             {formatDateTime(appt.cancelledAt)}
           </p>
           <p className="mt-0.5 text-muted">Lý do: {appt.cancelReason ?? '—'}</p>
@@ -271,7 +279,7 @@ export function AppointmentDetailPage() {
           <p className="text-sm">
             {}
             <span className="text-muted">Lý do khám / triệu chứng: </span>
-            {appt.otherSymptoms ?? '—'}
+            {stripAssistantTag(appt.otherSymptoms) ?? '—'}
           </p>
           {appt.photoUrls.length > 0 && (
             <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
@@ -309,6 +317,7 @@ export function AppointmentDetailPage() {
         ) : prescreeningNotFound ? (
           <div className="flex items-center justify-between">
             <p className="text-muted">Chưa có kết quả AI cho lịch hẹn này.</p>
+            {!isFinished && (
             <button
               type="button"
               disabled={rerunMutation.isPending}
@@ -317,6 +326,7 @@ export function AppointmentDetailPage() {
             >
               {rerunMutation.isPending ? 'Đang chạy…' : 'Chạy phân tích AI'}
             </button>
+            )}
           </div>
         ) : prescreeningQuery.isError ? (
           <p className="text-destructive">Không thể tải kết quả AI.</p>
@@ -359,12 +369,18 @@ export function AppointmentDetailPage() {
                 <p>{extractedSymptomKeywords.join(', ') || '—'}</p>
               </div>
               <div>
-                <p className="text-sm text-muted">Điểm dự đoán cao nhất / Tổng thể</p>
+                <p className="text-sm text-muted">Độ tin cậy phân loại / Tổng thể</p>
                 <p>
-                  {prescreeningQuery.data.nlpConfidence != null
-                    ? `${Math.round(prescreeningQuery.data.nlpConfidence * 100)}%`
-                    : '—'}{' '}
-                  / {Math.round(prescreeningQuery.data.overallConfidence * 100)}%
+                  {isKeywordFallback ? (
+                    <span className="text-muted">Không áp dụng (đánh giá dự phòng theo từ khoá)</span>
+                  ) : (
+                    <>
+                      {prescreeningQuery.data.nlpConfidence != null
+                        ? `${Math.round(prescreeningQuery.data.nlpConfidence * 100)}%`
+                        : '—'}{' '}
+                      / {Math.round(prescreeningQuery.data.overallConfidence * 100)}%
+                    </>
+                  )}
                 </p>
               </div>
               <div className="sm:col-span-2">
@@ -372,24 +388,35 @@ export function AppointmentDetailPage() {
                 <p>{prescreeningQuery.data.rawAiResponse?.triage_result?.reasoning || '—'}</p>
               </div>
               <div className="sm:col-span-2">
-                <p className="text-xs text-muted">Mô hình: {prescreeningQuery.data.modelVersion}</p>
+                <p className="text-xs text-muted" title={prescreeningQuery.data.modelVersion}>
+                  Nguồn đánh giá:{' '}
+                  {isKeywordFallback
+                    ? 'Đánh giá dự phòng theo từ khoá (dịch vụ AI tạm gián đoạn)'
+                    : 'Mô hình AI sàng lọc triệu chứng'}
+                </p>
               </div>
             </div>
-            <div>
-              <button
-                type="button"
-                disabled={rerunMutation.isPending}
-                onClick={() => rerunMutation.mutate()}
-                className="rounded border border-border px-4 py-2 text-sm hover:bg-surface-muted disabled:opacity-50"
-              >
-                {rerunMutation.isPending ? 'Đang chạy…' : 'Chạy lại phân tích AI'}
-              </button>
-            </div>
+            {isFinished ? (
+              <p className="text-xs text-muted">
+                Lịch hẹn đã kết thúc - kết quả AI được giữ nguyên làm hồ sơ, không chạy lại.
+              </p>
+            ) : (
+              <div>
+                <button
+                  type="button"
+                  disabled={rerunMutation.isPending}
+                  onClick={() => rerunMutation.mutate()}
+                  className="rounded border border-border px-4 py-2 text-sm hover:bg-surface-muted disabled:opacity-50"
+                >
+                  {rerunMutation.isPending ? 'Đang chạy…' : 'Chạy lại phân tích AI'}
+                </button>
+              </div>
+            )}
           </div>
         ) : null}
       </section>
 
-      {canOverride && (
+      {canOverride && !isClosed && (
         <section className="rounded border border-border bg-surface p-4">
           <h2 className="mb-3 font-medium">Điều chỉnh mức độ ưu tiên / trạng thái</h2>
           <form
@@ -466,6 +493,8 @@ export function AppointmentDetailPage() {
           >
             Xem hóa đơn ({invoiceQuery.data.paid ? 'đã thanh toán' : 'chưa thanh toán'})
           </Link>
+        ) : isClosed ? (
+          <p className="text-muted">Lịch hẹn đã hủy hoặc khách không đến - không tạo hóa đơn.</p>
         ) : canManageBilling ? (
           <button
             type="button"
@@ -481,6 +510,14 @@ export function AppointmentDetailPage() {
       </section>
     </div>
   );
+}
+
+const KEYWORD_TRIAGE_MODEL_VERSION = 'keyword-rules-v1';
+
+/** Lịch đặt qua trợ lý trước 20/11/2026 có tiền tố kỹ thuật "[Trợ lý AI]" trong lý do khám. */
+function stripAssistantTag(text: string | null | undefined): string | null {
+  const cleaned = text?.replace(/^\s*\[Trợ lý AI\]\s*/u, '').trim();
+  return cleaned ? cleaned : null;
 }
 
 function formatPredictionRate(rate: number | undefined): string {

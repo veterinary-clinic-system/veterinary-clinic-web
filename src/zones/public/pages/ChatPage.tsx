@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { aiChatApi, AiChatBooking, AiChatDraft, AiChatResponse } from '@/api/prescreening.api';
 import { filesApi } from '@/api/files.api';
 import { Alert, Avatar, Button, Icon, TriageBadge, cn } from '@/components/basic';
+import type { IconName } from '@/components/basic/Icon';
 import { useAuth } from '@/context/AuthContext';
 import { Role } from '@/types/enums';
 import { getErrorMessage } from '@/utils/errors';
@@ -31,6 +32,50 @@ const MAX_IMAGES = 5;
 const MAX_VIDEOS = 2;
 const MAX_IMAGE_MB = 8;
 const MAX_VIDEO_MB = 100;
+/** Khớp `@MaxLength(2000)` của POST /ai-chat - chặn ngay ở ô nhập thay vì nhận lỗi 400. */
+const MAX_MESSAGE_LENGTH = 2000;
+
+/**
+ * Trợ lý trả về dòng mở đầu bằng emoji (🩺, 📋, 🔍...). Máy không có font emoji (Linux,
+ * Chromium tối giản) vẽ chúng thành ô vuông rỗng - đổi sang icon SVG của hệ thống.
+ */
+const EMOJI_ICONS: Array<[string, IconName, string]> = [
+  ['🩺', 'stethoscope', 'text-primary'],
+  ['📋', 'clipboard-check', 'text-primary'],
+  ['🔍', 'search', 'text-primary'],
+  ['💡', 'info', 'text-warning'],
+  ['👉', 'arrow-right', 'text-primary'],
+  ['📷', 'image', 'text-primary'],
+  ['🎥', 'video', 'text-primary'],
+  ['👁', 'search', 'text-primary'],
+  ['⚠️', 'alert', 'text-warning'],
+  ['⚠', 'alert', 'text-warning'],
+  ['ℹ️', 'info', 'text-primary'],
+  ['✅', 'check', 'text-success'],
+  ['🎉', 'check', 'text-success'],
+  ['💉', 'syringe', 'text-primary'],
+  ['🐶', 'paw', 'text-primary'],
+  ['🐱', 'paw', 'text-primary'],
+  ['🐾', 'paw', 'text-primary'],
+  ['☎', 'phone', 'text-primary'],
+  ['🕘', 'clock', 'text-primary'],
+];
+
+function splitLeadingEmoji(line: string): { icon?: [IconName, string]; rest: string } {
+  const indent = line.match(/^\s*/)?.[0] ?? '';
+  const body = line.slice(indent.length);
+  for (const [emoji, icon, tone] of EMOJI_ICONS) {
+    if (body.startsWith(emoji)) {
+      return { icon: [icon, tone], rest: indent + body.slice(emoji.length).replace(/^️/, '').trimStart() };
+    }
+  }
+  return { rest: line };
+}
+
+/** Emoji lẻ giữa câu ("... nhé 🐾") cũng bỏ đi vì cùng lý do. */
+function stripInlineEmoji(text: string): string {
+  return text.replace(/\s*\p{Extended_Pictographic}️?/gu, '');
+}
 
 const WELCOME_MESSAGE: DisplayMessage = {
   id: 'welcome',
@@ -62,7 +107,8 @@ function renderRichText(content: string): ReactNode {
     if (line.trim() === '---') {
       return <hr key={lineIndex} className="my-2 border-border" />;
     }
-    const parts = line.split(/(\*\*[^*]+\*\*|(?<![\p{L}\d])_[^_]+_(?![\p{L}\d]))/u).map((part, index) => {
+    const { icon, rest } = splitLeadingEmoji(line);
+    const parts = stripInlineEmoji(rest).split(/(\*\*[^*]+\*\*|(?<![\p{L}\d])_[^_]+_(?![\p{L}\d]))/u).map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         return (
           <strong key={index} className="font-semibold">
@@ -81,6 +127,9 @@ function renderRichText(content: string): ReactNode {
     });
     return (
       <Fragment key={lineIndex}>
+        {icon && (
+          <Icon name={icon[0]} className={cn('mr-1.5 inline-block h-4 w-4 -translate-y-px align-middle', icon[1])} />
+        )}
         {parts}
         {lineIndex < lines.length - 1 && '\n'}
       </Fragment>
@@ -275,6 +324,13 @@ export function ChatPage() {
   async function send(text: string) {
     const trimmed = text.trim();
     if ((!trimmed && attachments.length === 0) || busy) return;
+    if (trimmed.length > MAX_MESSAGE_LENGTH) {
+      setError(
+        `Tin nhắn quá dài (${trimmed.length.toLocaleString('vi-VN')} ký tự) - bạn vui lòng rút gọn dưới ` +
+          `${MAX_MESSAGE_LENGTH.toLocaleString('vi-VN')} ký tự.`,
+      );
+      return;
+    }
 
     setError(null);
     let media = { images: [] as string[], videos: [] as string[] };
@@ -289,10 +345,11 @@ export function ChatPage() {
 
     const content =
       trimmed || (media.videos.length > 0 ? 'Em gửi video tình trạng của bé' : 'Em gửi ảnh triệu chứng của bé');
+    const userMessageId = crypto.randomUUID();
     setMessages((prev) => [
       ...prev,
       {
-        id: crypto.randomUUID(),
+        id: userMessageId,
         role: 'user',
         content,
         images: media.images.length > 0 ? media.images : undefined,
@@ -320,6 +377,9 @@ export function ChatPage() {
           inputRef.current?.focus();
         },
         onError: (sendError) => {
+          // Không để lại bong bóng của tin gửi thất bại; trả chữ về ô nhập để khách sửa/gửi lại.
+          setMessages((prev) => prev.filter((m) => m.id !== userMessageId));
+          setInput(trimmed);
           setError(getErrorMessage(sendError, 'Không gửi được tin nhắn. Vui lòng thử lại.'));
         },
       },
@@ -334,7 +394,7 @@ export function ChatPage() {
   const lastMessageId = messages[messages.length - 1]?.id;
 
   return (
-    <div className="pet-chat mx-auto max-w-4xl px-4 py-8">
+    <div className="pet-chat mx-auto flex h-[calc(100dvh-4rem)] max-w-4xl flex-col px-4 py-4 sm:py-6">
       <div className="flex items-start gap-3">
         <span
           aria-hidden="true"
@@ -371,7 +431,7 @@ export function ChatPage() {
         role="log"
         aria-live="polite"
         aria-label="Nội dung trò chuyện"
-        className="mt-4 flex max-h-[60vh] min-h-[380px] flex-col gap-5 overflow-y-auto rounded-2xl border border-border bg-surface p-4 shadow-sm sm:p-6"
+        className="scrollbar-thin mt-4 flex min-h-[240px] flex-1 flex-col gap-5 overflow-y-auto overscroll-contain rounded-2xl border border-border bg-surface p-4 shadow-sm sm:p-6"
       >
         {messages.map((message) => {
           const isUser = message.role === 'user';
@@ -393,7 +453,7 @@ export function ChatPage() {
 
               <div
                 className={cn(
-                  'flex max-w-[85%] flex-col gap-2 rounded-2xl px-4 py-3 text-sm shadow-sm sm:max-w-[78%]',
+                  'flex w-fit min-w-0 max-w-[85%] flex-col gap-2 rounded-2xl px-4 py-3 text-sm shadow-sm sm:max-w-[78%]',
                   isUser ? 'bg-primary text-primary-foreground' : 'border border-border bg-surface-muted text-foreground',
                 )}
               >
@@ -412,8 +472,22 @@ export function ChatPage() {
                     ))}
                   </div>
                 )}
-                {message.videos?.map((url) => (
-                  <video key={url} src={url} controls className="max-h-56 max-w-full rounded-lg bg-foreground" />
+                {message.videos?.map((url, index) => (
+                  <div key={url} className="flex flex-col gap-1.5">
+                    <video src={url} controls preload="metadata" className="max-h-56 w-64 max-w-full rounded-lg bg-black/80" />
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={cn(
+                        'inline-flex items-center gap-1.5 text-xs font-medium underline-offset-2 hover:underline',
+                        isUser ? 'text-primary-foreground/90' : 'text-primary',
+                      )}
+                    >
+                      <Icon name="video" className="h-3.5 w-3.5" />
+                      Video {index + 1} đã gửi
+                    </a>
+                  </div>
                 ))}
 
                 <div className="whitespace-pre-wrap leading-relaxed">{renderRichText(message.content)}</div>
@@ -459,6 +533,24 @@ export function ChatPage() {
           );
         })}
 
+        {messages.length === 1 && (
+          <div className="mt-auto">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">Gợi ý câu hỏi</p>
+            <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {SUGGESTED_QUESTIONS.map((question) => (
+                <button
+                  key={question}
+                  type="button"
+                  onClick={() => void send(question)}
+                  className="rounded-xl border border-border bg-surface p-3 text-left text-xs text-foreground transition hover:border-primary/40 hover:bg-primary/5 sm:text-sm"
+                >
+                  {question}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {busy && (
           <div className="flex items-center gap-2 text-sm text-muted" role="status">
             <Icon name="sparkles" className="h-4 w-4 animate-pulse text-primary" />
@@ -467,24 +559,6 @@ export function ChatPage() {
         )}
         <div ref={bottomRef} />
       </div>
-
-      {messages.length === 1 && (
-        <div className="mt-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">Gợi ý câu hỏi</p>
-          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {SUGGESTED_QUESTIONS.map((question) => (
-              <button
-                key={question}
-                type="button"
-                onClick={() => void send(question)}
-                className="rounded-xl border border-border bg-surface p-3 text-left text-xs text-foreground transition hover:border-primary/40 hover:bg-primary/5 sm:text-sm"
-              >
-                {question}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {error && (
         <Alert tone="danger" className="mt-3">
@@ -561,8 +635,8 @@ export function ChatPage() {
             ref={inputRef}
             type="text"
             value={input}
-            maxLength={2000}
-            onChange={(event) => setInput(event.target.value)}
+            maxLength={MAX_MESSAGE_LENGTH}
+            onChange={(event) => setInput(event.target.value.slice(0, MAX_MESSAGE_LENGTH))}
             aria-label="Tin nhắn cho trợ lý"
             placeholder={
               attachments.length > 0
@@ -581,6 +655,17 @@ export function ChatPage() {
             Gửi
           </Button>
         </div>
+        {input.length > MAX_MESSAGE_LENGTH * 0.8 && (
+          <p
+            className={cn(
+              'mt-1 px-2 text-right text-[11px]',
+              input.length >= MAX_MESSAGE_LENGTH ? 'text-danger' : 'text-muted',
+            )}
+            aria-live="polite"
+          >
+            {input.length.toLocaleString('vi-VN')}/{MAX_MESSAGE_LENGTH.toLocaleString('vi-VN')} ký tự
+          </p>
+        )}
       </form>
 
       <div className="mt-3 flex flex-wrap items-center gap-2 px-1 text-xs">

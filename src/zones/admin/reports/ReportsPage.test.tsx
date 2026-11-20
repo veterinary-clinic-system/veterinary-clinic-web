@@ -98,11 +98,11 @@ describe('ReportsPage', () => {
     renderPage();
 
     expect(screen.getByText('Báo cáo & Thống kê')).toBeTruthy();
-    expect(screen.getByText('📊 Toàn cảnh báo cáo')).toBeTruthy();
-    expect(screen.getByText('💰 Doanh thu & Dòng tiền')).toBeTruthy();
-    expect(screen.getByText('🩺 Lâm sàng & Bác sĩ')).toBeTruthy();
-    expect(screen.getByText('📦 Bán hàng & Kho')).toBeTruthy();
-    expect(screen.getByText('🤖 Phân loại AI')).toBeTruthy();
+    expect(screen.getByText('Toàn cảnh báo cáo')).toBeTruthy();
+    expect(screen.getByText('Doanh thu & Dòng tiền')).toBeTruthy();
+    expect(screen.getByText('Lâm sàng & Bác sĩ')).toBeTruthy();
+    expect(screen.getByText('Bán hàng & Kho')).toBeTruthy();
+    expect(screen.getByText('Phân loại AI')).toBeTruthy();
 
     // Check that key metric cards are loaded
     expect(await screen.findByText('Doanh thu thuần')).toBeTruthy();

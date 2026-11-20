@@ -55,7 +55,16 @@ export default {
         xl: 'calc(var(--radius) + 0.25rem)',
       },
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        // Font emoji ở cuối: máy thiếu font emoji (Linux) vẽ emoji thành ô vuông rỗng.
+        sans: [
+          'Inter',
+          'ui-sans-serif',
+          'system-ui',
+          'sans-serif',
+          'Apple Color Emoji',
+          'Segoe UI Emoji',
+          'Noto Color Emoji',
+        ],
       },
       
       boxShadow: {

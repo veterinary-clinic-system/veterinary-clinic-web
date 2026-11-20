@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Avatar, Badge, Icon } from '@/components/basic';
 import { Appointment, Pet } from '@/types/models';
 import { formatDateTime } from '@/utils/format';
-import { petAgeLabel, petAlerts, petBreedLabel } from './pet-display';
+import { petAgeLabel, petAlerts, petBreedLabel, petDisplayName } from './pet-display';
 
 export interface PetCardProps {
   pet: Pet;
@@ -20,9 +20,9 @@ export function PetCard({ pet, nextAppointment }: PetCardProps) {
         to={`/my/pets/${pet.id}`}
         className="flex items-start gap-3.5 rounded-lg focus-visible:outline-none"
       >
-        <Avatar name={pet.name} src={pet.avatarUrl} size="lg" />
+        <Avatar name={petDisplayName(pet)} src={pet.avatarUrl} size="lg" />
         <div className="min-w-0 flex-1">
-          <h3 className="text-base font-semibold text-foreground">{pet.name}</h3>
+          <h3 className="text-base font-semibold text-foreground">{petDisplayName(pet)}</h3>
           <p className="truncate text-sm text-muted">{petBreedLabel(pet)}</p>
           <p className="mt-0.5 text-sm text-muted">
             {age ?? 'Chưa rõ tuổi'}

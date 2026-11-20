@@ -635,3 +635,18 @@ body {
     transform: none;
   }
 }
+
+/* Thanh cuộn mảnh cho khung cuộn bên trong (khung chat) - thay thanh cuộn thô mặc định. */
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--color-border, 203 213 225)) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background-color: rgb(148 163 184 / 0.5);
+  }
+}

@@ -2,11 +2,9 @@ import { useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useQueryClient } from '@tanstack/react-query';
 
-export const SOCKET_SERVER_URL =
-  import.meta.env.VITE_WS_URL ||
-  (import.meta.env.VITE_API_BASE_URL?.startsWith('http')
-    ? new URL(import.meta.env.VITE_API_BASE_URL).origin
-    : 'http://localhost:3010');
+import { SOCKET_SERVER_URL } from './endpoints';
+
+export { SOCKET_SERVER_URL };
 
 let socketInstance: Socket | null = null;
 

@@ -1,9 +1,12 @@
 import { KeyboardEvent, ReactNode, useId } from 'react';
 import { cn } from './utils';
+import { Icon, type IconName } from './Icon';
 
 export interface TabItem<T extends string = string> {
   id: T;
   label: string;
+  /** Icon SVG trước nhãn - dùng thay emoji (máy thiếu font emoji vẽ thành ô vuông rỗng). */
+  icon?: IconName;
   
   count?: number;
   disabled?: boolean;
@@ -111,6 +114,7 @@ export function Tabs<T extends string = string>({
                   ),
             )}
           >
+            {item.icon && <Icon name={item.icon} className="mr-1.5 inline-block h-4 w-4 align-[-3px]" />}
             {item.label}
             {item.count !== undefined && (
               <span

@@ -8,11 +8,12 @@ import { QueryErrorState } from '@/components/QueryErrorState';
 import { GENDER_LABEL_VI } from '@/utils/display';
 import { formatDate } from '@/utils/format';
 import { AppointmentList } from '../components/AppointmentList';
-import { petAgeLabel } from '../components/pet-display';
+import { petAgeLabel, petDisplayName } from '../components/pet-display';
 import { DocumentsTab } from '../pet-profile/DocumentsTab';
 import { HealthRecordTab } from '../pet-profile/HealthRecordTab';
 import { MedicalHistoryTab } from '../pet-profile/MedicalHistoryTab';
 import { PetHeader } from '../pet-profile/PetHeader';
+import { DeletePetSection } from '../pet-profile/DeletePetSection';
 
 type TabId = 'overview' | 'history' | 'health' | 'appointments' | 'documents';
 
@@ -118,6 +119,12 @@ export function PetProfilePage() {
                 { label: 'Ghi chú của bác sĩ', value: pet.notes, wide: true },
               ]}
             />
+          </div>
+        )}
+
+        {tab === 'overview' && (
+          <div className="mt-6">
+            <DeletePetSection petId={pet.id} petName={petDisplayName(pet)} />
           </div>
         )}
 

@@ -148,7 +148,7 @@ function KpiTile({ kpi }: { kpi: DashboardKpi }) {
       to={kpi.link}
       value={
         <span title={formatValue(kpi.value, kpi.format)}>
-          {kpi.format === 'currency' ? compactNumber(kpi.value) : kpi.value.toLocaleString('vi-VN')}
+          {kpi.format === 'currency' ? `${compactNumber(kpi.value)} ₫` : kpi.value.toLocaleString('vi-VN')}
         </span>
       }
       hint={deltaLabel(kpi)}

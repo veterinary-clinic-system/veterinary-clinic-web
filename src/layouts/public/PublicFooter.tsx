@@ -64,7 +64,9 @@ export function PublicFooter() {
           <dl className="mt-3 space-y-1 text-sm text-muted">
             <div className="flex justify-between gap-4">
               <dt>Thứ Hai - Thứ Sáu</dt>
-              <dd>07:00 - 17:30</dd>
+              <dd className="text-right">07:00 - 11:00
+                <br />
+                13:30 - 17:30</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt>Thứ Bảy - Chủ Nhật</dt>
@@ -72,7 +74,7 @@ export function PublicFooter() {
             </div>
           </dl>
           <p className="mt-3 text-sm text-muted">
-            Trường hợp cấp cứu ngoài giờ, vui lòng gọi trực tiếp chi nhánh gần nhất.
+            Nghỉ trưa 11:00 - 13:30. Trường hợp cấp cứu ngoài giờ, vui lòng gọi trực tiếp chi nhánh gần nhất.
           </p>
         </div>
       </div>

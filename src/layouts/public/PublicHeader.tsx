@@ -69,7 +69,7 @@ export function PublicHeader() {
             <Icon name="paw" className="h-5 w-5" />
           </span>
           <span className="hidden text-base font-semibold text-foreground sm:block">
-            VETAI <span className="font-normal text-primary">HUB</span>
+            Vet<span className="font-normal text-primary">Care</span>
           </span>
         </Link>
 
@@ -95,7 +95,11 @@ export function PublicHeader() {
         <div className="ml-auto flex items-center gap-2 lg:ml-0">
           <Link
             to="/booking"
-            className="inline-flex min-h-touch items-center rounded-lg bg-primary px-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            // Trang chủ trên điện thoại đã có nút "Đặt lịch cho bé" ngay khung đầu - không lặp hai CTA.
+            className={cn(
+              'min-h-touch items-center rounded-lg bg-primary px-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90',
+              location.pathname === '/' ? 'hidden sm:inline-flex' : 'inline-flex',
+            )}
           >
             Đặt lịch khám
           </Link>

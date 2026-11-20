@@ -50,6 +50,9 @@ export function StaffTopbar({ onOpenMobileNav }: StaffTopbarProps) {
 
       <div className="flex shrink-0 items-center gap-1 sm:gap-2">
         {}
+        {/* Tài khoản toàn hệ thống (quản trị) chọn chi nhánh ngay trên từng trang - nhãn tĩnh
+            "Toàn hệ thống" ở đây trông như bộ chọn thứ hai bị lặp. */}
+        {user?.branchId && (
         <span
           className="hidden items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs text-muted md:inline-flex"
           title="Chi nhánh đang làm việc"
@@ -57,6 +60,7 @@ export function StaffTopbar({ onOpenMobileNav }: StaffTopbarProps) {
           <Icon name="building" className="h-4 w-4" />
           <span className="max-w-[12rem] truncate">{branchName}</span>
         </span>
+        )}
 
         {user?.role === Role.DOCTOR && (
           <Link

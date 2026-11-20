@@ -63,7 +63,7 @@ export function ServicesPage() {
     <>
       <section className="pet-page-heading border-b border-border bg-surface">
         <div className="mx-auto max-w-6xl px-4 py-10">
-          <span className="care-eyebrow">VETAI HUB / CHĂM SÓC THÚ CƯNG</span><h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          <span className="care-eyebrow">VETCARE / CHĂM SÓC THÚ CƯNG</span><h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             Dịch vụ &amp; bảng giá
           </h1>
           <p className="mt-2 max-w-2xl text-muted">
