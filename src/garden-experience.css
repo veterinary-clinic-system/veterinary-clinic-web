@@ -1322,9 +1322,14 @@
     padding: 33px 16px 0;
   }
   .garden-eyebrow {
-    font-size: 1rem;
+    font-size: 0.78rem;
     gap: 8px;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+  /* Chấm cam không được co/trôi khi dòng chữ dài trên màn hẹp. */
+  .garden-eyebrow > span {
+    flex-shrink: 0;
   }
   .garden-hero h1 {
     font-size: clamp(42px, 9.7vw, 72px);

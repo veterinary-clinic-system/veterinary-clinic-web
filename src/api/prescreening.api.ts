@@ -4,7 +4,10 @@ import { PriorityColor } from '@/types/enums';
 
 export const prescreeningApi = {
   getForAppointment: (appointmentId: string) =>
-    apiClient.get<PreScreeningResult>(`/appointments/${appointmentId}/prescreening`).then((r) => r.data),
+    // 200 + thân rỗng khi chưa chạy sàng lọc -> null (axios trả chuỗi rỗng cho thân rỗng).
+    apiClient
+      .get<PreScreeningResult | ''>(`/appointments/${appointmentId}/prescreening`)
+      .then((r) => r.data || null),
   rerun: (appointmentId: string) =>
     apiClient.post<PreScreeningResult>(`/appointments/${appointmentId}/prescreening/run`).then((r) => r.data),
 };

@@ -30,3 +30,8 @@ export function petAlerts(pet: Pet): { tone: 'danger' | 'warning'; label: string
   }
   return alerts;
 }
+
+/** Hồ sơ cũ có thể mang tên toàn khoảng trắng (trước khi API chặn) - không để thẻ mất tiêu đề. */
+export function petDisplayName(pet: Pick<Pet, 'name'>): string {
+  return pet.name?.trim() || 'Bé chưa đặt tên';
+}

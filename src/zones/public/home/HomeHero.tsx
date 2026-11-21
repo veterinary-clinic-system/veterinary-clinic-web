@@ -31,7 +31,7 @@ export function HomeHero() {
     <section className="garden-hero" aria-labelledby="garden-title">
       <div className="garden-hero-heading">
         <p className="garden-eyebrow">
-          <span /> VETAI HUB · CHO NHỮNG NGƯỜI BẠN NHỎ
+          <span /> VETCARE · CHO NHỮNG NGƯỜI BẠN NHỎ
         </p>
         <h1 id="garden-title">
           <span>Thế giới nhỏ.</span>
@@ -106,7 +106,7 @@ export function HomeHero() {
         <div className="garden-love-seal" aria-hidden="true">
           <span>CHĂM SÓC TỪ TRÁI TIM</span>
           <Icon name="paw" className="h-7 w-7" />
-          <span>VETAI · WITH LOVE</span>
+          <span>VETCARE · WITH LOVE</span>
         </div>
       </div>
       <div className="garden-hero-bottom">

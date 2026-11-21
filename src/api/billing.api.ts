@@ -73,6 +73,11 @@ export const sepayApi = {
       .then((r) => r.data),
   ticket: (paymentId: string) =>
     apiClient.get<SepayTicketStatus>(`/billing/sepay/tickets/${paymentId}`).then((r) => r.data),
+  /** Chủ nuôi tự tạo mã VietQR cho hoá đơn của chính mình (POST /billing/sepay/mine/...). */
+  createQrForOwner: (invoiceId: string) =>
+    apiClient
+      .post<SepayQrTicket>(`/billing/sepay/mine/invoices/${invoiceId}/qr`)
+      .then((r) => r.data),
   publicTicket: (paymentId: string) =>
     apiClient
       .get<SepayTicketStatus>(`/billing/sepay/public/tickets/${paymentId}`)

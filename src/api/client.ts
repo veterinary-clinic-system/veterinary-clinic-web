@@ -1,8 +1,9 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { tokenStore } from './token-store';
+import { API_BASE_URL } from './endpoints';
 
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api/v1',
+  baseURL: API_BASE_URL,
 });
 
 apiClient.interceptors.request.use((config) => {

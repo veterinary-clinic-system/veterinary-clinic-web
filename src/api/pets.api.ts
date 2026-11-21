@@ -39,6 +39,8 @@ export interface OwnerPetHealthRecord {
 
 export const petsApi = {
   mine: () => apiClient.get<Pet[]>('/pets/mine').then((r) => r.data),
+  /** Chủ nuôi xoá hồ sơ tạo nhầm - API từ chối (409) nếu bé đã có lịch hẹn/hồ sơ khám. */
+  removeMine: (id: string) => apiClient.delete(`/pets/mine/${id}`).then(() => undefined),
   getOne: (id: string) => apiClient.get<Pet>(`/pets/${id}`).then((r) => r.data),
   search: (params: { page?: number; limit?: number; search?: string; ownerId?: string }) =>
     apiClient.get<PaginatedResult<Pet>>('/pets', { params }).then((r) => r.data),

@@ -15,6 +15,21 @@ const COLOR_MAP: Record<string, { bg: string; text: string; bar: string }> = {
   BLUE: { bg: 'bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400', bar: 'bg-blue-500' },
 };
 
+/** Đủ 5 mức theo thứ tự nặng -> nhẹ, kể cả mức 0 ca (API cũ bỏ hẳn mức không có ca nào). */
+function allPriorityRows(breakdown: AiAccuracyReport['breakdownByColor']) {
+  return Object.values(PriorityColor).map(
+    (color) =>
+      breakdown.find((row) => row.aiPriorityColor === color) ?? {
+        aiPriorityColor: color,
+        acceptedCount: 0,
+        overriddenCount: 0,
+      },
+  );
+}
+
+/** Dưới ngưỡng này tỷ lệ % dễ gây hiểu nhầm (1 ca = 100%). */
+const SMALL_SAMPLE = 5;
+
 export function AiAccuracyReportCard({ data, loading }: AiAccuracyReportCardProps) {
   if (loading) {
     return (
@@ -122,11 +137,12 @@ export function AiAccuracyReportCard({ data, loading }: AiAccuracyReportCardProp
             Phân tích theo từng mức độ ưu tiên cấp cứu
           </h3>
 
-          {data.breakdownByColor.length === 0 ? (
-            <p className="text-sm text-muted">Không có dữ liệu phân loại AI trong kỳ.</p>
-          ) : (
+          {data.totalEvaluated === 0 && (
+            <p className="mb-3 text-sm text-muted">Không có dữ liệu phân loại AI trong kỳ.</p>
+          )}
+          {(
             <div className="space-y-3">
-              {data.breakdownByColor.map((item) => {
+              {allPriorityRows(data.breakdownByColor).map((item) => {
                 const totalItem = item.acceptedCount + item.overriddenCount;
                 const itemAcceptRate = totalItem > 0 ? Math.round((item.acceptedCount / totalItem) * 100) : 0;
                 const colors = COLOR_MAP[item.aiPriorityColor] ?? {
@@ -155,14 +171,27 @@ export function AiAccuracyReportCard({ data, loading }: AiAccuracyReportCardProp
                         <span className="text-muted">
                           Ghi đè: <strong className="font-semibold text-amber-600 dark:text-amber-400">{item.overriddenCount}</strong>
                         </span>
+                        <span className="text-muted">
+                          Cỡ mẫu: <strong className="font-semibold text-foreground">{totalItem} ca</strong>
+                        </span>
                         <span className="font-bold text-foreground">
-                          {itemAcceptRate}% đồng thuận
+                          {totalItem === 0 ? 'Chưa có ca' : `${itemAcceptRate}% đồng thuận`}
+                          {totalItem > 0 && totalItem < SMALL_SAMPLE && (
+                            <span className="ml-1 font-normal text-muted">(mẫu nhỏ)</span>
+                          )}
                         </span>
                       </div>
                     </div>
 
                     {/* Progress bar showing accepted vs overridden ratio */}
-                    <div className="mt-2.5 flex h-2 w-full overflow-hidden rounded-full bg-surface-muted">
+                    <div
+                      className={cn(
+                        'mt-2.5 flex h-2 w-full overflow-hidden rounded-full bg-surface-muted',
+                        totalItem > 0 && totalItem < SMALL_SAMPLE && 'opacity-60',
+                      )}
+                    >
+                      {totalItem > 0 && (
+                      <>
                       <div
                         className="bg-emerald-500 transition-all duration-500"
                         style={{ width: `${itemAcceptRate}%` }}
@@ -173,6 +202,8 @@ export function AiAccuracyReportCard({ data, loading }: AiAccuracyReportCardProp
                         style={{ width: `${100 - itemAcceptRate}%` }}
                         title={`Ghi đè: ${item.overriddenCount} (${100 - itemAcceptRate}%)`}
                       />
+                      </>
+                      )}
                     </div>
                   </div>
                 );

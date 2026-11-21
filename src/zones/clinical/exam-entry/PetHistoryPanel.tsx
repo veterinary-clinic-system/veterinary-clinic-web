@@ -6,6 +6,7 @@ import { MedicalRecord } from '@/types/models';
 import { MedicalRecordStatus } from '@/types/enums';
 import { formatDate } from '@/utils/format';
 import { DIAGNOSIS_SEVERITY_LABEL_VI, MEDICAL_RECORD_STATUS_LABEL_VI } from '@/utils/labels';
+import { formatDoctorName } from '@/utils/doctor-name';
 
 export function PetHistoryPanel({
   petId,
@@ -59,7 +60,7 @@ function HistoryCard({ record }: { record: MedicalRecord }) {
       >
         <span>
           <span className="font-medium">{formatDate(visitedAt)}</span>
-          <span className="block text-muted">BS. {record.doctor?.fullName ?? '—'}</span>
+          <span className="block text-muted">{formatDoctorName(record.doctor?.fullName)}</span>
         </span>
         <Badge variant={record.status === MedicalRecordStatus.COMPLETED ? 'success' : 'warning'}>
           {MEDICAL_RECORD_STATUS_LABEL_VI[record.status]}

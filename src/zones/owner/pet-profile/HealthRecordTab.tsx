@@ -2,7 +2,8 @@ import type { ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { petsApi } from '@/api/pets.api';
 import { Badge, ErrorState, SkeletonText } from '@/components/basic';
-import { VACCINATION_DUE_STATUS_LABEL_VI } from '@/types/enums';
+import { InvoiceStatus, VACCINATION_DUE_STATUS_LABEL_VI } from '@/types/enums';
+import { InvoicePayButton } from './InvoicePayButton';
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/format';
 import {
   INVOICE_STATUS_LABEL_VI,
@@ -11,6 +12,7 @@ import {
   PAYMENT_METHOD_LABEL_VI,
   vaccinationDueClasses,
 } from '@/utils/labels';
+import { formatDoctorName } from '@/utils/doctor-name';
 
 export function HealthRecordTab({ petId }: { petId: string }) {
   const query = useQuery({
@@ -45,7 +47,7 @@ export function HealthRecordTab({ petId }: { petId: string }) {
                 </p>
                 <p className="mt-1 text-sm text-muted">
                   Tiêm ngày {formatDate(vaccination.vaccinatedAt)}
-                  {vaccination.doctor?.fullName ? ` · BS. ${vaccination.doctor.fullName}` : ''}
+                  {vaccination.doctor?.fullName ? ` · ${formatDoctorName(vaccination.doctor.fullName)}` : ''}
                 </p>
               </div>
               <span
@@ -71,7 +73,7 @@ export function HealthRecordTab({ petId }: { petId: string }) {
             className="rounded-lg border border-border p-4"
           >
             <p className="font-medium">{formatDateTime(prescription.examinedAt)}</p>
-            <p className="text-sm text-muted">BS. {prescription.doctorName ?? 'Chưa cập nhật'}</p>
+            <p className="text-sm text-muted">{formatDoctorName(prescription.doctorName, 'Bác sĩ: chưa cập nhật')}</p>
             <ul className="mt-3 divide-y divide-border text-sm">
               {prescription.items.map((item) => (
                 <li key={item.id} className="py-2 first:pt-0 last:pb-0">
@@ -141,9 +143,14 @@ export function HealthRecordTab({ petId }: { petId: string }) {
                   : ''}
               </p>
             </div>
-            <Badge variant={INVOICE_STATUS_VARIANT[invoice.status]}>
-              {INVOICE_STATUS_LABEL_VI[invoice.status]}
-            </Badge>
+            <div className="flex flex-wrap items-center gap-3">
+              <Badge variant={INVOICE_STATUS_VARIANT[invoice.status]}>
+                {INVOICE_STATUS_LABEL_VI[invoice.status]}
+              </Badge>
+              {invoice.status === InvoiceStatus.PENDING && !invoice.paid && (
+                <InvoicePayButton invoiceId={invoice.invoiceId} petId={petId} />
+              )}
+            </div>
           </article>
         ))}
       </HealthSection>
