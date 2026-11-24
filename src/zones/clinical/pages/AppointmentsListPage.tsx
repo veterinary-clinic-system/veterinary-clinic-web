@@ -21,7 +21,7 @@ import { AppointmentStatus } from '@/types/enums';
 import { Appointment } from '@/types/models';
 import { APPOINTMENT_STATUS_TONE } from '@/utils/appointment-status';
 import { getErrorMessage } from '@/utils/errors';
-import { formatDate, formatTime } from '@/utils/format';
+import { formatDate, formatTime, isDeletedPhone } from '@/utils/format';
 import { APPOINTMENT_STATUS_LABEL_VI } from '@/utils/labels';
 import { MarkNoShowDialog } from '../appointments/MarkNoShowDialog';
 
@@ -76,6 +76,31 @@ export function AppointmentsListPage() {
     onError: (error) => toast.show(getErrorMessage(error), 'error'),
   });
 
+  const confirmMutation = useMutation({
+    mutationFn: (appointmentId: string) =>
+      appointmentsApi.update(appointmentId, { status: AppointmentStatus.CONFIRMED }),
+    onSuccess: () => {
+      toast.show('Đã xác nhận lịch hẹn.', 'success');
+      void queryClient.invalidateQueries({ queryKey: ['appointments-list'] });
+      void queryClient.invalidateQueries({ queryKey: ['staff-appointments'] });
+    },
+    onError: (error) => toast.show(getErrorMessage(error), 'error'),
+  });
+
+  function handleCheckIn(appointment: Appointment) {
+    const apptDate = formatDate(appointment.startAt);
+    const todayDate = formatDate(new Date());
+    if (
+      apptDate !== todayDate &&
+      !window.confirm(
+        `Lịch hẹn này vào ngày ${apptDate} (khác hôm nay ${todayDate}). Bạn vẫn muốn check-in ngay?`,
+      )
+    ) {
+      return;
+    }
+    checkInMutation.mutate(appointment.id);
+  }
+
   const columns: DataColumn<Appointment>[] = [
     {
       key: 'startAt',
@@ -84,10 +109,14 @@ export function AppointmentsListPage() {
       minWidth: '140px',
       className: 'whitespace-nowrap',
       render: (appointment) => (
-        <span className="tabular-nums">
+        <Link
+          to={`/staff/appointments/${appointment.id}`}
+          onClick={(event) => event.stopPropagation()}
+          className="tabular-nums hover:underline"
+        >
           <span className="font-medium text-foreground">{formatTime(appointment.startAt)}</span>{' '}
           <span className="text-muted">{formatDate(appointment.startAt)}</span>
-        </span>
+        </Link>
       ),
     },
     {
@@ -112,18 +141,20 @@ export function AppointmentsListPage() {
       minWidth: '120px',
       hideBelow: 'md',
       className: 'whitespace-nowrap',
-      render: (appointment) =>
-        appointment.pet?.owner?.phone ? (
+      render: (appointment) => {
+        const phone = appointment.pet?.owner?.phone;
+        return phone && !isDeletedPhone(phone) ? (
           <a
-            href={`tel:${appointment.pet.owner.phone.replace(/\s/g, '')}`}
+            href={`tel:${phone.replace(/\s/g, '')}`}
             onClick={(event) => event.stopPropagation()}
             className="text-primary hover:underline tabular-nums"
           >
-            {appointment.pet.owner.phone}
+            {phone}
           </a>
         ) : (
           <span className="text-muted">—</span>
-        ),
+        );
+      },
     },
     {
       key: 'doctor',
@@ -243,13 +274,26 @@ export function AppointmentsListPage() {
         rowActions={(appointment) =>
           canMarkNoShow(appointment) ? (
             <div className="flex flex-nowrap items-center justify-end gap-1.5">
+              {appointment.status === AppointmentStatus.PENDING && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="whitespace-nowrap"
+                  loading={
+                    confirmMutation.isPending && confirmMutation.variables === appointment.id
+                  }
+                  onClick={() => confirmMutation.mutate(appointment.id)}
+                >
+                  Xác nhận
+                </Button>
+              )}
               <Button
                 size="sm"
                 className="whitespace-nowrap"
                 loading={
                   checkInMutation.isPending && checkInMutation.variables === appointment.id
                 }
-                onClick={() => checkInMutation.mutate(appointment.id)}
+                onClick={() => handleCheckIn(appointment)}
               >
                 Check-in
               </Button>

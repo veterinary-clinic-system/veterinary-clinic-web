@@ -68,7 +68,7 @@ function buildTimeline(appointment: Appointment): TimelineEntry[] {
   } else if (status === AppointmentStatus.COMPLETED) {
     entries.push({
       id: 'completed',
-      time: formatDateTime(appointment.endAt),
+      time: formatDateTime((appointment as Appointment & { updatedAt?: string }).updatedAt ?? appointment.endAt),
       title: 'Buổi khám đã hoàn tất',
       description: 'Chẩn đoán và đơn thuốc đã được lưu vào hồ sơ của bé.',
       tone: 'success',

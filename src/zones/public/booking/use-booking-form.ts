@@ -13,6 +13,7 @@ import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { CommonSymptom, Role, SlotStatus } from '@/types/enums';
 import { Appointment } from '@/types/models';
 import { SepayQrTicket } from '@/api/billing.api';
+import { useToast } from '@/components/basic';
 import { getErrorMessage, isConflictError } from '@/utils/errors';
 import {
   BookingHandoffState,
@@ -30,6 +31,7 @@ export function useBookingForm() {
   const { user } = useAuth();
   const location = useLocation();
   const queryClient = useQueryClient();
+  const toast = useToast();
   const isOwner = user?.role === Role.PET_OWNER;
   const handoff = (location.state as BookingHandoffState | null) ?? {};
 
@@ -209,7 +211,11 @@ export function useBookingForm() {
   const step5Errors: Partial<Record<'phone' | 'fullName' | 'petName' | 'breed' | 'pet', string>> =
     {};
   if (showStep5Errors) {
-    if (!phone.trim()) step5Errors.phone = 'Vui lòng nhập số điện thoại';
+    if (!phone.trim()) {
+      step5Errors.phone = 'Vui lòng nhập số điện thoại';
+    } else if (!/^0\d{9}$/.test(phone.trim())) {
+      step5Errors.phone = 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0';
+    }
     if (!ownerFullName.trim()) step5Errors.fullName = 'Vui lòng nhập họ tên';
     if (effectivePetMode === 'existing') {
       if (!selectedExistingPet) step5Errors.pet = 'Vui lòng chọn một bé';
@@ -300,8 +306,17 @@ export function useBookingForm() {
   }
 
   function onFilesSelected(e: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []).slice(0, Math.max(0, 5 - photoItems.length));
+    const raw = Array.from(e.target.files ?? []);
     e.target.value = '';
+    const valid = raw.filter((file) => file.type.startsWith('image/'));
+    if (valid.length < raw.length) {
+      toast.show('Chỉ hỗ trợ tệp hình ảnh hợp lệ (PNG, JPG, WebP...).', 'error');
+    }
+    const remaining = Math.max(0, 5 - photoItems.length);
+    if (valid.length > remaining) {
+      toast.show('Tối đa 5 ảnh đính kèm — các ảnh vượt quá đã được bỏ qua.', 'info');
+    }
+    const files = valid.slice(0, remaining);
     files.forEach((file) => {
       const id = crypto.randomUUID();
       setPhotoItems((prev) => [...prev, { id, name: file.name, status: 'uploading' }]);
@@ -323,8 +338,17 @@ export function useBookingForm() {
   }
 
   function onVideosSelected(e: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []).slice(0, Math.max(0, 2 - videoItems.length));
+    const raw = Array.from(e.target.files ?? []);
     e.target.value = '';
+    const valid = raw.filter((file) => file.type.startsWith('video/'));
+    if (valid.length < raw.length) {
+      toast.show('Chỉ hỗ trợ tệp video hợp lệ (MP4, WebM, MOV).', 'error');
+    }
+    const remaining = Math.max(0, 2 - videoItems.length);
+    if (valid.length > remaining) {
+      toast.show('Tối đa 2 video đính kèm — các video vượt quá đã được bỏ qua.', 'info');
+    }
+    const files = valid.slice(0, remaining);
     files.forEach((file) => {
       const id = crypto.randomUUID();
       setVideoItems((prev) => [...prev, { id, name: file.name, status: 'uploading' }]);

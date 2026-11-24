@@ -8,6 +8,7 @@ import type { IconName } from '@/components/basic/Icon';
 import { useAuth } from '@/context/AuthContext';
 import { Role } from '@/types/enums';
 import { getErrorMessage } from '@/utils/errors';
+import { formatWeekdayDateTimeVN } from '@/utils/format';
 
 interface DisplayMessage {
   id: string;
@@ -138,14 +139,7 @@ function renderRichText(content: string): ReactNode {
 }
 
 function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString('vi-VN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    weekday: 'long',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
+  return formatWeekdayDateTimeVN(iso);
 }
 
 function formatFileSize(bytes: number): string {
@@ -511,23 +505,36 @@ export function ChatPage() {
                   </div>
                 )}
 
-                {isLatest && response && response.quickReplies.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-1" aria-label="Trả lời nhanh">
-                    {response.quickReplies.map((reply) => (
-                      <button
-                        key={reply}
-                        type="button"
-                        disabled={busy}
-                        onClick={() => void send(reply)}
-                        className="rounded-full border border-primary/40 bg-surface px-3 py-1 text-xs font-medium text-primary transition hover:bg-primary/10 disabled:opacity-50"
-                      >
-                        {reply}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                {isLatest &&
+                  response &&
+                  response.quickReplies.length > 0 &&
+                  (() => {
+                    const isRed = response.triage?.priorityColor === 'RED';
+                    const uniqueReplies = Array.from(new Set(response.quickReplies)).filter(
+                      (reply) => !(isRed && reply.toLowerCase().includes('đặt lịch')),
+                    );
+                    if (uniqueReplies.length === 0) return null;
+                    return (
+                      <div className="flex flex-wrap gap-2 pt-1" aria-label="Trả lời nhanh">
+                        {uniqueReplies.map((reply) => (
+                          <button
+                            key={reply}
+                            type="button"
+                            disabled={busy}
+                            onClick={() => void send(reply)}
+                            className="rounded-full border border-primary/40 bg-surface px-3 py-1 text-xs font-medium text-primary transition hover:bg-primary/10 disabled:opacity-50"
+                          >
+                            {reply}
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })()}
 
-                {isLatest && response?.suggestBooking && !response.booking && (
+                {isLatest &&
+                  response?.suggestBooking &&
+                  !response.booking &&
+                  response.triage?.priorityColor !== 'RED' && (
                   <Link to="/booking" className="text-xs font-medium text-muted underline-offset-2 hover:text-primary hover:underline">
                     Hoặc tự chọn bác sĩ & giờ khám
                   </Link>

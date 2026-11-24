@@ -7,6 +7,7 @@ import type { DataColumn } from '@/components/basic';
 import { Role } from '@/types/enums';
 import { StaffUser } from '@/types/models';
 import { ROLE_LABEL_VI } from '@/utils/labels';
+import { isDeletedPhone, maskDeletedPhone } from '@/utils/format';
 import { StaffAccountModal } from './StaffAccountModal';
 
 const LIMIT = 20;
@@ -75,6 +76,7 @@ export function StaffAccountsTab() {
       width: '140px',
       minWidth: '120px',
       className: 'whitespace-nowrap tabular-nums text-muted',
+      render: (user) => maskDeletedPhone(user.phone),
     },
     {
       key: 'email',
@@ -130,12 +132,14 @@ export function StaffAccountsTab() {
         limit={listQuery.data?.limit}
         total={listQuery.data?.total}
         onPageChange={setPage}
-        rowActions={(user) => (
-          <Button variant="ghost" size="sm" onClick={() => openEdit(user)}>
-            <Icon name="edit" className="h-4 w-4" />
-            Sửa
-          </Button>
-        )}
+        rowActions={(user) =>
+          isDeletedPhone(user.phone) ? null : (
+            <Button variant="ghost" size="sm" onClick={() => openEdit(user)}>
+              <Icon name="edit" className="h-4 w-4" />
+              Sửa
+            </Button>
+          )
+        }
         emptyTitle="Không có tài khoản nào khớp bộ lọc"
         emptyDescription="Thử bỏ bớt điều kiện lọc, hoặc tạo tài khoản mới cho nhân viên."
         emptyAction={<Button onClick={openCreate}>Thêm tài khoản</Button>}

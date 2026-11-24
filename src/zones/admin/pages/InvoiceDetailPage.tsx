@@ -262,26 +262,37 @@ export function InvoiceDetailPage() {
 
         {canPay && (
           <div className="payment-method-grid">
-            {PAYMENT_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                aria-pressed={paymentMethod === option.value}
-                onClick={() => setPaymentMethod(option.value)}
-                className={paymentMethod === option.value ? 'is-selected' : ''}
-              >
-                <span className="payment-method-icon" aria-hidden="true">
-                  {option.icon}
-                </span>
-                <span>
-                  <strong>{option.title}</strong>
-                  <small>{option.detail}</small>
-                </span>
-                <span className="payment-method-check" aria-hidden="true">
-                  ✓
-                </span>
-              </button>
-            ))}
+            {PAYMENT_OPTIONS.map((option) => {
+              const disabled =
+                (option.value === PaymentMethod.BANK_TRANSFER ||
+                  option.value === PaymentMethod.QR) &&
+                paidAmount > 0;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  disabled={disabled}
+                  aria-pressed={paymentMethod === option.value}
+                  onClick={() => !disabled && setPaymentMethod(option.value)}
+                  className={paymentMethod === option.value ? 'is-selected' : ''}
+                >
+                  <span className="payment-method-icon" aria-hidden="true">
+                    {option.icon}
+                  </span>
+                  <span>
+                    <strong>{option.title}</strong>
+                    <small>
+                      {disabled
+                        ? 'Không hỗ trợ VietQR khi hóa đơn đã thu một phần'
+                        : option.detail}
+                    </small>
+                  </span>
+                  <span className="payment-method-check" aria-hidden="true">
+                    ✓
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
 

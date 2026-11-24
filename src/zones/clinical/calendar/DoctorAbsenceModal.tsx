@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { appointmentsApi } from '@/api/appointments.api';
 import { Button, Input, Modal, useToast } from '@/components/basic';
 import { getErrorMessage } from '@/utils/errors';
-import { formatTime } from '@/utils/format';
+import { formatDate, formatTime } from '@/utils/format';
 
 export function DoctorAbsenceModal({
   open,
@@ -41,7 +41,7 @@ export function DoctorAbsenceModal({
       void queryClient.invalidateQueries({ queryKey: ['staff-calendar-day'] });
       void queryClient.invalidateQueries({ queryKey: ['staff-calendar-month'] });
       toast.show(
-        `Đã đóng lịch ngày ${date}. Chuyển được ${data.reassigned.length}/${data.total} ca.`,
+        `Đã đóng lịch ngày ${formatDate(date)}. Chuyển được ${data.reassigned.length}/${data.total} ca.`,
         data.unresolved.length > 0 ? 'info' : 'success',
       );
     },
@@ -61,7 +61,7 @@ export function DoctorAbsenceModal({
           </Button>
           {!result && (
             <Button loading={mutation.isPending} onClick={() => mutation.mutate()}>
-              Xác nhận nghỉ ngày {date}
+              Xác nhận nghỉ ngày {formatDate(date)}
             </Button>
           )}
         </>

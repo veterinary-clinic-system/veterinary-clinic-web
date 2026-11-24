@@ -77,6 +77,31 @@ export function VitalsSection({ record, readOnly }: { record: MedicalRecord; rea
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  function handleSave() {
+    const temp = toOptionalNumber(form.temperatureCelsius);
+    const weight = toOptionalNumber(form.weightKg);
+    const hr = toOptionalNumber(form.heartRateBpm);
+    const rr = toOptionalNumber(form.respiratoryRateBpm);
+
+    if (temp !== undefined && (temp < 30 || temp > 45)) {
+      toast.show('Nhiệt độ phải nằm trong khoảng 30°C – 45°C.', 'error');
+      return;
+    }
+    if (weight !== undefined && (weight < 0.05 || weight > 200)) {
+      toast.show('Cân nặng phải nằm trong khoảng 0.05 kg – 200 kg.', 'error');
+      return;
+    }
+    if (hr !== undefined && (hr < 10 || hr > 400)) {
+      toast.show('Nhịp tim phải nằm trong khoảng 10 – 400 nhịp/phút.', 'error');
+      return;
+    }
+    if (rr !== undefined && (rr < 5 || rr > 200)) {
+      toast.show('Nhịp thở phải nằm trong khoảng 5 – 200 lần/phút.', 'error');
+      return;
+    }
+    saveMutation.mutate();
+  }
+
   return (
     <Section
       title="Sinh hiệu & triệu chứng"
@@ -89,6 +114,8 @@ export function VitalsSection({ record, readOnly }: { record: MedicalRecord; rea
           label="Nhiệt độ (°C)"
           type="number"
           step="0.1"
+          min={30}
+          max={45}
           disabled={readOnly}
           value={form.temperatureCelsius}
           onChange={(e) => set('temperatureCelsius', e.target.value)}
@@ -97,6 +124,8 @@ export function VitalsSection({ record, readOnly }: { record: MedicalRecord; rea
           label="Cân nặng (kg)"
           type="number"
           step="0.01"
+          min={0.05}
+          max={200}
           disabled={readOnly}
           value={form.weightKg}
           onChange={(e) => set('weightKg', e.target.value)}
@@ -104,6 +133,8 @@ export function VitalsSection({ record, readOnly }: { record: MedicalRecord; rea
         <Input
           label="Nhịp tim (lần/phút)"
           type="number"
+          min={10}
+          max={400}
           disabled={readOnly}
           value={form.heartRateBpm}
           onChange={(e) => set('heartRateBpm', e.target.value)}
@@ -111,6 +142,8 @@ export function VitalsSection({ record, readOnly }: { record: MedicalRecord; rea
         <Input
           label="Nhịp thở (lần/phút)"
           type="number"
+          min={5}
+          max={200}
           disabled={readOnly}
           value={form.respiratoryRateBpm}
           onChange={(e) => set('respiratoryRateBpm', e.target.value)}
@@ -154,7 +187,7 @@ export function VitalsSection({ record, readOnly }: { record: MedicalRecord; rea
           type="button"
           className="mt-3 w-fit"
           loading={saveMutation.isPending}
-          onClick={() => saveMutation.mutate()}
+          onClick={handleSave}
         >
           {examination ? 'Cập nhật sinh hiệu' : 'Lưu sinh hiệu'}
         </Button>

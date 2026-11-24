@@ -9,7 +9,7 @@ export function OwnerSpace() {
         <Link to="/my/pets" className="owner-brand">
           <Icon name="paw" className="h-5 w-5" />
           <span>
-            Góc nhỏ của bé<small>MY PET COMPANION</small>
+            Góc nhỏ của bé<small>NGƯỜI BẠN NHỎ CỦA BÉ</small>
           </span>
         </Link>
         <nav aria-label="Khu vực chủ thú cưng">

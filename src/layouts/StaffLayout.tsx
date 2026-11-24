@@ -1,7 +1,7 @@
-import { useRealtimeScheduling } from '@/api/socket';
+import { useRealtimeEvent, useRealtimeScheduling } from '@/api/socket';
 import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { Drawer, cn } from '@/components/basic';
+import { Drawer, cn, useToast } from '@/components/basic';
 import { useAuth } from '@/context/AuthContext';
 import { StaffSidebar } from './staff/StaffSidebar';
 import { StaffTopbar } from './staff/StaffTopbar';
@@ -12,7 +12,13 @@ const COLLAPSE_KEY = 'vetcare:sidebar-collapsed';
 export function StaffLayout() {
   const { user } = useAuth();
   const location = useLocation();
+  const toast = useToast();
   useRealtimeScheduling();
+  useRealtimeEvent<{ petName?: string; ticketNumber?: number }>('queue:emergency_red', (payload) => {
+    const label = payload?.petName ? ` (${payload.petName})` : '';
+    const stt = payload?.ticketNumber ? ` — STT ${payload.ticketNumber}` : '';
+    toast.show(`Cảnh báo cấp cứu ĐỎ${label}${stt}: vui lòng ưu tiên tiếp nhận ngay!`, 'error');
+  });
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const [collapsed, setCollapsed] = useState<boolean>(

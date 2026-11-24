@@ -1,12 +1,10 @@
 import { Link } from 'react-router-dom';
-import { format, parseISO } from 'date-fns';
-import { vi } from 'date-fns/locale';
 import { Appointment } from '@/types/models';
 import { SummaryRow } from './SummaryRow';
 import { PaymentStatus } from '@/types/enums';
 import { sepayApi, SepayQrTicket } from '@/api/billing.api';
 import { useQuery } from '@tanstack/react-query';
-import { formatCurrency } from '@/utils/format';
+import { formatCurrency, formatWeekdayDateTimeVN } from '@/utils/format';
 import type { BookingForm } from './use-booking-form';
 
 export function BookingSuccess({
@@ -56,7 +54,7 @@ export function BookingSuccess({
       <dl className="mt-6 rounded-xl border border-border bg-surface p-6 text-left text-sm">
         <SummaryRow
           label="Thời gian"
-          value={format(parseISO(appointment.startAt), 'HH:mm, EEEE dd/MM/yyyy', { locale: vi })}
+          value={formatWeekdayDateTimeVN(appointment.startAt)}
         />
         <SummaryRow label="Bác sĩ" value={appointment.doctor?.fullName ?? doctorName} />
         <SummaryRow label="Chi nhánh" value={branchName} />

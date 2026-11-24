@@ -48,12 +48,13 @@ function Spinner({ className }: { className?: string }) {
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { variant = 'primary', size = 'md', loading = false, fullWidth = false, disabled, className, children, ...rest },
+  { variant = 'primary', size = 'md', loading = false, fullWidth = false, disabled, type = 'button', className, children, ...rest },
   ref,
 ) {
   return (
     <button
       ref={ref}
+      type={type}
       className={cn(
         'inline-flex items-center justify-center rounded-lg font-sans font-semibold transition-colors',
         'focus-visible:outline-none focus-visible:ring-2',

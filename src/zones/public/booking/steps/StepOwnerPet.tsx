@@ -174,7 +174,7 @@ function NewPetFields({ pet, errors }: { pet: BookingForm['pet']; errors: Step5E
       />
 
       <Select
-        label="Loài"
+        label="Loài *"
         value={newPet.speciesId}
         error={!newPet.speciesId ? errors.breed : undefined}
         onChange={(value) => updateNewPet({ speciesId: value, breedId: '' })}

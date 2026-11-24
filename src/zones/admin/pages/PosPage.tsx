@@ -203,6 +203,7 @@ export function PosPage() {
           products={productsQuery.data ?? []}
           loading={productsQuery.isLoading}
           error={productsQuery.isError}
+          forbidden={(productsQuery.error as { response?: { status?: number } } | null)?.response?.status === 403}
           onRetry={() => void productsQuery.refetch()}
           onPick={(product) => addItem.mutate(product.itemId)}
         />
@@ -363,12 +364,14 @@ function ProductGrid({
   products,
   loading,
   error,
+  forbidden,
   onRetry,
   onPick,
 }: {
   products: PosProduct[];
   loading: boolean;
   error: boolean;
+  forbidden?: boolean;
   onRetry: () => void;
   onPick: (product: PosProduct) => void;
 }) {
@@ -379,9 +382,13 @@ function ProductGrid({
   if (error) {
     return (
       <ErrorState
-        title="Không tải được danh sách mặt hàng"
-        description="Máy chủ không trả lời. Chưa thể kết luận chi nhánh có mặt hàng này hay không."
-        onRetry={onRetry}
+        title={forbidden ? 'Bạn không có quyền truy cập' : 'Không tải được danh sách mặt hàng'}
+        description={
+          forbidden
+            ? 'Tài khoản của bạn chưa được cấp quyền bán hàng tại quầy (POS).'
+            : 'Máy chủ không trả lời. Chưa thể kết luận chi nhánh có mặt hàng này hay không.'
+        }
+        onRetry={forbidden ? undefined : onRetry}
       />
     );
   }

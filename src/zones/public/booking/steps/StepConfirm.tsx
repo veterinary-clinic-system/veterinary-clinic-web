@@ -1,7 +1,5 @@
-import { format, parseISO } from 'date-fns';
-import { vi } from 'date-fns/locale';
 import { COMMON_SYMPTOM_LABEL_VI } from '@/types/enums';
-import { formatCurrency } from '@/utils/format';
+import { formatCurrency, formatWeekdayDateTimeVN } from '@/utils/format';
 import { SummaryRow } from '../SummaryRow';
 import { BookingForm } from '../use-booking-form';
 
@@ -32,9 +30,7 @@ export function StepConfirm({ form }: { form: BookingForm }) {
           label="Thời gian"
           value={
             schedule.selectedSlot
-              ? format(parseISO(schedule.selectedSlot.startAt), 'HH:mm, EEEE dd/MM/yyyy', {
-                  locale: vi,
-                })
+              ? formatWeekdayDateTimeVN(schedule.selectedSlot.startAt)
               : undefined
           }
         />
@@ -64,6 +60,10 @@ export function StepConfirm({ form }: { form: BookingForm }) {
         <SummaryRow
           label="Ảnh đính kèm"
           value={`${symptoms.photos.filter((p) => p.status === 'done').length} ảnh`}
+        />
+        <SummaryRow
+          label="Video đính kèm"
+          value={`${symptoms.videos.filter((v) => v.status === 'done').length} video`}
         />
       </dl>
 
@@ -105,7 +105,7 @@ export function StepConfirm({ form }: { form: BookingForm }) {
         </div>
       </fieldset>
 
-      {}
+      { }
       {result.submitError && (
         <p role="alert" className="mt-3 text-sm text-destructive">
           {result.submitError}

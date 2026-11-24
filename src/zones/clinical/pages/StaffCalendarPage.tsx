@@ -5,10 +5,10 @@ import { addDays, addMonths, addWeeks, format, parseISO, subDays, subMonths, sub
 import { vi } from 'date-fns/locale';
 import { useAuth } from '@/context/AuthContext';
 import { branchesApi } from '@/api/branches.api';
-import { doctorsApi } from '@/api/doctors.api';
+import { doctorsApi, usersApi } from '@/api/doctors.api';
 import { appointmentsApi } from '@/api/appointments.api';
 import { EmptyState, ErrorState, Skeleton } from '@/components/basic';
-import { SlotStatus } from '@/types/enums';
+import { Role, SlotStatus } from '@/types/enums';
 import { SLOT_STATUS_LABEL_VI } from '@/utils/labels';
 import { DoctorAbsenceModal } from '../calendar/DoctorAbsenceModal';
 import { MonthGrid } from '../calendar/MonthGrid';
@@ -47,16 +47,27 @@ export function StaffCalendarPage() {
     enabled: !!branchId,
   });
 
+  const isDoctor = user?.role === Role.DOCTOR;
+  const meQuery = useQuery({
+    queryKey: ['me'],
+    queryFn: () => usersApi.me(),
+    enabled: isDoctor,
+  });
+  const ownDoctor = isDoctor
+    ? (doctorsQuery.data ?? []).find((d) => d.fullName === meQuery.data?.fullName)
+    : undefined;
+
   useEffect(() => {
     if (doctorsQuery.data && doctorsQuery.data.length > 0) {
-      if (!doctorsQuery.data.some((d) => d.id === doctorId)) {
+      if (ownDoctor) {
+        if (doctorId !== ownDoctor.id) setDoctorId(ownDoctor.id);
+      } else if (!doctorsQuery.data.some((d) => d.id === doctorId)) {
         setDoctorId(doctorsQuery.data[0].id);
       }
     } else if (doctorsQuery.data && doctorsQuery.data.length === 0) {
       setDoctorId('');
     }
-    
-  }, [doctorId, doctorsQuery.data]);
+  }, [doctorId, doctorsQuery.data, ownDoctor]);
 
   const anchorStr = format(anchor, 'yyyy-MM-dd');
 
@@ -96,7 +107,7 @@ export function StaffCalendarPage() {
       ? format(anchor, "'Tháng' M/yyyy", { locale: vi })
       : view === 'day'
         ? format(anchor, "EEEE, dd/MM/yyyy", { locale: vi })
-        : `Tuần chứa ${format(anchor, 'dd/MM/yyyy')}`;
+        : `Tuần từ ${format(anchor, 'dd/MM/yyyy')}`;
 
   const needsDoctor = view !== 'month';
   
@@ -196,7 +207,7 @@ export function StaffCalendarPage() {
         {}
         <button
           type="button"
-          disabled={!doctorId}
+          disabled={!doctorId || (isDoctor && !!ownDoctor && doctorId !== ownDoctor.id)}
           onClick={() => setAbsenceOpen(true)}
           className="ml-auto rounded border border-destructive px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/5 disabled:opacity-40"
         >
