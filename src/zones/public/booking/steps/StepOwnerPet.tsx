@@ -38,7 +38,9 @@ export function StepOwnerPet({
               <span className="text-muted">Đang tra cứu trong hệ thống...</span>
             )}
             {owner.lookupState === 'found' && !owner.isLoggedIn && (
-              <span className="text-primary">Đã tìm thấy hồ sơ - thông tin được điền sẵn.</span>
+              <span className="text-primary">
+                Số điện thoại đã có hồ sơ — vui lòng nhập họ tên để xác nhận đặt lịch.
+              </span>
             )}
             {owner.lookupState === 'new' && (
               <span className="text-muted">Số này chưa có hồ sơ - vui lòng nhập họ tên.</span>
@@ -55,15 +57,6 @@ export function StepOwnerPet({
             onChange={(e) => owner.setFullName(e.target.value)}
             className="w-full read-only:bg-surface-muted"
           />
-          {owner.nameIsReadOnly && !owner.isLoggedIn && (
-            <button
-              type="button"
-              onClick={owner.unlockName}
-              className="mt-1 text-xs text-primary underline"
-            >
-              Sửa họ tên
-            </button>
-          )}
         </div>
 
         <div className="sm:col-span-2">

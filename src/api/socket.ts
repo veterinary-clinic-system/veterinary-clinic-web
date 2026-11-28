@@ -34,6 +34,33 @@ export function useRealtimeEvent<T = unknown>(event: string, handler: (data: T) 
 }
 
 /**
+ * Hook tham gia phòng Socket.IO theo chi nhánh (`branch:<branchId>` hoặc `branch:all` khi `branchId` là null).
+ * Tự động tham gia lại phòng khi reconnect (`connect`) và rời phòng khi unmount hoặc đổi chi nhánh.
+ */
+export function useRealtimeBranchRoom(
+  branchId: string | null | undefined,
+  enabled = true,
+) {
+  useEffect(() => {
+    if (!enabled) return;
+
+    const socket = getRealtimeSocket();
+    const normalizedBranchId = branchId ?? null;
+    const join = () => {
+      socket.emit('branch:join', { branchId: normalizedBranchId });
+    };
+
+    join();
+    socket.on('connect', join);
+
+    return () => {
+      socket.off('connect', join);
+      socket.emit('branch:leave', { branchId: normalizedBranchId });
+    };
+  }, [branchId, enabled]);
+}
+
+/**
  * Hook tự động đồng bộ realtime cho phân hệ Đặt lịch & Hàng chờ
  * Khi có sự kiện từ bất kỳ client nào, nó tự động invalidate cache để UI cập nhật tức thì.
  */

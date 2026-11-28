@@ -1,6 +1,7 @@
-import { useRealtimeEvent, useRealtimeScheduling } from '@/api/socket';
+import { useRealtimeBranchRoom, useRealtimeEvent, useRealtimeScheduling } from '@/api/socket';
 import { useCallback, useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Drawer, cn, useToast } from '@/components/basic';
 import { useAuth } from '@/context/AuthContext';
 import { StaffSidebar } from './staff/StaffSidebar';
@@ -29,17 +30,21 @@ export function StaffLayout() {
   const { user } = useAuth();
   const location = useLocation();
   const toast = useToast();
+  const queryClient = useQueryClient();
+  useRealtimeBranchRoom(user?.branchId ?? null, Boolean(user));
   useRealtimeScheduling();
   const handleEmergencyRed = useCallback(
     (payload: EmergencyRedPayload | undefined) => {
       if (!shouldNotifyEmergencyRed(payload?.branchId, user?.branchId)) {
         return;
       }
+      void queryClient.invalidateQueries({ queryKey: ['staff-notifications'] });
+      void queryClient.invalidateQueries({ queryKey: ['staff-notifications-unread'] });
       const label = payload?.petName ? ` (${payload.petName})` : '';
       const stt = payload?.ticketNumber ? ` — STT ${payload.ticketNumber}` : '';
       toast.show(`Cảnh báo cấp cứu ĐỎ${label}${stt}: vui lòng ưu tiên tiếp nhận ngay!`, 'error');
     },
-    [toast, user?.branchId],
+    [queryClient, toast, user?.branchId],
   );
   useRealtimeEvent<EmergencyRedPayload>('queue:emergency_red', handleEmergencyRed);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);

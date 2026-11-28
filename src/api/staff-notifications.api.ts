@@ -8,7 +8,8 @@ export type StaffNotificationType =
   | 'EXPIRED'
   | 'PAYMENT_FAILED'
   | 'APPOINTMENT_CANCELLED'
-  | 'VACCINATION_DUE';
+  | 'VACCINATION_DUE'
+  | 'EMERGENCY_RED';
 
 export interface StaffNotification {
   id: string;

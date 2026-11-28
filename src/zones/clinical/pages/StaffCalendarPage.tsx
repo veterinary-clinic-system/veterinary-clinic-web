@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { branchesApi } from '@/api/branches.api';
 import { doctorsApi, usersApi } from '@/api/doctors.api';
 import { appointmentsApi } from '@/api/appointments.api';
-import { EmptyState, ErrorState, Skeleton } from '@/components/basic';
+import { Button, EmptyState, ErrorState, Modal, Skeleton } from '@/components/basic';
 import { Role, SlotStatus } from '@/types/enums';
 import {
   addVnDays,
@@ -17,6 +17,7 @@ import {
   todayLocalIso,
 } from '@/utils/format';
 import { SLOT_STATUS_LABEL_VI } from '@/utils/labels';
+import { BreaksPanel } from '@/zones/admin/users/BreaksPanel';
 import { DoctorAbsenceModal } from '../calendar/DoctorAbsenceModal';
 import { MonthGrid } from '../calendar/MonthGrid';
 import { CELL_CLASSES } from '../calendar/shared';
@@ -39,6 +40,7 @@ export function StaffCalendarPage() {
   const [view, setView] = useState<ViewMode>('week');
   const [anchorStr, setAnchorStr] = useState<string>(() => todayLocalIso());
   const [absenceOpen, setAbsenceOpen] = useState(false);
+  const [breaksOpen, setBreaksOpen] = useState(false);
 
   const branchesQuery = useQuery({ queryKey: ['branches'], queryFn: () => branchesApi.list() });
 
@@ -115,7 +117,10 @@ export function StaffCalendarPage() {
         : `Tuần từ ${formatDate(anchorStr)}`;
 
   const needsDoctor = view !== 'month';
-  
+  const cannotManageDoctorLeave =
+    !doctorId || (isDoctor && !!ownDoctor && doctorId !== ownDoctor.id);
+  const selectedDoctorName = doctorsQuery.data?.find((d) => d.id === doctorId)?.fullName ?? '';
+
   const activeQuery = view === 'week' ? weekQuery : view === 'day' ? dayQuery : monthQuery;
 
   return (
@@ -209,15 +214,24 @@ export function StaffCalendarPage() {
           />
         </label>
 
-        {}
-        <button
-          type="button"
-          disabled={!doctorId || (isDoctor && !!ownDoctor && doctorId !== ownDoctor.id)}
-          onClick={() => setAbsenceOpen(true)}
-          className="ml-auto rounded border border-destructive px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/5 disabled:opacity-40"
-        >
-          Báo bác sĩ nghỉ
-        </button>
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled={cannotManageDoctorLeave}
+            onClick={() => setBreaksOpen(true)}
+            className="rounded border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-muted disabled:opacity-40"
+          >
+            Nghỉ ngoài lịch
+          </button>
+          <button
+            type="button"
+            disabled={cannotManageDoctorLeave}
+            onClick={() => setAbsenceOpen(true)}
+            className="rounded border border-destructive px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/5 disabled:opacity-40"
+          >
+            Báo bác sĩ nghỉ
+          </button>
+        </div>
       </div>
 
       {view !== 'month' && (
@@ -270,10 +284,24 @@ export function StaffCalendarPage() {
       <DoctorAbsenceModal
         open={absenceOpen}
         doctorId={doctorId}
-        doctorName={doctorsQuery.data?.find((d) => d.id === doctorId)?.fullName ?? ''}
+        doctorName={selectedDoctorName}
         date={anchorStr}
         onClose={() => setAbsenceOpen(false)}
       />
+
+      <Modal
+        open={breaksOpen && !cannotManageDoctorLeave}
+        onClose={() => setBreaksOpen(false)}
+        title={selectedDoctorName ? `Nghỉ ngoài lịch — ${selectedDoctorName}` : 'Nghỉ ngoài lịch'}
+        className="max-w-3xl"
+        footer={
+          <Button variant="secondary" onClick={() => setBreaksOpen(false)}>
+            Đóng
+          </Button>
+        }
+      >
+        {breaksOpen && !cannotManageDoctorLeave && <BreaksPanel doctorId={doctorId} />}
+      </Modal>
     </div>
   );
 }

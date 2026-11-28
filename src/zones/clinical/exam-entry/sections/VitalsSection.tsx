@@ -91,8 +91,16 @@ export function VitalsSection({ record, readOnly }: { record: MedicalRecord; rea
       toast.show('Cân nặng phải nằm trong khoảng 0.05 kg – 200 kg.', 'error');
       return;
     }
-    if (hr !== undefined && (hr < 10 || hr > 400)) {
-      toast.show('Nhịp tim phải nằm trong khoảng 10 – 400 nhịp/phút.', 'error');
+    if (hr !== undefined && !Number.isInteger(hr)) {
+      toast.show('Nhịp tim phải là số nguyên trong khoảng 20 – 400 nhịp/phút.', 'error');
+      return;
+    }
+    if (hr !== undefined && (hr < 20 || hr > 400)) {
+      toast.show('Nhịp tim phải nằm trong khoảng 20 – 400 nhịp/phút.', 'error');
+      return;
+    }
+    if (rr !== undefined && !Number.isInteger(rr)) {
+      toast.show('Nhịp thở phải là số nguyên trong khoảng 5 – 200 lần/phút.', 'error');
       return;
     }
     if (rr !== undefined && (rr < 5 || rr > 200)) {
@@ -133,7 +141,8 @@ export function VitalsSection({ record, readOnly }: { record: MedicalRecord; rea
         <Input
           label="Nhịp tim (lần/phút)"
           type="number"
-          min={10}
+          step={1}
+          min={20}
           max={400}
           disabled={readOnly}
           value={form.heartRateBpm}
@@ -142,6 +151,7 @@ export function VitalsSection({ record, readOnly }: { record: MedicalRecord; rea
         <Input
           label="Nhịp thở (lần/phút)"
           type="number"
+          step={1}
           min={5}
           max={200}
           disabled={readOnly}

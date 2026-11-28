@@ -54,7 +54,7 @@ export const appointmentsApi = {
 
   ownerLookup: (phone: string) =>
     apiClient
-      .get<{ found: boolean; fullName?: string }>('/appointments/owner-lookup', {
+      .get<{ found: boolean }>('/appointments/owner-lookup', {
         params: { phone },
       })
       .then((r) => r.data),

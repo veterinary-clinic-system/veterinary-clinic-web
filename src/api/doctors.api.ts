@@ -43,6 +43,12 @@ export const doctorsApi = {
       .then((r) => r.data),
   createBreak: (doctorId: string, payload: { date: string; startTime: string; endTime: string; reason?: string }) =>
     apiClient.post<DoctorBreak>(`/users/doctors/${doctorId}/breaks`, payload).then((r) => r.data),
+  updateBreak: (
+    breakId: string,
+    payload: { date?: string; startTime?: string; endTime?: string; reason?: string | null },
+  ) =>
+    apiClient.patch<DoctorBreak>(`/users/doctors/breaks/${breakId}`, payload).then((r) => r.data),
+  deleteBreak: (breakId: string) => apiClient.delete(`/users/doctors/breaks/${breakId}`),
 };
 
 export const usersApi = {

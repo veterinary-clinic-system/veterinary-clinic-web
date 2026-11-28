@@ -156,8 +156,7 @@ export function useBookingForm() {
       .ownerLookup(debouncedPhone)
       .then((result) => {
         if (cancelled) return;
-        if (result.found && result.fullName) {
-          setOwnerFullName(result.fullName);
+        if (result.found) {
           setLookupState('found');
         } else {
           setLookupState('new');
@@ -189,7 +188,7 @@ export function useBookingForm() {
   const hasExistingPets = isOwner && (myPets?.length ?? 0) > 0;
   const effectivePetMode: PetMode = hasExistingPets ? petMode : 'new';
   const selectedExistingPet = myPets?.find((p) => p.id === petId);
-  const nameIsReadOnly = lookupState === 'found' && nameLocked;
+  const nameIsReadOnly = isOwner && lookupState === 'found' && nameLocked;
   const serviceDuration = selectedService?.durationMinutes ?? 30;
 
   const todayVn = todayLocalIso();

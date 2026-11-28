@@ -11,6 +11,7 @@ const TYPE_TONE: Record<string, 'warning' | 'destructive' | 'default'> = {
   OUT_OF_STOCK: 'destructive',
   EXPIRED: 'destructive',
   PAYMENT_FAILED: 'destructive',
+  EMERGENCY_RED: 'destructive',
   LOW_STOCK: 'warning',
   EXPIRING_SOON: 'warning',
   APPOINTMENT_CANCELLED: 'warning',
@@ -25,6 +26,7 @@ const TYPE_LABEL_VI: Record<string, string> = {
   PAYMENT_FAILED: 'Thanh toán lỗi',
   APPOINTMENT_CANCELLED: 'Lịch hẹn hủy',
   VACCINATION_DUE: 'Đến hạn tiêm',
+  EMERGENCY_RED: 'Cấp cứu ĐỎ',
 };
 
 export function NotificationBell() {
