@@ -20,6 +20,7 @@ import { ImageUpload } from '@/components/ImageUpload';
 import { QueryErrorState } from '@/components/QueryErrorState';
 import { useAuth } from '@/context/AuthContext';
 import { getErrorMessage } from '@/utils/errors';
+import { todayLocalIso } from '@/utils/format';
 
 interface ProfileValues {
   fullName: string;
@@ -34,7 +35,7 @@ interface PasswordValues {
   confirmPassword: string;
 }
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => todayLocalIso();
 
 function ProfileCard({ profile }: { profile: OwnerProfile }) {
   const queryClient = useQueryClient();

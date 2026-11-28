@@ -222,6 +222,7 @@ export function ChatPage() {
   const [input, setInput] = useState('');
   const [attachments, setAttachments] = useState<PendingAttachment[]>([]);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [sessionId, setSessionId] = useState<string | undefined>(undefined);
   const [draft, setDraft] = useState<AiChatDraft | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
@@ -231,6 +232,7 @@ export function ChatPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const attachmentsRef = useRef(attachments);
   attachmentsRef.current = attachments;
+  const sessionEpochRef = useRef(0);
 
   // Chỉ cuộn KHUNG CHAT tới tin mới nhất. scrollIntoView cuộn cả cửa sổ, kéo trang xuống tận
   // footer và làm khung chat co lại trên màn hình thấp.
@@ -244,7 +246,7 @@ export function ChatPage() {
 
   const queryClient = useQueryClient();
   const mutation = useMutation({ mutationFn: aiChatApi.send });
-  const busy = mutation.isPending || isUploadingFiles;
+  const busy = isSendingMessage || isUploadingFiles;
 
   function handleFileSelect(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
@@ -295,32 +297,59 @@ export function ChatPage() {
   }
 
   function clearAttachments() {
-    attachments.forEach((a) => URL.revokeObjectURL(a.previewUrl));
+    attachmentsRef.current.forEach((a) => URL.revokeObjectURL(a.previewUrl));
     setAttachments([]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
-  async function uploadPendingFiles(): Promise<{ images: string[]; videos: string[] }> {
+  function startNewSession() {
+    // Tăng epoch để mọi upload hoặc response từ phiên cũ còn in-flight đều bị bỏ qua.
+    sessionEpochRef.current += 1;
+    clearAttachments();
+    setMessages([WELCOME_MESSAGE]);
+    setSessionId(undefined);
+    setDraft(undefined);
+    setInput('');
+    setError(null);
+    setIsUploadingFiles(false);
+    setIsSendingMessage(false);
+    mutation.reset();
+    inputRef.current?.focus();
+  }
+
+  async function uploadPendingFiles(
+    filesToUpload: PendingAttachment[],
+    requestEpoch: number,
+  ): Promise<{ images: string[]; videos: string[] } | null> {
     setIsUploadingFiles(true);
     try {
       const uploaded = await Promise.all(
-        attachments.map(async (att) => ({
+        filesToUpload.map(async (att) => ({
           type: att.type,
           url: (await filesApi.upload(att.type === 'image' ? 'symptom-photos' : 'symptom-videos', att.file)).url,
         })),
       );
-      clearAttachments();
+      if (sessionEpochRef.current !== requestEpoch) {
+        return null;
+      }
+      const uploadedIds = new Set(filesToUpload.map((item) => item.id));
+      filesToUpload.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+      setAttachments((prev) => prev.filter((item) => !uploadedIds.has(item.id)));
       return {
         images: uploaded.filter((u) => u.type === 'image').map((u) => u.url),
         videos: uploaded.filter((u) => u.type === 'video').map((u) => u.url),
       };
     } finally {
-      setIsUploadingFiles(false);
+      if (sessionEpochRef.current === requestEpoch) {
+        setIsUploadingFiles(false);
+      }
     }
   }
 
   async function send(text: string) {
     const trimmed = text.trim();
-    if ((!trimmed && attachments.length === 0) || busy) return;
+    const pendingFiles = attachmentsRef.current;
+    if ((!trimmed && pendingFiles.length === 0) || busy) return;
     if (trimmed.length > MAX_MESSAGE_LENGTH) {
       setError(
         `Tin nhắn quá dài (${trimmed.length.toLocaleString('vi-VN')} ký tự) - bạn vui lòng rút gọn dưới ` +
@@ -329,16 +358,24 @@ export function ChatPage() {
       return;
     }
 
+    const requestEpoch = sessionEpochRef.current;
+    const currentSessionId = sessionId;
+    const currentDraft = draft;
     setError(null);
     let media = { images: [] as string[], videos: [] as string[] };
-    if (attachments.length > 0) {
+    if (pendingFiles.length > 0) {
       try {
-        media = await uploadPendingFiles();
+        const uploaded = await uploadPendingFiles(pendingFiles, requestEpoch);
+        if (!uploaded || sessionEpochRef.current !== requestEpoch) return;
+        media = uploaded;
       } catch (uploadError) {
+        if (sessionEpochRef.current !== requestEpoch) return;
         setError(getErrorMessage(uploadError, 'Không tải lên được ảnh/video. Vui lòng thử lại.'));
         return;
       }
     }
+
+    if (sessionEpochRef.current !== requestEpoch) return;
 
     const content =
       trimmed || (media.videos.length > 0 ? 'Em gửi video tình trạng của bé' : 'Em gửi ảnh triệu chứng của bé');
@@ -354,11 +391,20 @@ export function ChatPage() {
       },
     ]);
     setInput('');
+    setIsSendingMessage(true);
 
     mutation.mutate(
-      { sessionId, message: content, images: media.images, videos: media.videos, draft },
+      {
+        sessionId: currentSessionId,
+        message: content,
+        images: media.images,
+        videos: media.videos,
+        draft: currentDraft,
+      },
       {
         onSuccess: (response) => {
+          if (sessionEpochRef.current !== requestEpoch) return;
+          setIsSendingMessage(false);
           setSessionId(response.sessionId);
           setDraft(response.draft);
           if (response.booking) {
@@ -374,6 +420,8 @@ export function ChatPage() {
           inputRef.current?.focus();
         },
         onError: (sendError) => {
+          if (sessionEpochRef.current !== requestEpoch) return;
+          setIsSendingMessage(false);
           // Không để lại bong bóng của tin gửi thất bại; trả chữ về ô nhập để khách sửa/gửi lại.
           setMessages((prev) => prev.filter((m) => m.id !== userMessageId));
           setInput(trimmed);
@@ -392,22 +440,35 @@ export function ChatPage() {
 
   return (
     <div className="pet-chat mx-auto flex h-[calc(100dvh-5rem)] max-w-4xl flex-col px-4 py-4 sm:py-6">
-      <div className="flex items-start gap-3">
-        <span
-          aria-hidden="true"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
-        >
-          <Icon name="sparkles" className="h-5 w-5" />
-        </span>
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-            Trợ lý AI sức khoẻ & đặt lịch
-          </h1>
-          <p className="mt-1 text-sm leading-relaxed text-muted">
-            Mô tả triệu chứng, gửi ảnh hoặc video để được đánh giá sơ bộ; trợ lý tự đặt lịch khám và gửi xác nhận qua
-            Zalo, Gmail.
-          </p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3">
+          <span
+            aria-hidden="true"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
+          >
+            <Icon name="sparkles" className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+              Trợ lý AI sức khoẻ & đặt lịch
+            </h1>
+            <p className="mt-1 text-sm leading-relaxed text-muted">
+              Mô tả triệu chứng, gửi ảnh hoặc video để được đánh giá sơ bộ; trợ lý tự đặt lịch khám và gửi xác nhận qua
+              Zalo, Gmail.
+            </p>
+          </div>
         </div>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={startNewSession}
+          className="shrink-0"
+          title="Bắt đầu cuộc trò chuyện mới và xoá ngữ cảnh hiện tại"
+        >
+          <Icon name="plus" className="h-4 w-4" />
+          Phiên mới
+        </Button>
       </div>
 
       <Alert tone="warning" className="mt-4 text-xs sm:text-sm">

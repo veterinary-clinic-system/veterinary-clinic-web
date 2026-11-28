@@ -1,5 +1,6 @@
 import { BadgeVariant } from '@/components/basic';
 import { AppointmentStatus } from '@/types/enums';
+import { startOfVnDay } from '@/utils/format';
 
 export const APPOINTMENT_STATUS_TONE: Record<AppointmentStatus, BadgeVariant> = {
   [AppointmentStatus.PENDING]: 'warning',
@@ -26,7 +27,7 @@ export function appointmentGroupOf(
   if (status === AppointmentStatus.CANCELLED || status === AppointmentStatus.NO_SHOW) {
     return 'cancelled';
   }
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfToday = startOfVnDay(now);
   const missed =
     (status === AppointmentStatus.PENDING || status === AppointmentStatus.CONFIRMED) &&
     new Date(startAt) < startOfToday;

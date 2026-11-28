@@ -22,6 +22,7 @@ import { Avatar, Button, Icon, Skeleton, cn, useToast } from '@/components/basic
 import { QueryErrorState } from '@/components/QueryErrorState';
 import { useCall } from '@/components/calls/call-context';
 import { getErrorMessage } from '@/utils/errors';
+import { toVnDateKey } from '@/utils/format';
 import { appendMessageToCache } from './messaging-shared';
 import { formatDayDivider, formatMessageTime } from './messaging-format';
 
@@ -35,7 +36,7 @@ interface MessageThreadProps {
 }
 
 function dayKey(value: string): string {
-  return new Date(value).toDateString();
+  return toVnDateKey(value);
 }
 
 function CallLogRow({ message, mine }: { message: ChatMessage; mine: boolean }) {

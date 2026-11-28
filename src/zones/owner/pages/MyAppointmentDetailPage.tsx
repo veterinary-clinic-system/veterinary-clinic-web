@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { format, parseISO } from 'date-fns';
-import { vi } from 'date-fns/locale';
 import { appointmentsApi } from '@/api/appointments.api';
 import {
   Alert,
@@ -27,7 +25,7 @@ import { AppointmentStatus, COMMON_SYMPTOM_LABEL_VI } from '@/types/enums';
 import { Appointment } from '@/types/models';
 import { APPOINTMENT_STATUS_TONE, canCancel } from '@/utils/appointment-status';
 import { getErrorMessage } from '@/utils/errors';
-import { formatCurrency, formatDateTime } from '@/utils/format';
+import { formatCurrency, formatDateTime, formatWeekdayDateTimeVN } from '@/utils/format';
 import { APPOINTMENT_STATUS_LABEL_VI } from '@/utils/labels';
 import { CancelAppointmentDialog } from '../components/CancelAppointmentDialog';
 
@@ -141,7 +139,7 @@ export function MyAppointmentDetailPage() {
       <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            {format(parseISO(appointment.startAt), 'HH:mm, EEEE dd/MM/yyyy', { locale: vi })}
+            {formatWeekdayDateTimeVN(appointment.startAt)}
           </h1>
           <p className="mt-1 text-sm text-muted">
             {appointment.service?.item.itemName ?? 'Khám thú y'}

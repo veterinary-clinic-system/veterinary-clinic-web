@@ -1,7 +1,5 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
 import { appointmentsApi } from '@/api/appointments.api';
 import { queueApi } from '@/api/queue.api';
 import { vaccinationsApi } from '@/api/vaccinations.api';
@@ -18,7 +16,7 @@ import {
 } from '@/components/basic';
 import { useAuth } from '@/context/AuthContext';
 import { AppointmentStatus, QueueStatus, Role } from '@/types/enums';
-import { formatTime } from '@/utils/format';
+import { formatLongWeekdayDate, formatTime, todayLocalIso } from '@/utils/format';
 import { TodaySchedule } from '../dashboard/TodaySchedule';
 import { WaitingList } from '../dashboard/WaitingList';
 
@@ -30,7 +28,7 @@ export function ClinicalDashboardPage() {
   const { user } = useAuth();
   const branchId = user?.branchId ?? undefined;
   const isDoctor = user?.role === Role.DOCTOR;
-  const today = format(new Date(), 'yyyy-MM-dd');
+  const today = todayLocalIso();
 
   const queueQuery = useQuery({
     queryKey: ['queue', 'today', branchId],
@@ -76,7 +74,7 @@ export function ClinicalDashboardPage() {
     <div className="flex flex-col gap-stack">
       <PageHeader
         title="Hôm nay"
-        description={format(new Date(), "EEEE, dd 'tháng' M yyyy", { locale: vi })}
+        description={formatLongWeekdayDate(new Date())}
         actions={
           <Link
             to="/staff/queue"

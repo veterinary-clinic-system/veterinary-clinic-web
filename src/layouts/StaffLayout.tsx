@@ -1,5 +1,5 @@
 import { useRealtimeEvent, useRealtimeScheduling } from '@/api/socket';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Drawer, cn, useToast } from '@/components/basic';
 import { useAuth } from '@/context/AuthContext';
@@ -9,16 +9,39 @@ import { isClinicalPath } from './staff/nav-model';
 
 const COLLAPSE_KEY = 'vetcare:sidebar-collapsed';
 
+interface EmergencyRedPayload {
+  petName?: string;
+  ticketNumber?: number;
+  branchId?: string | null;
+}
+
+function shouldNotifyEmergencyRed(
+  payloadBranchId: string | null | undefined,
+  userBranchId: string | null | undefined,
+): boolean {
+  if (payloadBranchId && userBranchId && payloadBranchId !== userBranchId) {
+    return false;
+  }
+  return true;
+}
+
 export function StaffLayout() {
   const { user } = useAuth();
   const location = useLocation();
   const toast = useToast();
   useRealtimeScheduling();
-  useRealtimeEvent<{ petName?: string; ticketNumber?: number }>('queue:emergency_red', (payload) => {
-    const label = payload?.petName ? ` (${payload.petName})` : '';
-    const stt = payload?.ticketNumber ? ` — STT ${payload.ticketNumber}` : '';
-    toast.show(`Cảnh báo cấp cứu ĐỎ${label}${stt}: vui lòng ưu tiên tiếp nhận ngay!`, 'error');
-  });
+  const handleEmergencyRed = useCallback(
+    (payload: EmergencyRedPayload | undefined) => {
+      if (!shouldNotifyEmergencyRed(payload?.branchId, user?.branchId)) {
+        return;
+      }
+      const label = payload?.petName ? ` (${payload.petName})` : '';
+      const stt = payload?.ticketNumber ? ` — STT ${payload.ticketNumber}` : '';
+      toast.show(`Cảnh báo cấp cứu ĐỎ${label}${stt}: vui lòng ưu tiên tiếp nhận ngay!`, 'error');
+    },
+    [toast, user?.branchId],
+  );
+  useRealtimeEvent<EmergencyRedPayload>('queue:emergency_red', handleEmergencyRed);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const [collapsed, setCollapsed] = useState<boolean>(

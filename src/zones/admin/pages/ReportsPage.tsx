@@ -1,14 +1,5 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import {
-  format,
-  startOfDay,
-  startOfMonth,
-  startOfQuarter,
-  startOfWeek,
-  startOfYear,
-  subDays,
-} from 'date-fns';
 import { branchesApi } from '@/api/branches.api';
 import { employeesApi } from '@/api/employees.api';
 import { reportsApi } from '@/api/reports.api';
@@ -16,6 +7,14 @@ import { Button, DatePicker, PageHeader, Select, Tabs } from '@/components/basic
 import type { TabItem } from '@/components/basic';
 import { useToast } from '@/components/basic/Toast';
 import { PaymentMethod } from '@/types/enums';
+import {
+  addVnDays,
+  startOfVnMonth,
+  startOfVnQuarter,
+  startOfVnWeek,
+  startOfVnYear,
+  todayLocalIso,
+} from '@/utils/format';
 import { PAYMENT_METHOD_LABEL_VI } from '@/utils/labels';
 
 import { ReportStatsHeader } from '../reports/ReportStatsHeader';
@@ -31,14 +30,12 @@ import { AiAccuracyReportCard } from '../reports/AiAccuracyReportCard';
 type Preset = 'last30' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
 type ReportTab = 'all' | 'revenue' | 'clinical' | 'sales_inventory' | 'ai';
 
-const ISO = 'yyyy-MM-dd';
-
-const PRESET_START: Record<Exclude<Preset, 'custom'>, (today: Date) => Date> = {
-  last30: (today) => subDays(today, 30),
-  week: (today) => startOfWeek(today, { weekStartsOn: 1 }),
-  month: (today) => startOfMonth(today),
-  quarter: (today) => startOfQuarter(today),
-  year: (today) => startOfYear(today),
+const PRESET_START: Record<Exclude<Preset, 'custom'>, (today: string) => string> = {
+  last30: (today) => addVnDays(today, -30),
+  week: (today) => startOfVnWeek(today),
+  month: (today) => startOfVnMonth(today),
+  quarter: (today) => startOfVnQuarter(today),
+  year: (today) => startOfVnYear(today),
 };
 
 const PRESET_LABEL: Record<Exclude<Preset, 'custom'>, string> = {
@@ -62,12 +59,12 @@ const SALES_EXPORT_TABS: ReadonlySet<ReportTab> = new Set(['all', 'revenue', 'sa
 
 export function ReportsPage() {
   const toast = useToast();
-  const today = startOfDay(new Date());
+  const today = todayLocalIso();
 
   const [activeTab, setActiveTab] = useState<ReportTab>('all');
   const [preset, setPreset] = useState<Preset>('last30');
-  const [from, setFrom] = useState<string | null>(format(subDays(today, 30), ISO));
-  const [to, setTo] = useState<string | null>(format(today, ISO));
+  const [from, setFrom] = useState<string | null>(() => addVnDays(today, -30));
+  const [to, setTo] = useState<string | null>(() => today);
   const [branchId, setBranchId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [employeeUserId, setEmployeeUserId] = useState('');
@@ -83,9 +80,9 @@ export function ReportsPage() {
 
   function applyPreset(value: Exclude<Preset, 'custom'>) {
     setPreset(value);
-    const currentToday = startOfDay(new Date());
-    setFrom(format(PRESET_START[value](currentToday), ISO));
-    setTo(format(currentToday, ISO));
+    const currentToday = todayLocalIso();
+    setFrom(PRESET_START[value](currentToday));
+    setTo(currentToday);
   }
 
   function setCustomFrom(value: string | null) {
@@ -101,7 +98,7 @@ export function ReportsPage() {
     setGroupBy('day');
   }
 
-  const range = { from: from ?? format(subDays(today, 30), ISO), to: to ?? format(today, ISO) };
+  const range = { from: from ?? addVnDays(today, -30), to: to ?? today };
   const filters = {
     ...range,
     branchId: branchId || undefined,

@@ -1,9 +1,10 @@
 import { DoctorPublic } from '@/api/doctors.api';
 import { specializationLabel } from '@/utils/display';
+import { getVnYear } from '@/utils/format';
 
 export function DoctorProfileDetails({ doctor }: { doctor: DoctorPublic }) {
   const years = doctor.yearOfStart
-    ? Math.max(0, new Date().getFullYear() - doctor.yearOfStart)
+    ? Math.max(0, getVnYear() - doctor.yearOfStart)
     : null;
   return (
     <details className="doctor-profile-details">

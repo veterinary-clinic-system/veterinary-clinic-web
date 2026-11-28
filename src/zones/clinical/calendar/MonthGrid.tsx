@@ -1,6 +1,6 @@
-import { format, getDay, parseISO, startOfMonth } from 'date-fns';
 import { PRIORITY_COLOR_LABEL_VI } from '@/types/enums';
 import { MonthDaySummary } from '@/types/models';
+import { formatDayNumber, getVnDayOfWeek, startOfVnMonth, todayLocalIso } from '@/utils/format';
 import { triageColorClasses } from '@/utils/labels';
 
 const WEEKDAY_HEADERS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
@@ -12,7 +12,7 @@ export function MonthGrid({
   emptyMessage,
 }: {
   days: MonthDaySummary[];
-  anchor: Date;
+  anchor: Date | string;
   onSelectDay: (date: string) => void;
   emptyMessage: string;
 }) {
@@ -20,9 +20,9 @@ export function MonthGrid({
     return <p className="text-muted">{emptyMessage}</p>;
   }
 
-  const firstDayOfWeek = getDay(startOfMonth(anchor));
+  const firstDayOfWeek = getVnDayOfWeek(startOfVnMonth(anchor));
   const leadingBlanks = (firstDayOfWeek + 6) % 7;
-  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const todayStr = todayLocalIso();
 
   return (
     <div className="overflow-x-auto">
@@ -52,7 +52,7 @@ export function MonthGrid({
                 <span
                   className={`text-sm ${isToday ? 'rounded-full bg-primary px-2 py-0.5 font-semibold text-primary-foreground' : ''}`}
                 >
-                  {format(parseISO(day.date), 'd')}
+                  {formatDayNumber(day.date)}
                 </span>
                 {!day.isBranchOpen && <span className="text-[10px] text-muted">Đóng cửa</span>}
               </div>

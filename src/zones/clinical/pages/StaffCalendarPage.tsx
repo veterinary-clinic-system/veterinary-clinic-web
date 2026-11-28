@@ -1,14 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { addDays, addMonths, addWeeks, format, parseISO, subDays, subMonths, subWeeks } from 'date-fns';
-import { vi } from 'date-fns/locale';
 import { useAuth } from '@/context/AuthContext';
 import { branchesApi } from '@/api/branches.api';
 import { doctorsApi, usersApi } from '@/api/doctors.api';
 import { appointmentsApi } from '@/api/appointments.api';
 import { EmptyState, ErrorState, Skeleton } from '@/components/basic';
 import { Role, SlotStatus } from '@/types/enums';
+import {
+  addVnDays,
+  addVnMonths,
+  addVnWeeks,
+  formatDate,
+  formatMonthYear,
+  formatWeekdayDate,
+  todayLocalIso,
+} from '@/utils/format';
 import { SLOT_STATUS_LABEL_VI } from '@/utils/labels';
 import { DoctorAbsenceModal } from '../calendar/DoctorAbsenceModal';
 import { MonthGrid } from '../calendar/MonthGrid';
@@ -30,7 +37,7 @@ export function StaffCalendarPage() {
   const [branchId, setBranchId] = useState<string>(user?.branchId ?? '');
   const [doctorId, setDoctorId] = useState<string>('');
   const [view, setView] = useState<ViewMode>('week');
-  const [anchor, setAnchor] = useState<Date>(new Date());
+  const [anchorStr, setAnchorStr] = useState<string>(() => todayLocalIso());
   const [absenceOpen, setAbsenceOpen] = useState(false);
 
   const branchesQuery = useQuery({ queryKey: ['branches'], queryFn: () => branchesApi.list() });
@@ -69,8 +76,6 @@ export function StaffCalendarPage() {
     }
   }, [doctorId, doctorsQuery.data, ownDoctor]);
 
-  const anchorStr = format(anchor, 'yyyy-MM-dd');
-
   const weekQuery = useQuery({
     queryKey: ['staff-calendar-week', branchId, doctorId, anchorStr],
     queryFn: () => appointmentsApi.staffCalendar(branchId, doctorId, anchorStr),
@@ -84,30 +89,30 @@ export function StaffCalendarPage() {
   });
 
   const monthQuery = useQuery({
-    queryKey: ['staff-calendar-month', branchId, doctorId, format(anchor, 'yyyy-MM')],
+    queryKey: ['staff-calendar-month', branchId, doctorId, anchorStr.slice(0, 7)],
     queryFn: () => appointmentsApi.staffMonthCalendar(branchId, doctorId, anchorStr),
     enabled: view === 'month' && !!branchId,
   });
 
   function shift(direction: -1 | 1) {
-    setAnchor((current) => {
-      if (view === 'day') return direction === 1 ? addDays(current, 1) : subDays(current, 1);
-      if (view === 'week') return direction === 1 ? addWeeks(current, 1) : subWeeks(current, 1);
-      return direction === 1 ? addMonths(current, 1) : subMonths(current, 1);
+    setAnchorStr((current) => {
+      if (view === 'day') return addVnDays(current, direction);
+      if (view === 'week') return addVnWeeks(current, direction);
+      return addVnMonths(current, direction);
     });
   }
 
   function openDay(date: string) {
-    setAnchor(parseISO(date));
+    setAnchorStr(date);
     setView('day');
   }
 
   const periodLabel =
     view === 'month'
-      ? format(anchor, "'Tháng' M/yyyy", { locale: vi })
+      ? formatMonthYear(anchorStr)
       : view === 'day'
-        ? format(anchor, "EEEE, dd/MM/yyyy", { locale: vi })
-        : `Tuần từ ${format(anchor, 'dd/MM/yyyy')}`;
+        ? formatWeekdayDate(anchorStr)
+        : `Tuần từ ${formatDate(anchorStr)}`;
 
   const needsDoctor = view !== 'month';
   
@@ -187,7 +192,7 @@ export function StaffCalendarPage() {
           </button>
           <button
             type="button"
-            onClick={() => setAnchor(new Date())}
+            onClick={() => setAnchorStr(todayLocalIso())}
             className="rounded border border-border px-3 py-2 text-sm hover:bg-surface-muted"
           >
             Hôm nay
@@ -199,7 +204,7 @@ export function StaffCalendarPage() {
           <input
             type="date"
             value={anchorStr}
-            onChange={(e) => e.target.value && setAnchor(parseISO(e.target.value))}
+            onChange={(e) => e.target.value && setAnchorStr(e.target.value)}
             className="rounded border border-border bg-surface px-3 py-2 text-sm"
           />
         </label>
@@ -251,7 +256,7 @@ export function StaffCalendarPage() {
       ) : view === 'month' ? (
         <MonthGrid
           days={monthQuery.data?.days ?? []}
-          anchor={anchor}
+          anchor={anchorStr}
           onSelectDay={openDay}
           emptyMessage="Không có dữ liệu lịch cho tháng này."
         />

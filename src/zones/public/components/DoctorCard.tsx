@@ -2,11 +2,12 @@ import { useNavigate } from 'react-router-dom';
 import { DoctorPublic } from '@/api/doctors.api';
 import { Avatar, Badge, Button, Icon } from '@/components/basic';
 import { specializationLabel } from '@/utils/display';
+import { getVnYear } from '@/utils/format';
 import { DoctorProfileDetails } from './DoctorProfileDetails';
 
 function experienceLabel(yearOfStart: number | null): string | null {
   if (!yearOfStart) return null;
-  const years = new Date().getFullYear() - yearOfStart;
+  const years = getVnYear() - yearOfStart;
   if (years < 1) return 'Mới vào nghề';
   return `${years} năm kinh nghiệm`;
 }

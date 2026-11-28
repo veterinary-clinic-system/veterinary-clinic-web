@@ -10,7 +10,7 @@ import { Customer } from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';
 import { DEFAULT_USER_IMAGE } from '@/utils/media-assets';
 import { ImageUpload } from '@/components/ImageUpload';
-import { formatDate } from '@/utils/format';
+import { formatDate, todayLocalIso } from '@/utils/format';
 
 const LIMIT = 20;
 
@@ -449,7 +449,7 @@ export function CustomersPage() {
           <Input
             label="Ngày sinh (tùy chọn)"
             type="date"
-            max={new Date().toLocaleDateString('en-CA')}
+            max={todayLocalIso()}
             value={form.dateOfBirth}
             onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
           />

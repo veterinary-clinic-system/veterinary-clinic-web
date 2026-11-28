@@ -1,7 +1,6 @@
-import { format, parseISO } from 'date-fns';
-import { vi } from 'date-fns/locale';
 import { SlotStatus } from '@/types/enums';
 import { DayAvailability, SlotInfo } from '@/types/models';
+import { formatDayMonth, formatWeekdayDayMonth } from '@/utils/format';
 import { slotFitsService } from '../slot-fit';
 import { SelectedSlot } from '../types';
 
@@ -39,7 +38,7 @@ export function SlotGrid({
                 scope="col"
                 className="whitespace-nowrap border-b border-border p-2 text-center font-medium text-foreground"
               >
-                {format(parseISO(day.date), 'EEEE dd/MM', { locale: vi })}
+                {formatWeekdayDayMonth(day.date)}
                 {!day.isBranchOpen && (
                   <span className="block text-xs font-normal text-muted">(Đóng cửa)</span>
                 )}
@@ -120,7 +119,7 @@ function SlotCell({
         aria-pressed={isSelected}
         title={reason}
         aria-label={
-          `${slot.start} ${format(parseISO(day.date), 'dd/MM')}` + (reason ? ` - ${reason}` : '')
+          `${slot.start} ${formatDayMonth(day.date)}` + (reason ? ` - ${reason}` : '')
         }
         onClick={() => onSelect({ ...slot, dayDate: day.date })}
         className={

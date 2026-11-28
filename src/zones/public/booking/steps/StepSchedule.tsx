@@ -1,6 +1,5 @@
-import { format, parseISO } from 'date-fns';
-import { vi } from 'date-fns/locale';
 import { Button, ErrorState, Skeleton } from '@/components/basic';
+import { formatDate, formatWeekdayDateTimeVN } from '@/utils/format';
 import { slotFitsService } from '../slot-fit';
 import { BookingForm } from '../use-booking-form';
 import { SlotGrid } from './SlotGrid';
@@ -25,7 +24,7 @@ export function StepSchedule({
         Chọn ngày và giờ khám
       </h2>
       <p className="mt-1 text-sm text-muted">
-        Lịch hẹn sớm nhất là ngày mai ({format(schedule.earliestBookable, 'dd/MM/yyyy')}). Cần khám
+        Lịch hẹn sớm nhất là ngày mai ({formatDate(schedule.earliestBookable)}). Cần khám
         trong hôm nay, vui lòng đến trực tiếp phòng khám.
       </p>
       {service.selected && (
@@ -125,10 +124,7 @@ export function StepSchedule({
       <p aria-live="polite" className="mt-4">
         {schedule.selectedSlot && (
           <span className="inline-block rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
-            Đã chọn:{' '}
-            {format(parseISO(schedule.selectedSlot.startAt), 'HH:mm, EEEE dd/MM/yyyy', {
-              locale: vi,
-            })}
+            Đã chọn: {formatWeekdayDateTimeVN(schedule.selectedSlot.startAt)}
           </span>
         )}
       </p>

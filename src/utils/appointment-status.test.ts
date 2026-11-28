@@ -23,4 +23,17 @@ describe('appointmentGroupOf', () => {
     expect(appointmentGroupOf(AppointmentStatus.COMPLETED, lastWeek, now)).toBe('completed');
     expect(appointmentGroupOf(AppointmentStatus.NO_SHOW, lastWeek, now)).toBe('cancelled');
   });
+
+  it('tính mốc đầu ngày theo múi giờ Asia/Ho_Chi_Minh qua ranh giới nửa đêm', () => {
+    // 2026-11-01 01:00+07:00 (2026-10-31T18:00:00Z)
+    const vnNow = new Date('2026-10-31T18:00:00.000Z');
+    // 2026-10-31 23:30+07:00 (hôm qua theo giờ VN)
+    expect(appointmentGroupOf(AppointmentStatus.CONFIRMED, '2026-10-31T16:30:00.000Z', vnNow)).toBe(
+      'cancelled',
+    );
+    // 2026-11-01 00:30+07:00 (hôm nay theo giờ VN)
+    expect(appointmentGroupOf(AppointmentStatus.CONFIRMED, '2026-10-31T17:30:00.000Z', vnNow)).toBe(
+      'upcoming',
+    );
+  });
 });

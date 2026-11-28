@@ -1,7 +1,6 @@
 import { ChangeEvent, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { addWeeks, format, parseISO, startOfDay, subWeeks } from 'date-fns';
 import { useAuth } from '@/context/AuthContext';
 import { branchesApi } from '@/api/branches.api';
 import { doctorsApi, usersApi } from '@/api/doctors.api';
@@ -15,6 +14,7 @@ import { Appointment } from '@/types/models';
 import { SepayQrTicket } from '@/api/billing.api';
 import { useToast } from '@/components/basic';
 import { getErrorMessage, isConflictError } from '@/utils/errors';
+import { addVnDays, addVnWeeks, parseVnDateKey, todayLocalIso } from '@/utils/format';
 import {
   BookingHandoffState,
   createEmptyNewPet,
@@ -42,9 +42,7 @@ export function useBookingForm() {
   const [doctorId, setDoctorId] = useState<string | null>(handoff.doctorId ?? null);
   const [serviceId, setServiceId] = useState(handoff.serviceId ?? '');
 
-  const [weekOf, setWeekOf] = useState(() =>
-    format(startOfDay(new Date(Date.now() + 24 * 60 * 60 * 1000)), 'yyyy-MM-dd'),
-  );
+  const [weekOf, setWeekOf] = useState(() => addVnDays(todayLocalIso(), 1));
   const [autoAdvanced, setAutoAdvanced] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null);
 
@@ -182,7 +180,7 @@ export function useBookingForm() {
     if (hasFreeSlot) return;
 
     setAutoAdvanced(true);
-    setWeekOf(format(addWeeks(parseISO(weekOf), 1), 'yyyy-MM-dd'));
+    setWeekOf(addVnWeeks(weekOf, 1));
   }, [autoAdvanced, calendarDays, weekOf]);
 
   const selectedBranch = branches?.find((b) => b.id === branchId);
@@ -194,15 +192,16 @@ export function useBookingForm() {
   const nameIsReadOnly = lookupState === 'found' && nameLocked;
   const serviceDuration = selectedService?.durationMinutes ?? 30;
 
-  const earliestBookable = startOfDay(new Date(Date.now() + 24 * 60 * 60 * 1000));
-  const canGoPrevWeek = subWeeks(parseISO(weekOf), 1) >= startOfDay(new Date());
+  const todayVn = todayLocalIso();
+  const earliestBookable = parseVnDateKey(addVnDays(todayVn, 1));
+  const canGoPrevWeek = addVnWeeks(weekOf, -1) >= todayVn;
 
   // Chặn số liệu vô lý trước khi gửi (backend cũng kiểm lại).
   const newPetErrors: { weight?: string; birthDate?: string } = {};
   if (newPet.weight !== '' && !(Number(newPet.weight) > 0)) {
     newPetErrors.weight = 'Cân nặng phải lớn hơn 0';
   }
-  if (newPet.birthDate && newPet.birthDate > format(new Date(), 'yyyy-MM-dd')) {
+  if (newPet.birthDate && newPet.birthDate > todayVn) {
     newPetErrors.birthDate = 'Ngày sinh không được sau hôm nay';
   }
 
@@ -372,11 +371,8 @@ export function useBookingForm() {
   }
 
   function goToWeek(direction: 'prev' | 'next') {
-    const base = parseISO(weekOf);
-    const next = direction === 'prev' ? subWeeks(base, 1) : addWeeks(base, 1);
-
     setAutoAdvanced(true);
-    setWeekOf(format(next, 'yyyy-MM-dd'));
+    setWeekOf(addVnWeeks(weekOf, direction === 'prev' ? -1 : 1));
   }
 
   const bookingMutation = useMutation({

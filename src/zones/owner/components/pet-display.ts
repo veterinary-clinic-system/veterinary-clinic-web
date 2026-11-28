@@ -1,14 +1,13 @@
-import { differenceInMonths, differenceInYears, parseISO } from 'date-fns';
 import { Pet } from '@/types/models';
+import { diffVnMonths, diffVnYears } from '@/utils/format';
 
-export function petAgeLabel(birthDate: string | null): string | null {
+export function petAgeLabel(birthDate: string | null, now: Date = new Date()): string | null {
   if (!birthDate) return null;
 
-  const born = parseISO(birthDate);
-  const years = differenceInYears(new Date(), born);
+  const years = diffVnYears(birthDate, now);
   if (years >= 1) return `${years} tuổi`;
 
-  const months = differenceInMonths(new Date(), born);
+  const months = diffVnMonths(birthDate, now);
   if (months >= 1) return `${months} tháng tuổi`;
   return 'Dưới 1 tháng tuổi';
 }

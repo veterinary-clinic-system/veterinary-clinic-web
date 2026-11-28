@@ -1,7 +1,7 @@
-import { format } from 'date-fns';
 import { Input, Select } from '@/components/basic';
 import { Gender } from '@/types/enums';
 import { GENDER_LABEL_VI } from '@/utils/display';
+import { todayLocalIso } from '@/utils/format';
 import { BookingForm } from '../use-booking-form';
 
 type Step5Errors = BookingForm['step5Errors'];
@@ -213,7 +213,7 @@ function NewPetFields({ pet, errors }: { pet: BookingForm['pet']; errors: Step5E
       <Input
         type="date"
         label="Ngày sinh"
-        max={format(new Date(), 'yyyy-MM-dd')}
+        max={todayLocalIso()}
         value={newPet.birthDate}
         error={newPetErrors.birthDate}
         onChange={(e) => updateNewPet({ birthDate: e.target.value })}

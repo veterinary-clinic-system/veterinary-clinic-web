@@ -5,6 +5,7 @@ import { queueApi } from '@/api/queue.api';
 import { Button, Input, Modal, Select, useToast } from '@/components/basic';
 import { QueueEntry } from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';
+import { vnDateTimeLocalToIso } from '@/utils/format';
 
 export function AssignDoctorModal({
   entry,
@@ -34,7 +35,7 @@ export function AssignDoctorModal({
     mutationFn: () =>
       queueApi.assignDoctor(entry!.id, {
         doctorId,
-        startAt: startAt ? new Date(startAt).toISOString() : undefined,
+        startAt: startAt ? vnDateTimeLocalToIso(startAt) : undefined,
       }),
     onSuccess: (updated) => {
       toast.show(`Đã gán bác sĩ ${updated.doctor?.fullName ?? ''}.`, 'success');

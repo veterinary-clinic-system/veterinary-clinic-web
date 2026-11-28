@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { format, formatDistanceToNowStrict } from 'date-fns';
+import { formatDistanceToNowStrict } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { branchesApi } from '@/api/branches.api';
 import { queueApi } from '@/api/queue.api';
@@ -27,13 +27,13 @@ import {
   QUEUE_STATUS_LABEL_VI,
 } from '@/types/models';
 import { getErrorMessage } from '@/utils/errors';
-import { formatTime } from '@/utils/format';
+import { formatTime, todayLocalIso } from '@/utils/format';
 import { AssignDoctorModal } from '../queue/AssignDoctorModal';
 import { CancelQueueEntryDialog } from '../queue/CancelQueueEntryDialog';
 import { CheckInModal } from '../queue/CheckInModal';
 import { WalkInModal } from '../queue/WalkInModal';
 
-const today = () => format(new Date(), 'yyyy-MM-dd');
+const today = () => todayLocalIso();
 
 const PAGE_SIZE = 20;
 

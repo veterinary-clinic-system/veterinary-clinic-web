@@ -6,6 +6,7 @@ import { branchesApi } from '@/api/branches.api';
 import { catalogApi } from '@/api/catalog.api';
 import { doctorsApi } from '@/api/doctors.api';
 import { Button, Select } from '@/components/basic';
+import { vnDateTimeLocalToIso } from '@/utils/format';
 import { Section } from '../Section';
 
 export function FollowUpSection({
@@ -36,7 +37,7 @@ export function FollowUpSection({
         doctorId,
         branchId,
         serviceId,
-        startAt: new Date(startAt).toISOString(),
+        startAt: vnDateTimeLocalToIso(startAt),
       }),
   });
 

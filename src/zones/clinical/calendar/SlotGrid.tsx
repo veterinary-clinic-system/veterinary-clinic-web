@@ -1,8 +1,7 @@
 import { useMemo } from 'react';
-import { format, parseISO } from 'date-fns';
-import { vi } from 'date-fns/locale';
 import { PRIORITY_COLOR_LABEL_VI, SlotStatus } from '@/types/enums';
 import { DayAvailability, SlotInfo } from '@/types/models';
+import { formatDayMonth, formatWeekday } from '@/utils/format';
 import { SLOT_STATUS_LABEL_VI, triageColorClasses, triagePriorityBar } from '@/utils/labels';
 import { CELL_CLASSES } from './shared';
 
@@ -36,8 +35,8 @@ export function SlotGrid({
             <th className="w-20 border-b border-border px-2 py-2 text-left whitespace-nowrap font-medium">Giờ</th>
             {days.map((day) => (
               <th key={day.date} className="border-b border-border px-2 py-2 text-left whitespace-nowrap">
-                <div className="capitalize">{format(parseISO(day.date), 'EEEE', { locale: vi })}</div>
-                <div className="font-normal text-muted">{format(parseISO(day.date), 'dd/MM')}</div>
+                <div className="capitalize">{formatWeekday(day.date)}</div>
+                <div className="font-normal text-muted">{formatDayMonth(day.date)}</div>
                 {!day.isBranchOpen && (
                   <div className="text-xs font-normal text-destructive">Đóng cửa</div>
                 )}

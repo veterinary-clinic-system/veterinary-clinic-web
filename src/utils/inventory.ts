@@ -1,15 +1,16 @@
 import type { BadgeVariant } from '@/components/basic';
+import { diffVnDays, todayLocalIso } from '@/utils/format';
 
 export const EXPIRING_SOON_DAYS = 30;
 
 export type ExpiryLevel = 'none' | 'ok' | 'soon' | 'expired';
 
-export function daysUntilExpiry(expiryDate: string | null | undefined): number | null {
+export function daysUntilExpiry(
+  expiryDate: string | null | undefined,
+  now: Date = new Date(),
+): number | null {
   if (!expiryDate) return null;
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  const expiry = new Date(`${expiryDate}T00:00:00`);
-  return Math.round((expiry.getTime() - startOfToday.getTime()) / 86_400_000);
+  return diffVnDays(todayLocalIso(now), expiryDate);
 }
 
 export function expiryLevel(expiryDate: string | null | undefined): ExpiryLevel {
