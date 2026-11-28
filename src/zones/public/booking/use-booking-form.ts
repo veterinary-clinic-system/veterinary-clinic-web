@@ -17,7 +17,7 @@ import { useToast } from '@/components/basic';
 import { getErrorMessage, isConflictError } from '@/utils/errors';
 import {
   BookingHandoffState,
-  EMPTY_NEW_PET,
+  createEmptyNewPet,
   LookupState,
   NewPetFormState,
   PetMode,
@@ -54,7 +54,7 @@ export function useBookingForm() {
   const [lookupState, setLookupState] = useState<LookupState>('idle');
   const [petMode, setPetMode] = useState<PetMode>('existing');
   const [petId, setPetId] = useState(handoff.petId ?? '');
-  const [newPet, setNewPet] = useState<NewPetFormState>(EMPTY_NEW_PET);
+  const [newPet, setNewPet] = useState<NewPetFormState>(createEmptyNewPet);
 
   const [nameLocked, setNameLocked] = useState(true);
 

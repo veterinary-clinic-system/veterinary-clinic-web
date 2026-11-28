@@ -24,14 +24,16 @@ export interface NewPetFormState {
   birthDate: string;
 }
 
-export const EMPTY_NEW_PET: NewPetFormState = {
-  name: '',
-  speciesId: '',
-  breedId: '',
-  gender: Gender.MALE,
-  weight: '',
-  birthDate: '',
-};
+export function createEmptyNewPet(): NewPetFormState {
+  return {
+    name: '',
+    speciesId: '',
+    breedId: '',
+    gender: Gender.MALE,
+    weight: '',
+    birthDate: '',
+  };
+}
 
 export interface PhotoItem {
   id: string;

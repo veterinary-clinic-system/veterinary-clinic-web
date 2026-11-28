@@ -10,29 +10,41 @@ const SHARED_DIRS = [
   'hooks',
   'layouts',
   'utils',
-  'types',
   'routes',
 ];
 
 function chunkFor(id: string): string | undefined {
-  const path = id.replace(/\\/g, '/');
+  const normalized = id.replace(/\\/g, '/');
 
-  if (path.includes('/node_modules/')) {
-    if (path.includes('/node_modules/three/')) return 'three-garden';
-    if (/\/node_modules\/(react|react-dom|react-router|react-router-dom|scheduler)\//.test(path)) {
+  if (normalized.includes('/node_modules/')) {
+    if (normalized.includes('/node_modules/three/')) return 'three-garden';
+    // Keep dynamically imported workbox-window in its own lazy chunk.
+    if (normalized.includes('/node_modules/workbox-window/')) return undefined;
+    if (
+      /\/node_modules\/(react|react-dom|react-router|react-router-dom|@remix-run\/router|scheduler)\//.test(
+        normalized,
+      )
+    ) {
       return 'react-vendor';
     }
-    return undefined;
+    // Anchor all remaining third-party packages outside zone chunks so Rollup
+    // never places shared libraries (e.g. date-fns, react-hook-form) inside a
+    // zone-* chunk and creates a circular shared <-> zone-* import.
+    return 'vendor';
   }
 
   // Keep the dynamically imported renderer outside the eagerly loaded layout chunk.
-  if (path.endsWith('/layouts/public/garden-scene.ts')) return 'garden-scene';
-  const shared = path.match(/\/src\/([^/]+)\//);
+  if (normalized.endsWith('/layouts/public/garden-scene.ts')) return 'garden-scene';
+
+  // Keep pure domain enums/types/role constants in a leaf chunk with zero UI dependencies.
+  if (normalized.includes('/src/types/')) return 'shared-types';
+
+  const shared = normalized.match(/\/src\/([^/]+)\//);
   if (shared && SHARED_DIRS.includes(shared[1])) {
     return 'shared';
   }
 
-  const zone = path.match(/\/src\/zones\/([^/]+)\//);
+  const zone = normalized.match(/\/src\/zones\/([^/]+)\//);
   return zone ? `zone-${zone[1]}` : undefined;
 }
 

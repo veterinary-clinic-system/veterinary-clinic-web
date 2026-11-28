@@ -43,22 +43,24 @@ interface WalkInFormState {
   videoUrls: string[];
 }
 
-const EMPTY_WALK_IN: WalkInFormState = {
-  phone: '',
-  ownerFullName: '',
-  petId: '',
-  petName: '',
-  speciesId: '',
-  breedId: '',
-  gender: Gender.MALE,
-  serviceId: '',
-  doctorId: '',
-  priorityColor: '',
-  commonSymptoms: [],
-  reason: '',
-  photoUrls: [],
-  videoUrls: [],
-};
+function createEmptyWalkIn(): WalkInFormState {
+  return {
+    phone: '',
+    ownerFullName: '',
+    petId: '',
+    petName: '',
+    speciesId: '',
+    breedId: '',
+    gender: Gender.MALE,
+    serviceId: '',
+    doctorId: '',
+    priorityColor: '',
+    commonSymptoms: [],
+    reason: '',
+    photoUrls: [],
+    videoUrls: [],
+  };
+}
 
 export function WalkInModal({
   open,
@@ -72,7 +74,7 @@ export function WalkInModal({
   onDone: () => void;
 }) {
   const toast = useToast();
-  const [form, setForm] = useState<WalkInFormState>(EMPTY_WALK_IN);
+  const [form, setForm] = useState<WalkInFormState>(createEmptyWalkIn);
   const [uploading, setUploading] = useState(false);
   const debouncedPhone = useDebouncedValue(form.phone, 400);
 
@@ -140,7 +142,7 @@ export function WalkInModal({
           : `Số thứ tự ${entry.ticketNumber} — hiện không còn bác sĩ trống, khách được đưa vào hàng chờ.`,
         scheduled ? 'success' : 'info',
       );
-      setForm(EMPTY_WALK_IN);
+      setForm(createEmptyWalkIn());
       onDone();
       onClose();
     },

@@ -42,21 +42,23 @@ interface EmployeeFormState {
   password: string;
 }
 
-const EMPTY_FORM: EmployeeFormState = {
-  avatarUrl: DEFAULT_STAFF_IMAGE,
-  fullName: '',
-  phone: '',
-  email: '',
-  address: '',
-  position: '',
-  branchId: '',
-  hireDate: '',
-  status: EmployeeStatus.PROBATION,
-  note: '',
-  createAccount: false,
-  role: Role.RECEPTIONIST,
-  password: '',
-};
+function createEmptyForm(): EmployeeFormState {
+  return {
+    avatarUrl: DEFAULT_STAFF_IMAGE,
+    fullName: '',
+    phone: '',
+    email: '',
+    address: '',
+    position: '',
+    branchId: '',
+    hireDate: '',
+    status: EmployeeStatus.PROBATION,
+    note: '',
+    createAccount: false,
+    role: Role.RECEPTIONIST,
+    password: '',
+  };
+}
 
 export function EmployeesPage() {
   const queryClient = useQueryClient();
@@ -71,7 +73,7 @@ export function EmployeesPage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
-  const [form, setForm] = useState<EmployeeFormState>(EMPTY_FORM);
+  const [form, setForm] = useState<EmployeeFormState>(createEmptyForm);
 
   const debouncedSearch = useDebouncedValue(search, 300);
   const branchesQuery = useQuery({ queryKey: ['branches'], queryFn: () => branchesApi.list() });
@@ -135,14 +137,14 @@ export function EmployeesPage() {
 
   function openCreate() {
     setEditing(null);
-    setForm(EMPTY_FORM);
+    setForm(createEmptyForm());
     setFormOpen(true);
   }
 
   function openEdit(employee: Employee) {
     setEditing(employee);
     setForm({
-      ...EMPTY_FORM,
+      ...createEmptyForm(),
       avatarUrl: employee.avatarUrl,
       fullName: employee.fullName,
       phone: employee.phone,
@@ -160,7 +162,7 @@ export function EmployeesPage() {
   function closeForm() {
     setFormOpen(false);
     setEditing(null);
-    setForm(EMPTY_FORM);
+    setForm(createEmptyForm());
   }
 
   function handleSubmit(event: FormEvent) {

@@ -41,18 +41,20 @@ interface FormState {
   active: boolean;
 }
 
-const EMPTY_FORM: FormState = {
-  avatarUrl: DEFAULT_STAFF_IMAGE,
-  phone: '',
-  fullName: '',
-  email: '',
-  password: '',
-  role: Role.RECEPTIONIST,
-  branchId: '',
-  yearOfStart: '',
-  specialization: [],
-  active: true,
-};
+function createEmptyForm(): FormState {
+  return {
+    avatarUrl: DEFAULT_STAFF_IMAGE,
+    phone: '',
+    fullName: '',
+    email: '',
+    password: '',
+    role: Role.RECEPTIONIST,
+    branchId: '',
+    yearOfStart: '',
+    specialization: [],
+    active: true,
+  };
+}
 
 export interface StaffAccountModalProps {
   open: boolean;
@@ -64,7 +66,7 @@ export interface StaffAccountModalProps {
 export function StaffAccountModal({ open, onClose, editing }: StaffAccountModalProps) {
   const queryClient = useQueryClient();
   const toast = useToast();
-  const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [form, setForm] = useState<FormState>(createEmptyForm);
 
   const branchesQuery = useQuery({
     queryKey: ['branches'],
@@ -77,7 +79,7 @@ export function StaffAccountModal({ open, onClose, editing }: StaffAccountModalP
     setForm(
       editing
         ? {
-            ...EMPTY_FORM,
+            ...createEmptyForm(),
             phone: editing.phone,
             avatarUrl: editing.avatarUrl,
             fullName: editing.fullName,
@@ -86,7 +88,7 @@ export function StaffAccountModal({ open, onClose, editing }: StaffAccountModalP
             branchId: editing.branchId ?? '',
             active: editing.active,
           }
-        : EMPTY_FORM,
+        : createEmptyForm(),
     );
   }, [open, editing]);
 

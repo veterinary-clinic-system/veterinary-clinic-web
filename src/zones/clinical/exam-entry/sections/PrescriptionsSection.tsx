@@ -19,15 +19,17 @@ interface PrescriptionLine {
   instructions: string;
 }
 
-const EMPTY_LINE: PrescriptionLine = {
-  medicationId: '',
-  quantity: '',
-  dosage: '',
-  frequency: '',
-  durationDays: '',
-  route: MedicationRoute.ORAL,
-  instructions: '',
-};
+function createEmptyLine(): PrescriptionLine {
+  return {
+    medicationId: '',
+    quantity: '',
+    dosage: '',
+    frequency: '',
+    durationDays: '',
+    route: MedicationRoute.ORAL,
+    instructions: '',
+  };
+}
 
 export function PrescriptionsSection({
   record,
@@ -52,7 +54,7 @@ export function PrescriptionsSection({
   ];
 
   const [notes, setNotes] = useState('');
-  const [lines, setLines] = useState<PrescriptionLine[]>([{ ...EMPTY_LINE }]);
+  const [lines, setLines] = useState<PrescriptionLine[]>(() => [createEmptyLine()]);
 
   const addMutation = useMutation({
     mutationFn: () =>
@@ -71,7 +73,7 @@ export function PrescriptionsSection({
           })),
       }),
     onSuccess: (view) => {
-      setLines([{ ...EMPTY_LINE }]);
+      setLines([createEmptyLine()]);
       setNotes('');
 
       const short = view.stockCheck.filter((s) => s.insufficientStock);
@@ -191,7 +193,7 @@ export function PrescriptionsSection({
               variant="secondary"
               size="sm"
               className="w-fit"
-              onClick={() => setLines((prev) => [...prev, { ...EMPTY_LINE }])}
+              onClick={() => setLines((prev) => [...prev, createEmptyLine()])}
             >
               + Thêm thuốc
             </Button>
